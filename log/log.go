@@ -28,6 +28,7 @@
 package log
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 
@@ -39,14 +40,15 @@ type Log interface {
 	ParseConfig(v map[string]interface{}) error
 	InitLogger() error
 	SetLevel(level int) error
-	Emergency(format string, v ...interface{}) error
-	Alert(format string, v ...interface{}) error
-	Critical(format string, v ...interface{}) error
-	Error(format string, v ...interface{}) error
-	Warning(format string, v ...interface{}) error
-	Notice(format string, v ...interface{}) error
-	Info(format string, v ...interface{}) error
-	Debug(format string, v ...interface{}) error
+	Emergency(v ...interface{}) error
+	Alert(v ...interface{}) error
+	Critical(v ...interface{}) error
+	Error(v ...interface{}) error
+	Warning(v ...interface{}) error
+	Notice(v ...interface{}) error
+	Info(v ...interface{}) error
+	Debug(v ...interface{}) error
+	QuitChan() <-chan struct{}
 	Close() error
 }
 
@@ -74,17 +76,31 @@ const (
 var LogLevelPrefix = [DEBUG + 1]string{" [EMEGENCY] ", " [ALERT] ", " [CRITICAL] ", " [ERROR] ", " [WARNING] ", " [NOTICE] ", " [INFO] ", " [DEBUG] "}
 
 //FormatLog format log and return string
-func FormatLog(level int, format string, v ...interface{}) string {
+func FormatLog(level int, v ...interface{}) string {
 	if level < EMEGENCY || level > DEBUG {
 		level = EMEGENCY
 	}
-	msg := utils.TimeYMDHIS() + LogLevelPrefix[level]
-	if len(v) > 0 {
-		msg = msg + fmt.Sprintf(format, v...)
+	var buf bytes.Buffer
+	buf.WriteString(utils.TimeYMDHIS())
+	buf.WriteString(LogLevelPrefix[level])
+	format := v[0].(string)
+
+	if len(v) > 1 {
+		buf.WriteString(fmt.Sprintf(format, v[1:]...))
 	} else {
-		msg = msg + format
+		buf.WriteString(format)
 	}
-	return msg + "\n"
+	buf.WriteString("\n")
+	return buf.String()
+
+	// msg := utils.TimeYMDHIS() + LogLevelPrefix[level]
+	// if len(v) > 0 {
+	// 	msg = msg + fmt.Sprintf(format, v...)
+	// } else {
+	// 	msg = msg + format
+	// }
+	// return msg + "\n"
+
 }
 
 //ParseValue read config from map,if not exist return default value

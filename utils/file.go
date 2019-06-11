@@ -21,73 +21,54 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-06 16:57:24
+// * @Date: 2019-06-11 07:48:41
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-06 16:57:24
+// * @Last Modified time: 2019-06-11 07:48:41
 
-package log_test
+package utils
 
 import (
-	"fmt"
-	"runtime"
-	"sync"
-	"testing"
-
-	"github.com/gonethopper/nethopper/log"
+	"bytes"
+	"io"
+	"os"
 )
 
-const Step = 10000000
-
-//BenchmarkFormatLog format test
-func BenchmarkFormatLog(t *testing.B) {
-
-	msg := "format log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg)
+//FileIsExist if file exist ,return true
+func FileIsExist(path string) bool {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
 	}
-
+	if os.IsNotExist(err) {
+		return false
+	}
+	return false
 }
 
-func BenchmarkFormatLogWithParams(t *testing.B) {
-
-	msg := "format %d log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg, i)
-	}
-}
-
-func BenchmarkWriteLog(t *testing.B) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	fmt.Println("hello")
-	m := map[string]interface{}{
-		"filename":    "test/server1.log",
-		"level":       7,
-		"maxSize":     300,
-		"maxLines":    Step,
-		"hourEnabled": true,
-		"dailyEnable": true,
-	}
-	logger, err := log.NewFileLogger(m)
+//FileLines get file lines
+func FileLines(filename string) (int, error) {
+	fd, err := os.Open(filename)
+	//fd, err := mmap.Open(filename)
 	if err != nil {
-		t.Error(err)
+		return 0, err
 	}
-
-	var wg sync.WaitGroup
-	writerNum := 5
-	wg.Add(writerNum)
-	for j := 0; j < writerNum; j++ {
-		go func() {
-			for i := 0; i < Step; i++ {
-				logger.Debug("helloword true filename:testserver.log hourEnabled:true level:7 maxLines:100000")
-			}
-			wg.Done()
-		}()
+	defer fd.Close()
+	maxbuf := 32768
+	buf := make([]byte, maxbuf) // 32k
+	count := 0
+	lineSep := []byte{'\n'}
+	offset := int64(0)
+	for {
+		c, err := fd.Read(buf)
+		//c, err := fd.ReadAt(buf, offset)
+		if err != nil && err != io.EOF {
+			return count, nil
+		}
+		offset += int64(c)
+		count += bytes.Count(buf[:c], lineSep)
+		if err == io.EOF {
+			break
+		}
 	}
-	wg.Wait()
-	logger.Close()
-
-	select {
-	case <-logger.QuitChan():
-		return
-	}
+	return count, nil
 }

@@ -28,28 +28,21 @@
 package server
 
 import (
-	"sync"
-
-	"github.com/gonethopper/nethopper/log"
 	"github.com/gonethopper/queue"
 )
 
-// MQ global message bus
-var MQ queue.Queue
-
-// Logger global logger
-var Logger log.Log
-
-// WG global goruntine wait group
-var WG sync.WaitGroup
-
-// App server instance
-var App = &Server{
-	GoCount: 0,
+//GlobalMQInit init global message queue
+func GlobalMQInit(size int) queue.Queue {
+	MQ = queue.NewChanQueue(size)
+	return MQ
 }
 
-// Server server entity, only one instance
-type Server struct {
-	// GoCount total goruntine count
-	GoCount int
+//GlobalMQPush block push message to global message queue
+func GlobalMQPush(x interface{}) error {
+	return MQ.Push(x)
+}
+
+//GlobalMQPop async pop message from global message queue
+func GlobalMQPop() (interface{}, error) {
+	return MQ.AsyncPop()
 }

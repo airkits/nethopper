@@ -21,71 +21,20 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-06 16:57:24
+// * @Date: 2019-06-12 15:52:10
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-06 16:57:24
+// * @Last Modified time: 2019-06-12 15:52:10
 
-package log_test
+package server
 
 import (
-	"runtime"
-	"sync"
-	"testing"
-
-	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/queue"
 )
 
-const Step = 10000000
-
-// BenchmarkFormatLog format test
-func BenchmarkFormatLog(t *testing.B) {
-
-	msg := "format log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg)
-	}
-
-}
-
-func BenchmarkFormatLogWithParams(t *testing.B) {
-
-	msg := "format %d log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg, i)
-	}
-}
-
-func BenchmarkWriteLog(t *testing.B) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	m := map[string]interface{}{
-		"filename":    "test/server1.log",
-		"level":       7,
-		"maxSize":     300,
-		"maxLines":    Step,
-		"hourEnabled": false,
-		"dailyEnable": true,
-	}
-	logger, err := log.NewFileLogger(m)
-	if err != nil {
-		t.Error(err)
-	}
-
-	var wg sync.WaitGroup
-	writerNum := 5
-	wg.Add(writerNum)
-	for j := 0; j < writerNum; j++ {
-		go func() {
-			for i := 0; i < Step; i++ {
-				logger.Debug("helloword true filename:testserver.log hourEnabled:true level:7 maxLines:100000")
-			}
-			wg.Done()
-		}()
-	}
-	wg.Wait()
-	logger.Close()
-
-	select {
-	case <-logger.QuitChan():
-		return
-	}
+// ServiceContext service goroutine
+type ServiceContext struct {
+	mq        queue.Queue
+	cpuCost   int64 // in microsec
+	cpuStart  int64 // in microsec
+	contextID int32
 }

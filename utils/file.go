@@ -33,7 +33,7 @@ import (
 	"os"
 )
 
-//FileIsExist if file exist ,return true
+// FileIsExist if file exist ,return true
 func FileIsExist(path string) bool {
 	_, err := os.Stat(path)
 	if err == nil {
@@ -45,7 +45,7 @@ func FileIsExist(path string) bool {
 	return false
 }
 
-//FileLines get file lines
+// FileLines get file lines
 func FileLines(filename string) (int, error) {
 	fd, err := os.Open(filename)
 	//fd, err := mmap.Open(filename)

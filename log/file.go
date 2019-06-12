@@ -40,7 +40,7 @@ import (
 	"github.com/gonethopper/queue"
 )
 
-//NewFileLogger create FileLog instance
+// NewFileLogger create FileLog instance
 func NewFileLogger(m map[string]interface{}) (Log, error) {
 	logger := &FileLog{
 		closedChan: make(chan struct{}),
@@ -54,14 +54,14 @@ func NewFileLogger(m map[string]interface{}) (Log, error) {
 	return logger, nil
 }
 
-//FileLog implements Log interface
-//write log to file,if file reached limit,rename file match format filename
-//support filesize limit / time frequency / lines limit
-//filename read from config like server.log and the real filename like server_20190101-01.log or server_20190101.log
-//hourEnabled if enabled , filename like server_20190101-01.log
-//dailyEnabled if enabled, filename like server_20190101.log
-//else filename like server.log
-//filename format = filename_ymd-h_num.suffix
+// FileLog implements Log interface
+// write log to file,if file reached limit,rename file match format filename
+// support filesize limit / time frequency / lines limit
+// filename read from config like server.log and the real filename like server_20190101-01.log or server_20190101.log
+// hourEnabled if enabled , filename like server_20190101-01.log
+// dailyEnabled if enabled, filename like server_20190101.log
+// else filename like server.log
+// filename format = filename_ymd-h_num.suffix
 type FileLog struct {
 	//set level and  atomic incr CurrentSize and CurrentLines
 	//write log one by one
@@ -83,7 +83,7 @@ type FileLog struct {
 	closedChan    chan struct{}
 }
 
-//InitLogger init logger
+// InitLogger init logger
 func (l *FileLog) InitLogger() error {
 	l.q = queue.NewChanQueue(1024)
 
@@ -91,10 +91,11 @@ func (l *FileLog) InitLogger() error {
 	return l.createNewFile()
 }
 
-//QuitChan write all message from queue and tigger closed notify
+// QuitChan write all message from queue and tigger closed notify
 func (l *FileLog) QuitChan() <-chan struct{} {
 	return l.closedChan
 }
+
 func (l *FileLog) startLogger() {
 	var buf bytes.Buffer
 	var count int
@@ -103,7 +104,7 @@ func (l *FileLog) startLogger() {
 		count = 0
 		msgSize = 0
 		for i := 0; i < 128; i++ {
-			if v, err := l.q.AsyncGet(); err == nil {
+			if v, err := l.q.AsyncPop(); err == nil {
 				if n, e := buf.WriteString(v.(string)); e == nil {
 					msgSize += n
 					count++
@@ -118,6 +119,7 @@ func (l *FileLog) startLogger() {
 			l.writeLog(buf.String(), count)
 			buf.Reset()
 		} else {
+			// ensure queue is empty
 			if l.q.IsClosed() && l.q.Length() == 0 {
 				l.flush()
 				l.currentWriter.Close()
@@ -128,7 +130,7 @@ func (l *FileLog) startLogger() {
 	}
 }
 
-//writeLog write message to file, return immediately if not meet the conditions
+// writeLog write message to file, return immediately if not meet the conditions
 func (l *FileLog) writeLog(msg string, count int) error {
 
 	// l.Lock()
@@ -146,7 +148,7 @@ func (l *FileLog) writeLog(msg string, count int) error {
 	return nil
 }
 
-//SetLevel update log level
+// SetLevel update log level
 func (l *FileLog) SetLevel(level int) error {
 	if level < EMEGENCY || level > DEBUG {
 		return fmt.Errorf("log level:[%d] invalid", level)
@@ -157,7 +159,7 @@ func (l *FileLog) SetLevel(level int) error {
 	return nil
 }
 
-//ParseConfig read config from map[string]interface{}
+// ParseConfig read config from map[string]interface{}
 // config key
 // filename default server.log
 // level default 7
@@ -212,10 +214,10 @@ func (l *FileLog) genCurrentTime() string {
 	return currentTime
 }
 
-//genFilename filename format = filename_ymd-h_num.suffix
-//if num == 0, then format = filename_ymd-h.suffix
-//else if hourEnabled == false, then format = filename_ymd.suffix
-//else if  dailyEnabled == false, then format = filename.suffix
+// genFilename filename format = filename_ymd-h_num.suffix
+// if num == 0, then format = filename_ymd-h.suffix
+// else if hourEnabled == false, then format = filename_ymd.suffix
+// else if  dailyEnabled == false, then format = filename.suffix
 func (l *FileLog) genFilename(timestr string, num int) string {
 	var buf bytes.Buffer
 	buf.WriteString(l.prefix)
@@ -239,8 +241,8 @@ func (l *FileLog) genFilename(timestr string, num int) string {
 	// return filename + l.suffix
 }
 
-//nextNumTest test the file actually exists in the filesystem,return the next file num
-//if test failed return -1
+// nextNumTest test the file actually exists in the filesystem,return the next file num
+// if test failed return -1
 func (l *FileLog) nextNumTest(timestr string) int {
 	MaxNum := 1000
 	for i := 1; i < MaxNum; i++ {
@@ -252,7 +254,7 @@ func (l *FileLog) nextNumTest(timestr string) int {
 	return -1
 }
 
-//fileCutTest check time/maxsize/maxlines
+// fileCutTest check time/maxsize/maxlines
 func (l *FileLog) fileCutTest() bool {
 
 	timestr := l.genCurrentTime()
@@ -265,7 +267,7 @@ func (l *FileLog) fileCutTest() bool {
 	return false
 }
 
-//Close close file logger
+// Close close file logger
 func (l *FileLog) Close() error {
 	return l.q.Close()
 }
@@ -290,7 +292,7 @@ func (l *FileLog) moveFile() error {
 	return nil
 }
 
-//createNewFile if file exist,then check current lines and filesize
+// createNewFile if file exist,then check current lines and filesize
 func (l *FileLog) createNewFile() error {
 	l.currentTime = l.genCurrentTime()
 	l.fileName = l.genFilename(l.currentTime, 0)
@@ -321,54 +323,54 @@ func (l *FileLog) createNewFile() error {
 	return nil
 }
 
-//PushLog push log to queue
+// PushLog push log to queue
 func (l *FileLog) PushLog(level int, v ...interface{}) error {
 	if level > l.level {
 		return nil
 	}
 	msg := FormatLog(level, v...)
-	if err := l.q.Put(msg); err != nil {
+	if err := l.q.Push(msg); err != nil {
 		return err
 	}
 	return nil
 }
 
-//Emergency system is unusable
+// Emergency system is unusable
 func (l *FileLog) Emergency(v ...interface{}) error {
 	return l.PushLog(EMEGENCY, v...)
 }
 
-//Alert action must be taken immediately
+// Alert action must be taken immediately
 func (l *FileLog) Alert(v ...interface{}) error {
 	return l.PushLog(ALERT, v...)
 }
 
-//Critical critical conditions
+// Critical critical conditions
 func (l *FileLog) Critical(v ...interface{}) error {
 	return l.PushLog(CRITICAL, v...)
 }
 
-//Error error conditions
+// Error error conditions
 func (l *FileLog) Error(v ...interface{}) error {
 	return l.PushLog(ERROR, v...)
 }
 
-//Warning warning conditions
+// Warning warning conditions
 func (l *FileLog) Warning(v ...interface{}) error {
 	return l.PushLog(WARNING, v...)
 }
 
-//Notice normal but significant condition
+// Notice normal but significant condition
 func (l *FileLog) Notice(v ...interface{}) error {
 	return l.PushLog(NOTICE, v...)
 }
 
-//Info informational messages
+// Info informational messages
 func (l *FileLog) Info(v ...interface{}) error {
 	return l.PushLog(INFO, v...)
 }
 
-//Debug debug-level messages
+// Debug debug-level messages
 func (l *FileLog) Debug(v ...interface{}) error {
 	return l.PushLog(DEBUG, v...)
 }

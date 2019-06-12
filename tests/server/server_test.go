@@ -21,47 +21,45 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-06 16:57:24
+// * @Date: 2019-06-12 17:11:57
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-06 16:57:24
+// * @Last Modified time: 2019-06-12 17:11:57
 
-package log_test
+package server_test
 
 import (
-	"runtime"
-	"sync"
 	"testing"
 
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/server"
 )
 
-const Step = 10000000
-
-// BenchmarkFormatLog format test
-func BenchmarkFormatLog(t *testing.B) {
-
-	msg := "format log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg)
-	}
-
+type Factory struct {
+	Name string
 }
 
-func BenchmarkFormatLogWithParams(t *testing.B) {
-
-	msg := "format %d log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg, i)
-	}
+func (g *Factory) CallStructName0() {
+	server.Logger.Debug("CallStructName0")
 }
 
-func BenchmarkWriteLog(t *testing.B) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+func (g *Factory) CallStructName1(value int) {
+	server.Logger.Debug("CallStructName1 %d \n", value)
+}
+
+func (g *Factory) CallStructName2(value int, name string) {
+	server.Logger.Debug("CallStructName2 %d %s \n", value, name)
+}
+
+func (g *Factory) CallStructNameArgs(v ...interface{}) {
+	server.Logger.Debug("CallStructNameArgs %v \n", v)
+}
+
+func TestGO(t *testing.T) {
 	m := map[string]interface{}{
-		"filename":    "test/server1.log",
+		"filename":    "server.log",
 		"level":       7,
-		"maxSize":     300,
-		"maxLines":    Step,
+		"maxSize":     50,
+		"maxLines":    1000,
 		"hourEnabled": false,
 		"dailyEnable": true,
 	}
@@ -69,23 +67,14 @@ func BenchmarkWriteLog(t *testing.B) {
 	if err != nil {
 		t.Error(err)
 	}
+	server.Logger = logger
 
-	var wg sync.WaitGroup
-	writerNum := 5
-	wg.Add(writerNum)
-	for j := 0; j < writerNum; j++ {
-		go func() {
-			for i := 0; i < Step; i++ {
-				logger.Debug("helloword true filename:testserver.log hourEnabled:true level:7 maxLines:100000")
-			}
-			wg.Done()
-		}()
-	}
-	wg.Wait()
-	logger.Close()
+	f := &Factory{Name: "Factory"}
 
-	select {
-	case <-logger.QuitChan():
-		return
-	}
+	server.GO(f.CallStructName0)
+	server.GO(f.CallStructName1, 1)
+	//	runtime.GO(f.CallStructName2, 2, "hello")
+	//server.GO(f.CallStructNameArgs, 3, 4, 5, 6, 7)
+
+	server.WG.Wait()
 }

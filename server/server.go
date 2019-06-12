@@ -21,71 +21,56 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-06 16:57:24
+// * @Date: 2019-06-12 15:53:22
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-06 16:57:24
+// * @Last Modified time: 2019-06-12 15:53:22
 
-package log_test
+package server
 
 import (
-	"runtime"
+	"reflect"
 	"sync"
-	"testing"
 
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/queue"
 )
 
-const Step = 10000000
+// MQ global message bus
+var MQ queue.Queue
 
-// BenchmarkFormatLog format test
-func BenchmarkFormatLog(t *testing.B) {
+// Logger global logger
+var Logger log.Log
 
-	msg := "format log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg)
-	}
+// WG global goruntine wait group
+var WG sync.WaitGroup
 
+// App server instance
+var App = &Server{
+	GoCount: 0,
 }
 
-func BenchmarkFormatLogWithParams(t *testing.B) {
-
-	msg := "format %d log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg, i)
-	}
+// Server server entity, only one instance
+type Server struct {
+	// GoCount total goruntine count
+	GoCount int
 }
 
-func BenchmarkWriteLog(t *testing.B) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	m := map[string]interface{}{
-		"filename":    "test/server1.log",
-		"level":       7,
-		"maxSize":     300,
-		"maxLines":    Step,
-		"hourEnabled": false,
-		"dailyEnable": true,
-	}
-	logger, err := log.NewFileLogger(m)
-	if err != nil {
-		t.Error(err)
-	}
-
-	var wg sync.WaitGroup
-	writerNum := 5
-	wg.Add(writerNum)
-	for j := 0; j < writerNum; j++ {
-		go func() {
-			for i := 0; i < Step; i++ {
-				logger.Debug("helloword true filename:testserver.log hourEnabled:true level:7 maxLines:100000")
+// GO exec goruntine and stat count
+func GO(v ...interface{}) {
+	WG.Add(1)
+	Logger.Debug("goroutine start %s", reflect.TypeOf(v[0]))
+	go func() {
+		if len(v) == 1 {
+			if f, ok := v[0].(func()); ok {
+				f()
 			}
-			wg.Done()
-		}()
-	}
-	wg.Wait()
-	logger.Close()
+		} else {
+			if f, ok := v[0].(func(...interface{})); ok {
+				f(v[1:]...)
+			}
+		}
+		Logger.Debug("gorontine stop %s", reflect.TypeOf(v[0]))
+		WG.Done()
+	}()
 
-	select {
-	case <-logger.QuitChan():
-		return
-	}
 }

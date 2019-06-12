@@ -52,7 +52,7 @@ type Log interface {
 	Close() error
 }
 
-// rfc5424 log levels https://tools.ietf.org/html/rfc5424
+// Log Levels Define rfc5424  https://tools.ietf.org/html/rfc5424
 // 0       Emergency: system is unusable
 // 1       Alert: action must be taken immediately
 // 2       Critical: critical conditions
@@ -72,10 +72,11 @@ const (
 	DEBUG
 )
 
-//LogLevelPrefix level format to string
+// LogLevelPrefix level format to string
 var LogLevelPrefix = [DEBUG + 1]string{" [EMEGENCY] ", " [ALERT] ", " [CRITICAL] ", " [ERROR] ", " [WARNING] ", " [NOTICE] ", " [INFO] ", " [DEBUG] "}
 
-//FormatLog format log and return string
+// FormatLog format log and return string
+// if len(v) > 1 ,format = v[0]
 func FormatLog(level int, v ...interface{}) string {
 	if level < EMEGENCY || level > DEBUG {
 		level = EMEGENCY
@@ -103,7 +104,7 @@ func FormatLog(level int, v ...interface{}) string {
 
 }
 
-//ParseValue read config from map,if not exist return default value
+// ParseValue read config from map,if not exist return default value
 func ParseValue(m map[string]interface{}, key string, opt interface{}) (interface{}, error) {
 	value, ok := m[key]
 	if !ok {

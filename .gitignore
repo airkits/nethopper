@@ -12,3 +12,4 @@
 *.out
 tests_bench/log/test/*
 .vscode/ipch
+*.log

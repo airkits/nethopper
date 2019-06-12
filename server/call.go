@@ -35,16 +35,16 @@ import (
 // Calls the callback given by the first parameter and passes the remaining parameters as arguments.
 // Zero or more parameters to be passed to the callback.
 // Returns the return value of the callback.
-func CallUserFunc(v ...interface{}) interface{} {
-	valueFunc := reflect.ValueOf(v[0])
+func CallUserFunc(f interface{}, v ...interface{}) []reflect.Value {
+	valueFunc := reflect.ValueOf(f)
 	paramsList := []reflect.Value{}
-	if len(v) > 1 {
-		for i := 1; i < len(v); i++ {
+	if len(v) > 0 {
+		for i := 0; i < len(v); i++ {
 			paramsList = append(paramsList, reflect.ValueOf(v[i]))
 		}
 	}
-	result := valueFunc.Call(paramsList)
-	return result
+	return valueFunc.Call(paramsList)
+
 }
 
 // CallUserMethod simply to dynamically call a method on an object
@@ -52,26 +52,25 @@ func CallUserFunc(v ...interface{}) interface{} {
 // and passes the remaining parameters as arguments.
 // Zero or more parameters to be passed to the method.
 // Returns the return value of the method.
-func CallUserMethod(instance interface{}, method string, v ...interface{}) interface{} {
+func CallUserMethod(instance interface{}, method string, v ...interface{}) []reflect.Value {
 	valueS := reflect.ValueOf(instance)
 	m := valueS.MethodByName(method)
 	paramsList := []reflect.Value{}
-	if len(v) > 1 {
-		for i := 1; i < len(v); i++ {
+	if len(v) > 0 {
+		for i := 0; i < len(v); i++ {
 			paramsList = append(paramsList, reflect.ValueOf(v[i]))
 		}
 	}
-	result := m.Call(paramsList)
-	return result
+	return m.Call(paramsList)
 }
 
 // GO wapper exec goruntine and stat count
-func GO(v ...interface{}) {
+func GO(f interface{}, v ...interface{}) {
 	WG.Add(1)
-	Logger.Debug("goroutine start %s", reflect.TypeOf(v[0]))
+	Logger.Debug("goroutine start %s", reflect.TypeOf(f))
 	go func() {
-		CallUserFunc(v...)
-		Logger.Debug("gorontine stop %s", reflect.TypeOf(v[0]))
+		CallUserFunc(f, v...)
+		Logger.Debug("gorontine stop %s", reflect.TypeOf(f))
 		WG.Done()
 	}()
 }

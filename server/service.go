@@ -21,20 +21,38 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-12 15:52:10
+// * @Date: 2019-06-14 14:15:06
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-12 15:52:10
+// * @Last Modified time: 2019-06-14 14:15:06
 
 package server
 
-import (
-	"github.com/gonethopper/queue"
+const (
+	// ServiceNamedIDs service id define, system reserved 1-63
+	ServiceNamedIDs = iota
+	// ServiceIDMain main goruntinue
+	ServiceIDMain
+	// ServiceIDMonitor server monitor service
+	ServiceIDMonitor
+	//ServiceIDLog log service
+	ServiceIDLog
+	//ServiceIDUserCustom User custom define named services from 64-128
+	ServiceIDUserCustom = 64
+	//ServiceIDNamedMax named services max ID
+	ServiceIDNamedMax = 128
 )
 
-// ServiceContext service goroutine
-type ServiceContext struct {
-	mq        queue.Queue
-	cpuCost   int64 // in microsec
-	cpuStart  int64 // in microsec
-	contextID int32
+// Service interface define
+type Service interface {
+	// ID service id
+	ID() int
+	//Create instance
+	Create(serviceID int, m map[string]interface{}) (Service, error)
+	// Start create goruntine and run
+	Start(m map[string]interface{}) error
+	// Stop goruntine
+	Stop() error
+	// Send async send message to other goruntine
+	Send(msg *Message) error
+	SendBuffer(buf []byte) error
 }

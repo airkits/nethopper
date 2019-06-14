@@ -87,7 +87,7 @@ type FileLog struct {
 func (l *FileLog) InitLogger() error {
 	l.q = queue.NewChanQueue(1024)
 
-	go l.startLogger()
+	//go l.RunLogger()
 	return l.createNewFile()
 }
 
@@ -96,7 +96,8 @@ func (l *FileLog) QuitChan() <-chan struct{} {
 	return l.closedChan
 }
 
-func (l *FileLog) startLogger() {
+//RunLogger async pop from queue and write to file
+func (l *FileLog) RunLogger() {
 	var buf bytes.Buffer
 	var count int
 	var msgSize int
@@ -105,7 +106,7 @@ func (l *FileLog) startLogger() {
 		msgSize = 0
 		for i := 0; i < 128; i++ {
 			if v, err := l.q.AsyncPop(); err == nil {
-				if n, e := buf.WriteString(v.(string)); e == nil {
+				if n, e := buf.Write(v.([]byte)); e == nil {
 					msgSize += n
 					count++
 					if (msgSize+l.currentSize) >= l.maxSize || (count+l.currentLines) >= l.maxLines {
@@ -116,7 +117,7 @@ func (l *FileLog) startLogger() {
 		}
 
 		if buf.Len() > 0 {
-			l.writeLog(buf.String(), count)
+			l.writeLog(buf.Bytes(), count)
 			buf.Reset()
 		} else {
 			// ensure queue is empty
@@ -131,7 +132,7 @@ func (l *FileLog) startLogger() {
 }
 
 // writeLog write message to file, return immediately if not meet the conditions
-func (l *FileLog) writeLog(msg string, count int) error {
+func (l *FileLog) writeLog(msg []byte, count int) error {
 
 	// l.Lock()
 	// defer l.Unlock()
@@ -139,7 +140,7 @@ func (l *FileLog) writeLog(msg string, count int) error {
 		l.moveFile()
 		l.createNewFile()
 	}
-	_, err := l.currentWriter.Write([]byte(msg))
+	_, err := l.currentWriter.Write(msg)
 	if err == nil {
 		l.currentLines += count
 		l.currentSize += len(msg)
@@ -329,7 +330,18 @@ func (l *FileLog) PushLog(level int, v ...interface{}) error {
 		return nil
 	}
 	msg := FormatLog(level, v...)
-	if err := l.q.Push(msg); err != nil {
+	return l.AsyncWrite([]byte(msg))
+
+}
+
+//GetLevel get current log level
+func (l *FileLog) GetLevel() int {
+	return l.level
+}
+
+//AsyncWrite write to queue
+func (l *FileLog) AsyncWrite(buf []byte) error {
+	if err := l.q.Push(buf); err != nil {
 		return err
 	}
 	return nil

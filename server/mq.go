@@ -27,22 +27,24 @@
 
 package server
 
-import (
-	"github.com/gonethopper/queue"
+const (
+	// MessageType message type enum
+	MessageType = iota
+	// MTRequest request =1
+	MTRequest
+	// MTResponse response = 2
+	MTResponse
+	// MTNotify notify = 3
+	MTNotify
+	// MTBroadcast broadcast = 4
+	MTBroadcast
 )
 
-//GlobalMQInit init global message queue
-func GlobalMQInit(size int) queue.Queue {
-	MQ = queue.NewChanQueue(size)
-	return MQ
-}
-
-//GlobalMQPush block push message to global message queue
-func GlobalMQPush(x interface{}) error {
-	return MQ.Push(x)
-}
-
-//GlobalMQPop async pop message from global message queue
-func GlobalMQPop() (interface{}, error) {
-	return MQ.AsyncPop()
+//Message mq Message
+type Message struct {
+	SrcID   int
+	DestID  int
+	MsgType int
+	Cmd     string
+	Payload []byte
 }

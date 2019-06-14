@@ -39,15 +39,28 @@ import (
 type Log interface {
 	ParseConfig(v map[string]interface{}) error
 	InitLogger() error
+	//RunLogger async pop from queue and write to file
+	RunLogger()
 	SetLevel(level int) error
+	GetLevel() int
+	// Emergency system is unusable
 	Emergency(v ...interface{}) error
+	// Alert action must be taken immediately
 	Alert(v ...interface{}) error
+	// Critical critical conditions
 	Critical(v ...interface{}) error
+	// Error error conditions
 	Error(v ...interface{}) error
+	// Warning warning conditions
 	Warning(v ...interface{}) error
+	// Notice normal but significant condition
 	Notice(v ...interface{}) error
+	// Info informational messages
 	Info(v ...interface{}) error
+	// Debug debug-level messages
 	Debug(v ...interface{}) error
+	// AsyncWrite write buffer to async queue
+	AsyncWrite(buf []byte) error
 	QuitChan() <-chan struct{}
 	Close() error
 }

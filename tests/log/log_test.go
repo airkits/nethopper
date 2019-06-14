@@ -39,12 +39,12 @@ import (
 func TestFormatLog(t *testing.T) {
 	//test msg without params
 	msg := "format log test"
-	format := "%s%s%s"
+	format := "%s%s%s\n"
 	for level := log.EMEGENCY; level < log.DEBUG; level++ {
 		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], msg)
 		result := log.FormatLog(level, msg)
 		if expect != result {
-			t.Errorf("expect :%s,but result :%s", expect, result)
+			t.Errorf("\nexpect :%s,\nresult :%s", expect, result)
 		}
 	}
 	//test msg with params
@@ -53,7 +53,7 @@ func TestFormatLog(t *testing.T) {
 		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], fmt.Sprintf(msg, strconv.Itoa(level), level))
 		result := log.FormatLog(level, msg, strconv.Itoa(level), level)
 		if expect != result {
-			t.Errorf("expect :%s,but result :%s", expect, result)
+			t.Errorf("\nexpect :%s,\nresult :%s", expect, result)
 		}
 	}
 

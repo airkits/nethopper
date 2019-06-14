@@ -28,28 +28,90 @@
 package server
 
 import (
+	"fmt"
 	"sync"
-
-	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/queue"
 )
 
-// MQ global message bus
-var MQ queue.Queue
-
-// Logger global logger
-var Logger log.Log
+var logger Service
 
 // WG global goruntine wait group
 var WG sync.WaitGroup
 
 // App server instance
 var App = &Server{
-	GoCount: 0,
+	GoCount:            0,
+	ServiceCount:       0,
+	ServiceAnonymousID: ServiceIDNamedMax,
+	Services:           make(map[int]Service),
 }
 
 // Server server entity, only one instance
 type Server struct {
 	// GoCount total goruntine count
-	GoCount int
+	sync.Mutex
+	LogLevel           int
+	GoCount            int
+	ServiceCount       int
+	ServiceAnonymousID int
+	Services           map[int]Service
+}
+
+//SetLogLevel set log level to app global var
+func (s *Server) SetLogLevel(level int) {
+	s.Lock()
+	defer s.Unlock()
+	s.LogLevel = level
+}
+
+// GetServiceByID get service instance by id
+func (s *Server) GetServiceByID(serviceID int) (Service, error) {
+	s.Lock()
+	defer s.Unlock()
+	se, ok := s.Services[serviceID]
+	if ok {
+		return se, nil
+	}
+	return nil, fmt.Errorf("cant get service ID")
+}
+
+// CreateNamedService register named service
+func (s *Server) CreateNamedService(serviceID int, service Service, m map[string]interface{}) (Service, error) {
+	s.Lock()
+	defer s.Unlock()
+	se, err := service.Create(serviceID, m)
+	if err != nil {
+		return nil, err
+	}
+	s.Services[serviceID] = se
+	s.ServiceCount++
+	return se, nil
+}
+
+// CreateService register service
+func (s *Server) CreateService(service Service, m map[string]interface{}) (Service, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	se, err := service.Create(s.ServiceAnonymousID, m)
+	if err != nil {
+		return nil, err
+	}
+	s.Services[s.ServiceAnonymousID] = se
+	s.ServiceAnonymousID++
+	s.ServiceCount++
+	return se, nil
+}
+
+// RemoveService unregister service
+func (s *Server) RemoveService(serviceID int) error {
+	s.Lock()
+	defer s.Unlock()
+	se, ok := s.Services[serviceID]
+	if !ok {
+		return fmt.Errorf("cant exist serviceID %d", serviceID)
+	}
+	se.Stop()
+	delete(s.Services, serviceID)
+	s.ServiceCount--
+	return nil
 }

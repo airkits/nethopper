@@ -40,7 +40,8 @@ func TestFormatLog(t *testing.T) {
 	//test msg without params
 	msg := "format log test"
 	format := "%s%s%s\n"
-	for level := log.EMEGENCY; level < log.DEBUG; level++ {
+	var level int32
+	for level = log.EMEGENCY; level < log.DEBUG; level++ {
 		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], msg)
 		result := log.FormatLog(level, msg)
 		if expect != result {
@@ -49,9 +50,9 @@ func TestFormatLog(t *testing.T) {
 	}
 	//test msg with params
 	msg = "format %s log test %d"
-	for level := log.EMEGENCY; level < log.DEBUG; level++ {
-		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], fmt.Sprintf(msg, strconv.Itoa(level), level))
-		result := log.FormatLog(level, msg, strconv.Itoa(level), level)
+	for level = log.EMEGENCY; level < log.DEBUG; level++ {
+		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], fmt.Sprintf(msg, strconv.Itoa(int(level)), level))
+		result := log.FormatLog(level, msg, strconv.Itoa(int(level)), level)
 		if expect != result {
 			t.Errorf("\nexpect :%s,\nresult :%s", expect, result)
 		}
@@ -72,6 +73,7 @@ func TestNewFileLogger(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	go logger.RunLogger()
 	defer logger.Close()
 	logger.Debug("helloword %d", 1234)
 

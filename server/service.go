@@ -45,14 +45,14 @@ const (
 // Service interface define
 type Service interface {
 	// ID service id
-	ID() int
-	//Create instance
-	Create(serviceID int, m map[string]interface{}) (Service, error)
+	ID() int32
+	//SetID set service ID
+	SetID(v int32)
 	// Start create goruntine and run
-	Start(m map[string]interface{}) error
+	Start() error
 	// Stop goruntine
 	Stop() error
 	// Send async send message to other goruntine
 	Send(msg *Message) error
-	SendBuffer(buf []byte) error
+	SendBytes(buf []byte) error
 }

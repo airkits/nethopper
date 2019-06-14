@@ -66,17 +66,17 @@ type FileLog struct {
 	//set level and  atomic incr CurrentSize and CurrentLines
 	//write log one by one
 	sync.Mutex
-	level         int
+	level         int32
 	fileName      string //real filename
 	currentTime   string //gen date ymd / ymd-h
 	suffix        string //filename suffix,like .log .txt
 	prefix        string //filename prefix, like server
-	maxSize       int    //filesize limit
-	currentSize   int
-	maxLines      int //lines limit
-	currentLines  int
-	currentNum    int  //current file nums
-	hourEnabled   bool //time frequency
+	maxSize       int32  //filesize limit
+	currentSize   int32
+	maxLines      int32 //lines limit
+	currentLines  int32
+	currentNum    int32 //current file nums
+	hourEnabled   bool  //time frequency
 	dailyEnabled  bool
 	currentWriter *os.File //current File Writer
 	q             queue.Queue
@@ -99,15 +99,15 @@ func (l *FileLog) QuitChan() <-chan struct{} {
 //RunLogger async pop from queue and write to file
 func (l *FileLog) RunLogger() {
 	var buf bytes.Buffer
-	var count int
-	var msgSize int
+	var count int32
+	var msgSize int32
 	for {
 		count = 0
 		msgSize = 0
 		for i := 0; i < 128; i++ {
 			if v, err := l.q.AsyncPop(); err == nil {
 				if n, e := buf.Write(v.([]byte)); e == nil {
-					msgSize += n
+					msgSize += int32(n)
 					count++
 					if (msgSize+l.currentSize) >= l.maxSize || (count+l.currentLines) >= l.maxLines {
 						break
@@ -132,7 +132,7 @@ func (l *FileLog) RunLogger() {
 }
 
 // writeLog write message to file, return immediately if not meet the conditions
-func (l *FileLog) writeLog(msg []byte, count int) error {
+func (l *FileLog) writeLog(msg []byte, count int32) error {
 
 	// l.Lock()
 	// defer l.Unlock()
@@ -143,14 +143,14 @@ func (l *FileLog) writeLog(msg []byte, count int) error {
 	_, err := l.currentWriter.Write(msg)
 	if err == nil {
 		l.currentLines += count
-		l.currentSize += len(msg)
+		l.currentSize += int32(len(msg))
 	}
 
 	return nil
 }
 
 // SetLevel update log level
-func (l *FileLog) SetLevel(level int) error {
+func (l *FileLog) SetLevel(level int32) error {
 	if level < EMEGENCY || level > DEBUG {
 		return fmt.Errorf("log level:[%d] invalid", level)
 	}
@@ -180,18 +180,18 @@ func (l *FileLog) ParseConfig(m map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	l.level = level.(int)
+	l.level = int32(level.(int))
 
 	maxSize, err := ParseValue(m, "maxSize", 1024)
 	if err != nil {
 		return err
 	}
-	l.maxSize = maxSize.(int) * 1024 * 1024
+	l.maxSize = int32(maxSize.(int) * 1024 * 1024)
 	maxLines, err := ParseValue(m, "maxLines", 100000)
 	if err != nil {
 		return err
 	}
-	l.maxLines = maxLines.(int)
+	l.maxLines = int32(maxLines.(int))
 	hourEnabled, err := ParseValue(m, "hourEnabled", false)
 	if err != nil {
 		return err
@@ -219,7 +219,7 @@ func (l *FileLog) genCurrentTime() string {
 // if num == 0, then format = filename_ymd-h.suffix
 // else if hourEnabled == false, then format = filename_ymd.suffix
 // else if  dailyEnabled == false, then format = filename.suffix
-func (l *FileLog) genFilename(timestr string, num int) string {
+func (l *FileLog) genFilename(timestr string, num int32) string {
 	var buf bytes.Buffer
 	buf.WriteString(l.prefix)
 	if len(timestr) > 0 {
@@ -228,7 +228,7 @@ func (l *FileLog) genFilename(timestr string, num int) string {
 	}
 	if num > 0 {
 		buf.WriteString("_")
-		buf.WriteString(strconv.Itoa(num))
+		buf.WriteString(strconv.Itoa(int(num)))
 	}
 	buf.WriteString(l.suffix)
 	return buf.String()
@@ -244,9 +244,10 @@ func (l *FileLog) genFilename(timestr string, num int) string {
 
 // nextNumTest test the file actually exists in the filesystem,return the next file num
 // if test failed return -1
-func (l *FileLog) nextNumTest(timestr string) int {
-	MaxNum := 1000
-	for i := 1; i < MaxNum; i++ {
+func (l *FileLog) nextNumTest(timestr string) int32 {
+	var MaxNum int32 = 1000
+	var i int32
+	for i = 1; i < MaxNum; i++ {
 		filename := l.genFilename(timestr, i)
 		if !utils.FileIsExist(filename) {
 			return i
@@ -317,7 +318,7 @@ func (l *FileLog) createNewFile() error {
 		if err != nil {
 			return err
 		}
-		l.currentSize = int(stat.Size())
+		l.currentSize = int32(stat.Size())
 	} else {
 		l.currentSize = 0
 	}
@@ -325,22 +326,22 @@ func (l *FileLog) createNewFile() error {
 }
 
 // PushLog push log to queue
-func (l *FileLog) PushLog(level int, v ...interface{}) error {
+func (l *FileLog) PushLog(level int32, v ...interface{}) error {
 	if level > l.level {
 		return nil
 	}
 	msg := FormatLog(level, v...)
-	return l.AsyncWrite([]byte(msg))
+	return l.WriteBytes([]byte(msg))
 
 }
 
 //GetLevel get current log level
-func (l *FileLog) GetLevel() int {
+func (l *FileLog) GetLevel() int32 {
 	return l.level
 }
 
-//AsyncWrite write to queue
-func (l *FileLog) AsyncWrite(buf []byte) error {
+//WriteBytes write to queue
+func (l *FileLog) WriteBytes(buf []byte) error {
 	if err := l.q.Push(buf); err != nil {
 		return err
 	}

@@ -35,45 +35,50 @@ import (
 	"github.com/gonethopper/queue"
 )
 
-// LogService struct implements the interface Service
-type LogService struct {
-	logger log.Log
-	q      queue.Queue
-	id     int
-}
-
 // Create instance
-func (s *LogService) Create(serviceID int, m map[string]interface{}) (server.Service, error) {
-	s = &LogService{
-		id: serviceID,
-	}
+// Log config
+// m := map[string]interface{}{
+// 	"filename":    "server.log",
+// 	"level":       7,
+// 	"maxSize":     50,
+// 	"maxLines":    1000,
+// 	"hourEnabled": false,
+// 	"dailyEnable": true,
+//  "queueSize":1000,
+// }
+func NewLogService(m map[string]interface{}) (server.Service, error) {
+	s := &LogService{}
 	s.q = queue.NewChanQueue(m["queueSize"].(int))
-	// m := map[string]interface{}{
-	// 	"filename":    "server.log",
-	// 	"level":       7,
-	// 	"maxSize":     50,
-	// 	"maxLines":    1000,
-	// 	"hourEnabled": false,
-	// 	"dailyEnable": true,
-	//  "queueSize":1000,
-	// }
+
 	logger, err := log.NewFileLogger(m)
 	if err != nil {
 		return nil, err
 	}
 	s.logger = logger
-	server.App.SetLogLevel(logger.GetLevel())
+	server.SetLogLevel(logger.GetLevel())
 
 	return s, nil
 }
 
+// LogService struct implements the interface Service
+type LogService struct {
+	logger log.Log
+	q      queue.Queue
+	id     int32
+}
+
 //ID service ID
-func (s *LogService) ID() int {
+func (s *LogService) ID() int32 {
 	return s.id
 }
 
+//SetID set service id
+func (s *LogService) SetID(v int32) {
+	s.id = v
+}
+
 // Start create goruntine and run
-func (s *LogService) Start(m map[string]interface{}) error {
+func (s *LogService) Start() error {
 	server.GO(s.logger.RunLogger)
 	return nil
 }
@@ -88,7 +93,7 @@ func (s *LogService) Send(msg *server.Message) error {
 	return fmt.Errorf("TODO LogServer Send")
 }
 
-// SendBuffer async send buffer to other goruntine
-func (s *LogService) SendBuffer(buf []byte) error {
-	return s.logger.AsyncWrite(buf)
+// SendBytes async send buffer to other goruntine
+func (s *LogService) SendBytes(buf []byte) error {
+	return s.logger.WriteBytes(buf)
 }

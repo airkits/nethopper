@@ -31,13 +31,13 @@ import (
 	"github.com/gonethopper/nethopper/log"
 )
 
-//SendLog send log
-func SendLog(level int, v ...interface{}) error {
-	if level > App.LogLevel {
+//WriteLog send log to queue
+func WriteLog(level int32, v ...interface{}) error {
+	if level > LogLevel {
 		return nil
 	}
 	msg := log.FormatLog(level, v...)
-	if err := logger.SendBuffer([]byte(msg)); err != nil {
+	if err := logger.SendBytes([]byte(msg)); err != nil {
 		return err
 	}
 	return nil
@@ -45,40 +45,40 @@ func SendLog(level int, v ...interface{}) error {
 
 // Emergency system is unusable
 func Emergency(v ...interface{}) error {
-	return SendLog(log.EMEGENCY, v...)
+	return WriteLog(log.EMEGENCY, v...)
 }
 
 // Alert action must be taken immediately
 func Alert(v ...interface{}) error {
-	return SendLog(log.ALERT, v...)
+	return WriteLog(log.ALERT, v...)
 }
 
 // Critical critical conditions
 func Critical(v ...interface{}) error {
-	return SendLog(log.CRITICAL, v...)
+	return WriteLog(log.CRITICAL, v...)
 }
 
 // Error error conditions
 func Error(v ...interface{}) error {
-	return SendLog(log.ERROR, v...)
+	return WriteLog(log.ERROR, v...)
 }
 
 // Warning warning conditions
 func Warning(v ...interface{}) error {
-	return SendLog(log.WARNING, v...)
+	return WriteLog(log.WARNING, v...)
 }
 
 // Notice normal but significant condition
 func Notice(v ...interface{}) error {
-	return SendLog(log.NOTICE, v...)
+	return WriteLog(log.NOTICE, v...)
 }
 
 // Info informational messages
 func Info(v ...interface{}) error {
-	return SendLog(log.INFO, v...)
+	return WriteLog(log.INFO, v...)
 }
 
 // Debug debug-level messages
 func Debug(v ...interface{}) error {
-	return SendLog(log.DEBUG, v...)
+	return WriteLog(log.DEBUG, v...)
 }

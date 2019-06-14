@@ -21,54 +21,25 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-11 07:48:41
+// * @Date: 2019-06-14 19:56:49
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-11 07:48:41
+// * @Last Modified time: 2019-06-14 19:56:49
 
-package utils
+package main
 
-import (
-	"bytes"
-	"io"
-	"os"
-)
+import "fmt"
 
-// FileIsExist if file exist ,return true
-func FileIsExist(path string) bool {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
-		return false
-	}
-	return false
-}
+func main() {
+	fmt.Println("helloworld")
 
-// FileLines get file lines
-func FileLines(filename string) (int32, error) {
-	fd, err := os.Open(filename)
-	//fd, err := mmap.Open(filename)
-	if err != nil {
-		return 0, err
+	m := map[string]interface{}{
+		"filename":    "server.log",
+		"level":       7,
+		"maxSize":     50,
+		"maxLines":    1000,
+		"hourEnabled": false,
+		"dailyEnable": true,
+		"queueSize":   1000,
 	}
-	defer fd.Close()
-	maxbuf := 32768
-	buf := make([]byte, maxbuf) // 32k
-	var count int32
-	lineSep := []byte{'\n'}
-	offset := int64(0)
-	for {
-		c, err := fd.Read(buf)
-		//c, err := fd.ReadAt(buf, offset)
-		if err != nil && err != io.EOF {
-			return count, nil
-		}
-		offset += int64(c)
-		count += int32(bytes.Count(buf[:c], lineSep))
-		if err == io.EOF {
-			break
-		}
-	}
-	return count, nil
+	server.
 }

@@ -41,8 +41,8 @@ type Log interface {
 	InitLogger() error
 	//RunLogger async pop from queue and write to file
 	RunLogger()
-	SetLevel(level int) error
-	GetLevel() int
+	SetLevel(level int32) error
+	GetLevel() int32
 	// Emergency system is unusable
 	Emergency(v ...interface{}) error
 	// Alert action must be taken immediately
@@ -59,8 +59,8 @@ type Log interface {
 	Info(v ...interface{}) error
 	// Debug debug-level messages
 	Debug(v ...interface{}) error
-	// AsyncWrite write buffer to async queue
-	AsyncWrite(buf []byte) error
+	// WriteBytes write buffer to async queue
+	WriteBytes(buf []byte) error
 	QuitChan() <-chan struct{}
 	Close() error
 }
@@ -90,7 +90,7 @@ var LogLevelPrefix = [DEBUG + 1]string{" [EMEGENCY] ", " [ALERT] ", " [CRITICAL]
 
 // FormatLog format log and return string
 // if len(v) > 1 ,format = v[0]
-func FormatLog(level int, v ...interface{}) string {
+func FormatLog(level int32, v ...interface{}) string {
 	if level < EMEGENCY || level > DEBUG {
 		level = EMEGENCY
 	}

@@ -65,18 +65,20 @@ func CallUserMethod(instance interface{}, method string, v ...interface{}) []ref
 }
 
 // GO wapper exec goruntine and stat count
-func GO(f interface{}, v ...interface{}) {
+func GO(v ...interface{}) {
+	f := v[0]
 	WG.Add(1)
-	Debug("goroutine start %s", reflect.TypeOf(f))
+	//Debug("goroutine start %s", reflect.TypeOf(f))
 	go func() {
-		CallUserFunc(f, v...)
-		Debug("gorontine stop %s", reflect.TypeOf(f))
+		CallUserFunc(f, v[1:]...)
+		//Debug("gorontine stop %s", reflect.TypeOf(f))
+		Debug("Goruntine end")
 		WG.Done()
 	}()
 }
 
 // SendMessage send message to services
-func SendMessage(serviceID int, msg *Message) error {
+func SendMessage(serviceID int32, msg *Message) error {
 	s, err := App.GetServiceByID(serviceID)
 	if err != nil {
 		return err

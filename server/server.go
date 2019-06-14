@@ -30,88 +30,83 @@ package server
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 )
 
 var logger Service
+
+// LogLevel log level setting
+var LogLevel int32
+
+//SetLogLevel set log level to app global var
+func SetLogLevel(level int32) {
+	LogLevel = atomic.LoadInt32(&level)
+}
+
+// AnonymousServiceID Anonymous Service Counter
+var AnonymousServiceID int32 = ServiceIDNamedMax
 
 // WG global goruntine wait group
 var WG sync.WaitGroup
 
 // App server instance
 var App = &Server{
-	GoCount:            0,
-	ServiceCount:       0,
-	ServiceAnonymousID: ServiceIDNamedMax,
-	Services:           make(map[int]Service),
+	GoCount: 0,
 }
 
 // Server server entity, only one instance
 type Server struct {
 	// GoCount total goruntine count
-	sync.Mutex
-	LogLevel           int
-	GoCount            int
-	ServiceCount       int
-	ServiceAnonymousID int
-	Services           map[int]Service
-}
-
-//SetLogLevel set log level to app global var
-func (s *Server) SetLogLevel(level int) {
-	s.Lock()
-	defer s.Unlock()
-	s.LogLevel = level
+	GoCount  int32
+	Services sync.Map
 }
 
 // GetServiceByID get service instance by id
-func (s *Server) GetServiceByID(serviceID int) (Service, error) {
-	s.Lock()
-	defer s.Unlock()
-	se, ok := s.Services[serviceID]
+func (s *Server) GetServiceByID(serviceID int32) (Service, error) {
+	se, ok := s.Services.Load(serviceID)
 	if ok {
-		return se, nil
+		return se.(Service), nil
 	}
 	return nil, fmt.Errorf("cant get service ID")
 }
 
-// CreateNamedService register named service
-func (s *Server) CreateNamedService(serviceID int, service Service, m map[string]interface{}) (Service, error) {
-	s.Lock()
-	defer s.Unlock()
-	se, err := service.Create(serviceID, m)
-	if err != nil {
-		return nil, err
+// RegisterNamedService register named service
+func (s *Server) RegisterNamedService(serviceID int32, se Service) (Service, error) {
+	return s.registerServiceByID(serviceID, se)
+}
+func (s *Server) registerServiceByID(serviceID int32, se Service) (Service, error) {
+	se.SetID(serviceID)
+	s.Services.Store(serviceID, se)
+	if serviceID == ServiceIDLog {
+		logger = se
 	}
-	s.Services[serviceID] = se
-	s.ServiceCount++
+	se.Start()
 	return se, nil
 }
 
-// CreateService register service
-func (s *Server) CreateService(service Service, m map[string]interface{}) (Service, error) {
-	s.Lock()
-	defer s.Unlock()
-
-	se, err := service.Create(s.ServiceAnonymousID, m)
-	if err != nil {
-		return nil, err
-	}
-	s.Services[s.ServiceAnonymousID] = se
-	s.ServiceAnonymousID++
-	s.ServiceCount++
-	return se, nil
+// RegisterService register service
+func (s *Server) RegisterService(se Service) (Service, error) {
+	//Inc AnonymousServiceID count = count +1
+	serviceID := atomic.AddInt32(&AnonymousServiceID, 1)
+	return s.registerServiceByID(serviceID, se)
 }
 
 // RemoveService unregister service
-func (s *Server) RemoveService(serviceID int) error {
-	s.Lock()
-	defer s.Unlock()
-	se, ok := s.Services[serviceID]
-	if !ok {
-		return fmt.Errorf("cant exist serviceID %d", serviceID)
+func (s *Server) RemoveService(serviceID int32) error {
+	se, err := s.GetServiceByID(serviceID)
+	if err != nil {
+		return err
 	}
+	s.Services.Delete(serviceID)
 	se.Stop()
-	delete(s.Services, serviceID)
-	s.ServiceCount--
+
 	return nil
+}
+
+//RemoveAllServices traversing services
+func (s *Server) RemoveAllServices() {
+	s.Services.Range(func(key interface{}, v interface{}) bool {
+		s.RemoveService(key.(int32))
+		return true
+	})
 }

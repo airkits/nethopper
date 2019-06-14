@@ -29,9 +29,10 @@ package server_test
 
 import (
 	"testing"
+	"time"
 
-	"github.com/gonethopper/nethopper/log"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/service"
 )
 
 type Factory struct {
@@ -39,22 +40,22 @@ type Factory struct {
 }
 
 func (g *Factory) CallStructName0() int {
-	server.Logger.Debug("CallStructName0")
+	server.Debug("CallStructName0")
 	return 1
 }
 
 func (g *Factory) CallStructName1(value int) int {
-	server.Logger.Debug("CallStructName1 %d", value)
+	server.Debug("CallStructName1 %d", value)
 	return value
 }
 
 func (g *Factory) CallStructName2(value int, name string) int {
-	server.Logger.Debug("CallStructName2 %d %s", value, name)
+	server.Debug("CallStructName2 %d %s", value, name)
 	return value
 }
 
 func (g *Factory) CallStructNameArgs(v ...interface{}) int {
-	server.Logger.Debug("CallStructNameArgs %v", v)
+	server.Debug("CallStructName3 %v", v)
 	return v[0].(int)
 }
 func initServer() error {
@@ -65,12 +66,14 @@ func initServer() error {
 		"maxLines":    1000,
 		"hourEnabled": false,
 		"dailyEnable": true,
+		"queueSize":   1000,
 	}
-	logger, err := log.NewFileLogger(m)
+	se, err := service.NewLogService(m)
 	if err != nil {
 		return err
 	}
-	server.Logger = logger
+	server.App.RegisterNamedService(server.ServiceIDLog, se)
+
 	return nil
 }
 func init() {
@@ -85,6 +88,12 @@ func TestGO(t *testing.T) {
 	server.GO(f.CallStructName1, 1)
 	server.GO(f.CallStructName2, 2, "hello")
 	server.GO(f.CallStructNameArgs, 3, 4, 5, 6, 7)
+
+	server.GO(func() {
+		time.Sleep(1 * time.Second)
+		server.App.RemoveAllServices()
+
+	})
 
 	server.WG.Wait()
 }

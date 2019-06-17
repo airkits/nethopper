@@ -28,26 +28,36 @@
 package server
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
 )
+
+// log variable start
 
 var logger Service
 
 // LogLevel log level setting
 var LogLevel int32
 
+// log variable end
+
 //SetLogLevel set log level to app global var
 func SetLogLevel(level int32) {
 	LogLevel = atomic.LoadInt32(&level)
 }
 
+// WG global goruntine wait group
+var WG sync.WaitGroup
+
+// service variable start
+
 // AnonymousServiceID Anonymous Service Counter
 var AnonymousServiceID int32 = ServiceIDNamedMax
 
-// WG global goruntine wait group
-var WG sync.WaitGroup
+// refServices relate name to create service function
+var refServices = make(map[string]func() (Service, error))
+
+// service variable end
 
 // App server instance
 var App = &Server{
@@ -59,54 +69,4 @@ type Server struct {
 	// GoCount total goruntine count
 	GoCount  int32
 	Services sync.Map
-}
-
-// GetServiceByID get service instance by id
-func (s *Server) GetServiceByID(serviceID int32) (Service, error) {
-	se, ok := s.Services.Load(serviceID)
-	if ok {
-		return se.(Service), nil
-	}
-	return nil, fmt.Errorf("cant get service ID")
-}
-
-// RegisterNamedService register named service
-func (s *Server) RegisterNamedService(serviceID int32, se Service) (Service, error) {
-	return s.registerServiceByID(serviceID, se)
-}
-func (s *Server) registerServiceByID(serviceID int32, se Service) (Service, error) {
-	se.SetID(serviceID)
-	s.Services.Store(serviceID, se)
-	if serviceID == ServiceIDLog {
-		logger = se
-	}
-	se.Start()
-	return se, nil
-}
-
-// RegisterService register service
-func (s *Server) RegisterService(se Service) (Service, error) {
-	//Inc AnonymousServiceID count = count +1
-	serviceID := atomic.AddInt32(&AnonymousServiceID, 1)
-	return s.registerServiceByID(serviceID, se)
-}
-
-// RemoveService unregister service
-func (s *Server) RemoveService(serviceID int32) error {
-	se, err := s.GetServiceByID(serviceID)
-	if err != nil {
-		return err
-	}
-	s.Services.Delete(serviceID)
-	se.Stop()
-
-	return nil
-}
-
-//RemoveAllServices traversing services
-func (s *Server) RemoveAllServices() {
-	s.Services.Range(func(key interface{}, v interface{}) bool {
-		s.RemoveService(key.(int32))
-		return true
-	})
 }

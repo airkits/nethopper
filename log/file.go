@@ -174,6 +174,12 @@ func (l *FileLog) ParseConfig(m map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
+	filename = utils.GetAbsFilePath(filename.(string))
+	dir := utils.GetAbsDirectory(filename.(string))
+
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return err
+	}
 	l.suffix = filepath.Ext(filename.(string))
 	l.prefix = strings.TrimSuffix(filename.(string), l.suffix)
 	level, err := ParseValue(m, "level", 7)

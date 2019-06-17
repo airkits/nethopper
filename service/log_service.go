@@ -28,6 +28,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gonethopper/nethopper/log"
@@ -35,7 +36,19 @@ import (
 	"github.com/gonethopper/queue"
 )
 
-// Create instance
+// LogService struct implements the interface Service
+type LogService struct {
+	logger log.Log
+	q      queue.Queue
+	id     int32
+}
+
+// LogServiceCreate log service create function
+func LogServiceCreate() (server.Service, error) {
+	return &LogService{}, nil
+}
+
+// Setup init and setup config
 // Log config
 // m := map[string]interface{}{
 // 	"filename":    "server.log",
@@ -46,9 +59,12 @@ import (
 // 	"dailyEnable": true,
 //  "queueSize":1000,
 // }
-func NewLogService(m map[string]interface{}) (server.Service, error) {
-	s := &LogService{}
-	s.q = queue.NewChanQueue(m["queueSize"].(int))
+func (s *LogService) Setup(m map[string]interface{}) (server.Service, error) {
+	queueSize, ok := m["queueSize"]
+	if !ok {
+		return nil, errors.New("params queueSize needed")
+	}
+	s.q = queue.NewChanQueue(queueSize.(int))
 
 	logger, err := log.NewFileLogger(m)
 	if err != nil {
@@ -58,13 +74,6 @@ func NewLogService(m map[string]interface{}) (server.Service, error) {
 	server.SetLogLevel(logger.GetLevel())
 
 	return s, nil
-}
-
-// LogService struct implements the interface Service
-type LogService struct {
-	logger log.Log
-	q      queue.Queue
-	id     int32
 }
 
 //ID service ID

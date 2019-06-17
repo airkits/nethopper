@@ -62,19 +62,25 @@ func TestFormatLog(t *testing.T) {
 
 func TestNewFileLogger(t *testing.T) {
 	m := map[string]interface{}{
-		"filename":    "server.log",
+		"filename":    "logs/server_log.log",
 		"level":       7,
 		"maxSize":     50,
 		"maxLines":    1000,
 		"hourEnabled": false,
 		"dailyEnable": true,
+		"queueSize":   1000,
 	}
 	logger, err := log.NewFileLogger(m)
 	if err != nil {
 		t.Error(err)
 	}
 	go logger.RunLogger()
-	defer logger.Close()
+
 	logger.Debug("helloword %d", 1234)
 
+	logger.Close()
+	select {
+	case <-logger.QuitChan():
+		return
+	}
 }

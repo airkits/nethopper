@@ -31,7 +31,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gonethopper/nethopper/server"
+	. "github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/service"
 )
 
@@ -40,27 +40,28 @@ type Factory struct {
 }
 
 func (g *Factory) CallStructName0() int {
-	server.Debug("CallStructName0")
+	Debug("CallStructName0")
 	return 1
 }
 
 func (g *Factory) CallStructName1(value int) int {
-	server.Debug("CallStructName1 %d", value)
+	Debug("CallStructName1 %d", value)
 	return value
 }
 
 func (g *Factory) CallStructName2(value int, name string) int {
-	server.Debug("CallStructName2 %d %s", value, name)
+	Debug("CallStructName2 %d %s", value, name)
 	return value
 }
 
 func (g *Factory) CallStructNameArgs(v ...interface{}) int {
-	server.Debug("CallStructName3 %v", v)
+	Debug("CallStructName3 %v", v)
 	return v[0].(int)
 }
 func initServer() error {
+	RegisterService("log", service.LogServiceCreate)
 	m := map[string]interface{}{
-		"filename":    "server.log",
+		"filename":    "logs/server_call.log",
 		"level":       7,
 		"maxSize":     50,
 		"maxLines":    1000,
@@ -68,11 +69,7 @@ func initServer() error {
 		"dailyEnable": true,
 		"queueSize":   1000,
 	}
-	se, err := service.NewLogService(m)
-	if err != nil {
-		return err
-	}
-	server.App.RegisterNamedService(server.ServiceIDLog, se)
+	NewNamedService(ServiceIDLog, "log", m)
 
 	return nil
 }
@@ -84,18 +81,18 @@ func TestGO(t *testing.T) {
 
 	f := &Factory{Name: "Factory"}
 
-	server.GO(f.CallStructName0)
-	server.GO(f.CallStructName1, 1)
-	server.GO(f.CallStructName2, 2, "hello")
-	server.GO(f.CallStructNameArgs, 3, 4, 5, 6, 7)
+	GO(f.CallStructName0)
+	GO(f.CallStructName1, 1)
+	GO(f.CallStructName2, 2, "hello2")
+	GO(f.CallStructNameArgs, 3, 4, 5, 6, 7)
 
-	server.GO(func() {
-		time.Sleep(1 * time.Second)
-		server.App.RemoveAllServices()
+	GO(func() {
+		time.Sleep(2 * time.Second)
+		RemoveAllServices()
 
 	})
 
-	server.WG.Wait()
+	WG.Wait()
 }
 
 func CallUserFunc0() int {
@@ -112,32 +109,32 @@ func CallUserFunc3(i int, j int, k string) int {
 }
 
 func TestCallUserFunc(t *testing.T) {
-	if server.CallUserFunc(CallUserFunc0)[0].Int() != 0 {
+	if CallUserFunc(CallUserFunc0)[0].Int() != 0 {
 		t.Errorf("CallUserFunc0 != 0")
 	}
-	if server.CallUserFunc(CallUserFunc1, 1)[0].Int() != 1 {
+	if CallUserFunc(CallUserFunc1, 1)[0].Int() != 1 {
 		t.Errorf("CallUserFunc1 != 1")
 	}
-	if server.CallUserFunc(CallUserFunc2, 1, 1)[0].Int() != 2 {
+	if CallUserFunc(CallUserFunc2, 1, 1)[0].Int() != 2 {
 		t.Errorf("CallUserFunc2 != 2")
 	}
-	if server.CallUserFunc(CallUserFunc3, 1, 1, "hello")[0].Int() != 3 {
+	if CallUserFunc(CallUserFunc3, 1, 1, "hello")[0].Int() != 3 {
 		t.Errorf("CallUserFunc3 != 3")
 	}
 }
 
 func TestCallUserMethod(t *testing.T) {
 	f := &Factory{Name: "Factory"}
-	if server.CallUserMethod(f, "CallStructName0")[0].Int() != 1 {
+	if CallUserMethod(f, "CallStructName0")[0].Int() != 1 {
 		t.Error("CallStructName0 error")
 	}
-	if server.CallUserMethod(f, "CallStructName1", 1)[0].Int() != 1 {
+	if CallUserMethod(f, "CallStructName1", 1)[0].Int() != 1 {
 		t.Error("CallStructName1 error")
 	}
-	if server.CallUserMethod(f, "CallStructName2", 2, "hello")[0].Int() != 2 {
+	if CallUserMethod(f, "CallStructName2", 2, "hello")[0].Int() != 2 {
 		t.Error("CallStructName2 error")
 	}
-	if server.CallUserMethod(f, "CallStructNameArgs", 3, 1, "hello")[0].Int() != 3 {
+	if CallUserMethod(f, "CallStructNameArgs", 3, 1, "hello")[0].Int() != 3 {
 		t.Error("CallStructNameArgs error")
 	}
 

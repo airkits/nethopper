@@ -21,73 +21,53 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-06 16:57:24
+// * @Date: 2019-06-17 11:58:21
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-06 16:57:24
+// * @Last Modified time: 2019-06-17 11:58:21
 
-package log_test
+package utils_test
 
 import (
-	"runtime"
-	"sync"
+	"path/filepath"
 	"testing"
 
-	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/utils"
 )
 
-const Step = 1000000
-
-// BenchmarkFormatLog format test
-func BenchmarkFormatLog(t *testing.B) {
-
-	msg := "format log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg)
-	}
-
-}
-
-func BenchmarkFormatLogWithParams(t *testing.B) {
-
-	msg := "format %d log test"
-	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg, i)
-	}
-}
-
-func BenchmarkWriteLog(t *testing.B) {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    100000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
-	}
-	logger, err := log.NewFileLogger(m)
+func TestGetWorkDirectory(t *testing.T) {
+	_, err := utils.GetWorkDirectory()
 	if err != nil {
 		t.Error(err)
 	}
-	go logger.RunLogger()
 
-	var wg sync.WaitGroup
-	writerNum := 5
-	wg.Add(writerNum)
-	for j := 0; j < writerNum; j++ {
-		go func() {
-			for i := 0; i < Step; i++ {
-				logger.Debug("helloword true filename:testserver.log hourEnabled:true level:7 maxLines:100000")
-			}
-			wg.Done()
-		}()
+}
+
+func TestGetDirectory(t *testing.T) {
+	p := utils.GetAbsDirectory("../logs/utils_test.log")
+	workDir, err := utils.GetWorkDirectory()
+	if err != nil {
+		t.Error(err)
 	}
-	wg.Wait()
-	logger.Close()
+	if p != filepath.Join(workDir, "../logs") {
+		t.Error("file path failed")
+	}
+	p = utils.GetAbsDirectory("/Users/admin/work/nethopper/log/server.info")
+	if p != "/Users/admin/work/nethopper/log/" {
+		t.Error("file path failed 2")
+	}
+}
 
-	select {
-	case <-logger.QuitChan():
-		return
+func TestGetAbsFilePath(t *testing.T) {
+	p := utils.GetAbsFilePath("log/utils_test.log")
+	workDir, err := utils.GetWorkDirectory()
+	if err != nil {
+		t.Error(err)
+	}
+	if p != filepath.Join(workDir, "log/utils_test.log") {
+		t.Error("file path failed")
+	}
+	p = utils.GetAbsFilePath("/Users/admin/work/nethopper/log/server.info")
+	if p != "/Users/admin/work/nethopper/log/server.info" {
+		t.Error("file path failed 2")
 	}
 }

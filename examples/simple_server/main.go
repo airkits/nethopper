@@ -27,13 +27,18 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/service"
+)
 
 func main() {
 	fmt.Println("helloworld")
 
 	m := map[string]interface{}{
-		"filename":    "server.log",
+		"filename":    "log/server.log",
 		"level":       7,
 		"maxSize":     50,
 		"maxLines":    1000,
@@ -41,5 +46,7 @@ func main() {
 		"dailyEnable": true,
 		"queueSize":   1000,
 	}
-	server.
+	server.RegisterService("log", service.LogServiceCreate)
+	server.NewNamedService(server.ServiceIDLog, "log", m)
+
 }

@@ -72,16 +72,7 @@ func GO(v ...interface{}) {
 	go func() {
 		CallUserFunc(f, v[1:]...)
 		//Debug("gorontine stop %s", reflect.TypeOf(f))
-		Debug("Goruntine end")
+		//Debug("Goruntine end")
 		WG.Done()
 	}()
-}
-
-// SendMessage send message to services
-func SendMessage(serviceID int32, msg *Message) error {
-	s, err := App.GetServiceByID(serviceID)
-	if err != nil {
-		return err
-	}
-	return s.Send(msg)
 }

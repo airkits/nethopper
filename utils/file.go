@@ -29,20 +29,94 @@ package utils
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
 // FileIsExist if file exist ,return true
 func FileIsExist(path string) bool {
 	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		if os.IsNotExist(err) {
+			return false
+		}
 		return false
 	}
-	return false
+	return true
+}
+
+// GetWorkDirectory get current exec file directory
+func GetWorkDirectory() (string, error) {
+
+	// in test case or go run xxx, work directory is temp directory
+	// workDir := os.Getenv("WORK_DIR")
+	// if len(workDir) > 0 {
+	// 	return filepath.Abs(workDir)
+	// }
+
+	// workDir, err := os.Getwd()
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	file, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		return "", err
+	}
+	path, err := filepath.Abs(file)
+	if err != nil {
+		return "", err
+	}
+	if runtime.GOOS == "windows" {
+		path = strings.Replace(path, "\\", "/", -1)
+	}
+	i := strings.LastIndex(path, "/")
+	if i < 0 {
+		return "", errors.New("work directory invalid")
+	}
+	return string(path[0 : i+1]), nil
+}
+
+// GetAbsDirectory get file directory abs path
+func GetAbsDirectory(filename string) string {
+	filename = filepath.FromSlash(path.Clean(filename))
+	if runtime.GOOS == "windows" {
+		filename = strings.Replace(filename, "\\", "/", -1)
+	}
+	i := strings.LastIndex(filename, "/")
+	if i < 0 {
+		return ""
+	}
+	filename = string(filename[0 : i+1])
+	if filepath.IsAbs(filename) {
+		return filename
+	}
+	workDir, err := GetWorkDirectory()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(workDir, filename)
+}
+
+// GetAbsFilePath get file abs path
+func GetAbsFilePath(filename string) string {
+	if filepath.IsAbs(filename) {
+		return filename
+	}
+	workDir, err := GetWorkDirectory()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(workDir, filename)
 }
 
 // FileLines get file lines

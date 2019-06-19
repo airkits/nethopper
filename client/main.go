@@ -35,209 +35,131 @@ import (
 )
 
 type S interface {
-	Create(ctx context.Context)
-	Close()
+	MakeContext(parent S) S
 	GetContext() context.Context
+	ObserveChild(ch chan struct{})
 	Run()
-}
-type Root struct {
-	ctx    context.Context
-	cancel context.CancelFunc
+	IsClosed(ch chan struct{}) bool
+	Close()
+	OnExit()
 }
 
-func (a *Root) Create(ctx context.Context) {
-	a.ctx, a.cancel = context.WithCancel(ctx)
+type Base struct {
+	ctx           context.Context
+	cancel        context.CancelFunc
+	childrenChans []chan struct{}
+	quitChan      chan struct{}
+	Name          string
 }
-func (a *Root) Close() {
-	fmt.Println("Root")
-	a.cancel()
+
+func (a *Base) IsClosed(ch chan struct{}) bool {
+	_, isClose := <-ch
+	return isClose
 }
-func (a *Root) GetContext() context.Context {
+func (a *Base) GetContext() context.Context {
 	return a.ctx
 }
-func (a *Root) Run() {
+func (a *Base) ObserveChild(ch chan struct{}) {
+	a.childrenChans = append(a.childrenChans, ch)
+}
+func (a *Base) Close() {
+	a.cancel()
+}
+func (a *Base) MakeContext(p S) S {
+	a.childrenChans = make([]chan struct{}, 0)
+	a.quitChan = make(chan struct{})
+	if p == nil {
+		a.ctx, a.cancel = context.WithCancel(context.Background())
+	} else {
+		a.ctx, a.cancel = context.WithCancel(p.GetContext())
+		p.ObserveChild(a.quitChan)
+	}
+	return a
+}
+func (a *Base) OnExit() {
+	for _, v := range a.childrenChans {
+		if a.IsClosed(v) {
+		}
+	}
+	fmt.Println(a.Name + " Exit")
+	close(a.quitChan)
+}
+
+func (a *Base) Run() {
 	for {
 		select {
 		case <-a.ctx.Done():
-			fmt.Println("Root程序结束")
+			a.OnExit()
 			return
 		default:
 		}
 	}
+}
+
+type Root struct {
+	Base
+}
+
+func NewRoot(p S) S {
+	return (&Root{Base{Name: "Root"}}).MakeContext(p)
 }
 
 type A struct {
-	ctx    context.Context
-	cancel context.CancelFunc
+	Base
 }
 
-func (a *A) Create(ctx context.Context) {
-	a.ctx, a.cancel = context.WithCancel(ctx)
-}
-func (a *A) Close() {
-	fmt.Println("A")
-	a.cancel()
-}
-func (a *A) GetContext() context.Context {
-	return a.ctx
-}
-func (a *A) Run() {
-	for {
-		select {
-		case <-a.ctx.Done():
-			fmt.Println("A程序结束")
-			return
-		default:
-		}
-	}
+func NewA(p S) S {
+	return (&A{Base{Name: "A"}}).MakeContext(p)
 }
 
 type B struct {
-	ctx    context.Context
-	cancel context.CancelFunc
+	Base
 }
 
-func (a *B) Create(ctx context.Context) {
-	a.ctx, a.cancel = context.WithCancel(ctx)
-}
-func (a *B) Close() {
-	fmt.Println("B")
-	a.cancel()
-}
-func (a *B) GetContext() context.Context {
-	return a.ctx
-}
-func (a *B) Run() {
-	for {
-		select {
-		case <-a.ctx.Done():
-			fmt.Println("B程序结束")
-			return
-		default:
-		}
-	}
+func NewB(p S) S {
+	return (&B{Base{Name: "B"}}).MakeContext(p)
 }
 
 type C struct {
-	ctx    context.Context
-	cancel context.CancelFunc
+	Base
 }
 
-func (a *C) Create(ctx context.Context) {
-	a.ctx, a.cancel = context.WithCancel(ctx)
-}
-func (a *C) Close() {
-	fmt.Println("C")
-	a.cancel()
-}
-func (a *C) GetContext() context.Context {
-	return a.ctx
-}
-func (a *C) Run() {
-	for {
-		select {
-		case <-a.ctx.Done():
-			fmt.Println("C程序结束")
-			return
-		default:
-		}
-	}
+func NewC(p S) S {
+	return (&C{Base{Name: "C"}}).MakeContext(p)
 }
 
 type AA struct {
-	ctx    context.Context
-	cancel context.CancelFunc
+	Base
 }
 
-func (a *AA) Create(ctx context.Context) {
-	a.ctx, a.cancel = context.WithCancel(ctx)
-}
-func (a *AA) Close() {
-	fmt.Println("AA")
-	a.cancel()
-}
-func (a *AA) GetContext() context.Context {
-	return a.ctx
-}
-func (a *AA) Run() {
-	for {
-		select {
-		case <-a.ctx.Done():
-			fmt.Println("AA程序结束")
-			return
-		default:
-		}
-	}
+func NewAA(p S) S {
+	return (&AA{Base{Name: "AA"}}).MakeContext(p)
 }
 
 type AB struct {
-	ctx    context.Context
-	cancel context.CancelFunc
+	Base
 }
 
-func (a *AB) Create(ctx context.Context) {
-	a.ctx, a.cancel = context.WithCancel(ctx)
-}
-func (a *AB) Close() {
-	fmt.Println("AB")
-	a.cancel()
-}
-func (a *AB) GetContext() context.Context {
-	return a.ctx
-}
-func (a *AB) Run() {
-	for {
-		select {
-		case <-a.ctx.Done():
-			fmt.Println("AB程序结束")
-			return
-		default:
-		}
-	}
+func NewAB(p S) S {
+	return (&AB{Base{Name: "AB"}}).MakeContext(p)
 }
 
 type ABC struct {
-	ctx    context.Context
-	cancel context.CancelFunc
+	Base
 }
 
-func (a *ABC) Create(ctx context.Context) {
-	a.ctx, a.cancel = context.WithCancel(ctx)
-}
-func (a *ABC) Close() {
-	fmt.Println("ABC")
-	a.cancel()
-}
-func (a *ABC) GetContext() context.Context {
-	return a.ctx
-}
-func (a *ABC) Run() {
-	for {
-		select {
-		case <-a.ctx.Done():
-			fmt.Println("ABC程序结束")
-			return
-		default:
-		}
-	}
+func NewABC(p S) S {
+	return (&ABC{Base{Name: "ABC"}}).MakeContext(p)
 }
 func main() {
 
-	root := &Root{}
-	root.Create(context.Background())
-
-	a := &A{}
-	a.Create(root.GetContext())
-	b := &B{}
-	b.Create(root.GetContext())
-	c := &C{}
-	c.Create(root.GetContext())
-	aa := &AA{}
-	aa.Create(a.GetContext())
-	ab := &AB{}
-	ab.Create(a.GetContext())
-	abc := &ABC{}
-	abc.Create(ab.GetContext())
+	root := NewRoot(nil)
+	a := NewA(root)
+	b := NewB(root)
+	c := NewC(root)
+	aa := NewAA(a)
+	ab := NewAB(a)
+	abc := NewABC(ab)
 	GO(root.Run)
 	GO(a.Run)
 	GO(b.Run)

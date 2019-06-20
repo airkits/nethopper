@@ -28,8 +28,12 @@
 package server
 
 import (
+	"context"
 	"fmt"
+	"reflect"
 	"sync/atomic"
+
+	"github.com/gonethopper/queue"
 )
 
 const (
@@ -49,6 +53,18 @@ const (
 
 // Service interface define
 type Service interface {
+	//BaseService start
+	MakeContext(p Service, queueSize int32)
+	GetContext() context.Context
+	ChildAdd()
+	ChildDone()
+	Close()
+	Queue() queue.Queue
+	CanExit(flag bool) (bool, bool)
+	TryExit() bool
+
+	Run(v ...interface{})
+	//BaseService end
 
 	// Setup
 	Setup(m map[string]interface{}) (Service, error)
@@ -57,12 +73,98 @@ type Service interface {
 	//SetID set service ID
 	SetID(v int32)
 	// Start create goruntine and run
-	Start() error
+	// Start() error
 	// Stop goruntine
 	Stop() error
 	// Send async send message to other goruntine
 	Send(msg *Message) error
 	SendBytes(buf []byte) error
+}
+
+func ServiceRun(s Service, v ...interface{}) {
+	ctxClosed := false
+	exitFlag := false
+	for {
+		s.Run(v...)
+		if ctxClosed, exitFlag = s.CanExit(ctxClosed); exitFlag {
+			return
+		}
+
+	}
+}
+
+func ServiceName(s Service) string {
+	t := reflect.TypeOf(s)
+	return t.Elem().Name()
+}
+
+type BaseService struct {
+	ctx        context.Context
+	cancel     context.CancelFunc
+	parent     Service
+	childCount int32
+	q          queue.Queue
+	Name       string
+}
+
+func (a *BaseService) MakeContext(p Service, queueSize int32) {
+	a.parent = p
+	a.q = queue.NewChanQueue(queueSize)
+	if p == nil {
+		a.ctx, a.cancel = context.WithCancel(context.Background())
+	} else {
+		a.ctx, a.cancel = context.WithCancel(p.GetContext())
+		p.ChildAdd()
+	}
+}
+func (a *BaseService) Queue() queue.Queue {
+	return a.q
+}
+
+func (a *BaseService) GetContext() context.Context {
+	return a.ctx
+}
+func (a *BaseService) ChildAdd() {
+	atomic.AddInt32(&a.childCount, 1)
+}
+func (a *BaseService) ChildDone() {
+	atomic.AddInt32(&a.childCount, -1)
+}
+
+func (a *BaseService) Close() {
+	a.cancel()
+}
+
+func (a *BaseService) Run(v ...interface{}) {
+	fmt.Printf("service %s do Nothing \n", a.Name)
+}
+func (a *BaseService) TryExit() bool {
+
+	count := atomic.LoadInt32(&a.childCount)
+	if count > 0 {
+		return false
+	}
+	if a.parent != nil {
+		a.parent.ChildDone()
+	}
+	return true
+}
+
+func (a *BaseService) CanExit(flag bool) (bool, bool) {
+	if flag {
+		if a.q.Length() == 0 && a.TryExit() {
+			return flag, true
+		}
+	}
+	select {
+	case <-a.ctx.Done():
+		flag = true
+		if a.q.Length() == 0 && a.TryExit() {
+			return flag, true
+		}
+	default:
+	}
+	return flag, false
 }
 
 // RegisterService register service name to create function mapping
@@ -106,7 +208,7 @@ func createServiceByID(serviceID int32, name string, m map[string]interface{}) (
 	if serviceID == ServiceIDLog {
 		logger = se
 	}
-	se.Start()
+	GO(ServiceRun, se)
 	return se, nil
 }
 

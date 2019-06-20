@@ -28,23 +28,28 @@
 package service
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 
 	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/queue"
+	. "github.com/gonethopper/nethopper/server"
 )
 
 // LogService struct implements the interface Service
 type LogService struct {
+	BaseService
 	logger log.Log
-	q      queue.Queue
-	id     int32
+	//q      queue.Queue
+	id int32
+	//for stat
+	buf     bytes.Buffer
+	count   int32
+	msgSize int32
 }
 
 // LogServiceCreate log service create function
-func LogServiceCreate() (server.Service, error) {
+func LogServiceCreate() (Service, error) {
 	return &LogService{}, nil
 }
 
@@ -59,19 +64,19 @@ func LogServiceCreate() (server.Service, error) {
 // 	"dailyEnable": true,
 //  "queueSize":1000,
 // }
-func (s *LogService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *LogService) Setup(m map[string]interface{}) (Service, error) {
 	queueSize, ok := m["queueSize"]
 	if !ok {
 		return nil, errors.New("params queueSize needed")
 	}
-	s.q = queue.NewChanQueue(queueSize.(int))
+	s.MakeContext(nil, int32(queueSize.(int)))
 
 	logger, err := log.NewFileLogger(m)
 	if err != nil {
 		return nil, err
 	}
 	s.logger = logger
-	server.SetLogLevel(logger.GetLevel())
+	SetLogLevel(logger.GetLevel())
 
 	return s, nil
 }
@@ -86,10 +91,32 @@ func (s *LogService) SetID(v int32) {
 	s.id = v
 }
 
-// Start create goruntine and run
-func (s *LogService) Start() error {
-	server.GO(s.logger.RunLogger)
-	return nil
+// Run create goruntine and run
+func (s *LogService) Run(v ...interface{}) {
+
+	for i := 0; i < 128; i++ {
+
+		if v, err := s.Queue().AsyncPop(); err == nil {
+			if n, e := s.buf.Write(v.([]byte)); e == nil {
+				s.msgSize += int32(n)
+				s.count++
+				if !s.logger.CanLog(s.msgSize, s.count) {
+					break
+				}
+			}
+		}
+	}
+
+	if s.buf.Len() > 0 {
+		s.logger.WriteLog(s.buf.Bytes(), s.count)
+		s.buf.Reset()
+	} else {
+		// ensure queue is empty
+		if s.Queue().IsClosed() && s.Queue().Length() == 0 {
+			s.logger.Close()
+		}
+	}
+
 }
 
 // Stop goruntine
@@ -98,11 +125,14 @@ func (s *LogService) Stop() error {
 }
 
 // Send async send message to other goruntine
-func (s *LogService) Send(msg *server.Message) error {
+func (s *LogService) Send(msg *Message) error {
 	return fmt.Errorf("TODO LogServer Send")
 }
 
 // SendBytes async send buffer to other goruntine
 func (s *LogService) SendBytes(buf []byte) error {
-	return s.logger.WriteBytes(buf)
+	if err := s.Queue().Push(buf); err != nil {
+		return err
+	}
+	return nil
 }

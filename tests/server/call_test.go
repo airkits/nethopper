@@ -88,7 +88,7 @@ func TestGO(t *testing.T) {
 
 	GO(func() {
 		time.Sleep(2 * time.Second)
-		RemoveAllServices()
+		//RemoveAllServices()
 
 	})
 

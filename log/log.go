@@ -40,7 +40,7 @@ type Log interface {
 	ParseConfig(v map[string]interface{}) error
 	InitLogger() error
 	//RunLogger async pop from queue and write to file
-	RunLogger()
+	//RunLogger()
 	SetLevel(level int32) error
 	GetLevel() int32
 	// Emergency system is unusable
@@ -60,8 +60,12 @@ type Log interface {
 	// Debug debug-level messages
 	Debug(v ...interface{}) error
 	// WriteBytes write buffer to async queue
-	WriteBytes(buf []byte) error
-	QuitChan() <-chan struct{}
+	//WriteBytes(buf []byte) error
+	//QuitChan() <-chan struct{}
+	WriteLog(msg []byte, count int32) error
+
+	CanLog(msgSize int32, count int32) bool
+
 	Close() error
 }
 

@@ -74,13 +74,9 @@ func TestNewFileLogger(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	go logger.RunLogger()
 
 	logger.Debug("helloword %d", 1234)
 
 	logger.Close()
-	select {
-	case <-logger.QuitChan():
-		return
-	}
+
 }

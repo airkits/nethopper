@@ -37,13 +37,12 @@ import (
 	"sync"
 
 	"github.com/gonethopper/nethopper/utils"
-	"github.com/gonethopper/queue"
 )
 
 // NewFileLogger create FileLog instance
 func NewFileLogger(m map[string]interface{}) (Log, error) {
 	logger := &FileLog{
-		closedChan: make(chan struct{}),
+		//closedChan: make(chan struct{}),
 	}
 	if err := logger.ParseConfig(m); err != nil {
 		return nil, err
@@ -79,60 +78,60 @@ type FileLog struct {
 	hourEnabled   bool  //time frequency
 	dailyEnabled  bool
 	currentWriter *os.File //current File Writer
-	q             queue.Queue
-	closedChan    chan struct{}
+	// q             queue.Queue
+	// closedChan    chan struct{}
 }
 
 // InitLogger init logger
 func (l *FileLog) InitLogger() error {
-	l.q = queue.NewChanQueue(1024)
+	//l.q = queue.NewChanQueue(1024)
 
 	//go l.RunLogger()
 	return l.createNewFile()
 }
 
 // QuitChan write all message from queue and tigger closed notify
-func (l *FileLog) QuitChan() <-chan struct{} {
-	return l.closedChan
-}
+// func (l *FileLog) QuitChan() <-chan struct{} {
+// 	return l.closedChan
+// }
 
 //RunLogger async pop from queue and write to file
-func (l *FileLog) RunLogger() {
-	var buf bytes.Buffer
-	var count int32
-	var msgSize int32
-	for {
-		count = 0
-		msgSize = 0
-		for i := 0; i < 128; i++ {
-			if v, err := l.q.AsyncPop(); err == nil {
-				if n, e := buf.Write(v.([]byte)); e == nil {
-					msgSize += int32(n)
-					count++
-					if (msgSize+l.currentSize) >= l.maxSize || (count+l.currentLines) >= l.maxLines {
-						break
-					}
-				}
-			}
-		}
+// func (l *FileLog) RunLogger() {
+// 	var buf bytes.Buffer
+// 	var count int32
+// 	var msgSize int32
+// 	for {
+// 		count = 0
+// 		msgSize = 0
+// 		for i := 0; i < 128; i++ {
+// 			if v, err := l.q.AsyncPop(); err == nil {
+// 				if n, e := buf.Write(v.([]byte)); e == nil {
+// 					msgSize += int32(n)
+// 					count++
+// 					if (msgSize+l.currentSize) >= l.maxSize || (count+l.currentLines) >= l.maxLines {
+// 						break
+// 					}
+// 				}
+// 			}
+// 		}
 
-		if buf.Len() > 0 {
-			l.writeLog(buf.Bytes(), count)
-			buf.Reset()
-		} else {
-			// ensure queue is empty
-			if l.q.IsClosed() && l.q.Length() == 0 {
-				l.flush()
-				l.currentWriter.Close()
-				close(l.closedChan)
-				return
-			}
-		}
-	}
-}
+// 		if buf.Len() > 0 {
+// 			l.WriteLog(buf.Bytes(), count)
+// 			buf.Reset()
+// 		} else {
+// 			// ensure queue is empty
+// 			if l.q.IsClosed() && l.q.Length() == 0 {
+// 				l.flush()
+// 				l.currentWriter.Close()
+// 				close(l.closedChan)
+// 				return
+// 			}
+// 		}
+// 	}
+// }
 
-// writeLog write message to file, return immediately if not meet the conditions
-func (l *FileLog) writeLog(msg []byte, count int32) error {
+// WriteLog write message to file, return immediately if not meet the conditions
+func (l *FileLog) WriteLog(msg []byte, count int32) error {
 
 	// l.Lock()
 	// defer l.Unlock()
@@ -147,6 +146,15 @@ func (l *FileLog) writeLog(msg []byte, count int32) error {
 	}
 
 	return nil
+}
+
+// CanLog check log status
+func (l *FileLog) CanLog(msgSize int32, count int32) bool {
+	if (msgSize+l.currentSize) >= l.maxSize || (count+l.currentLines) >= l.maxLines {
+		return false
+	}
+	return true
+
 }
 
 // SetLevel update log level
@@ -277,7 +285,8 @@ func (l *FileLog) fileCutTest() bool {
 
 // Close close file logger
 func (l *FileLog) Close() error {
-	return l.q.Close()
+	l.flush()
+	return l.currentWriter.Close()
 }
 
 func (l *FileLog) flush() error {
@@ -337,7 +346,7 @@ func (l *FileLog) PushLog(level int32, v ...interface{}) error {
 		return nil
 	}
 	msg := FormatLog(level, v...)
-	return l.WriteBytes([]byte(msg))
+	return l.WriteLog([]byte(msg), 1)
 
 }
 
@@ -347,12 +356,13 @@ func (l *FileLog) GetLevel() int32 {
 }
 
 //WriteBytes write to queue
-func (l *FileLog) WriteBytes(buf []byte) error {
-	if err := l.q.Push(buf); err != nil {
-		return err
-	}
-	return nil
-}
+// func (l *FileLog) WriteBytes(buf []byte) error {
+// 	if err := l.q.Push(buf); err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 // Emergency system is unusable
 func (l *FileLog) Emergency(v ...interface{}) error {

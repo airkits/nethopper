@@ -27,6 +27,8 @@
 
 package server
 
+import "sync"
+
 const (
 	// MessageType message type enum
 	MessageType = iota
@@ -39,12 +41,61 @@ const (
 	// MTBroadcast broadcast = 4
 	MTBroadcast
 )
+const (
+	// InvalidInt32 Invalid values set to -1
+	InvalidInt32 = -1
+)
+
+// NewMessagePool new message pool
+func NewMessagePool() *MessagePool {
+	mp := &MessagePool{}
+	mp.Pool = &sync.Pool{
+		New: func() interface{} {
+			m := &Message{}
+			return m
+		}}
+	return mp
+}
+
+// MessagePool mamager message objests
+type MessagePool struct {
+	Pool *sync.Pool
+}
+
+// Alloc borrow message from pool
+func (p *MessagePool) Alloc(srcID int32, destID int32, msgType int8, cmd string, payLoad []byte) *Message {
+	m := p.Pool.Get().(*Message)
+	m.Reset()
+	m.SrcID = srcID
+	m.DestID = destID
+	m.MsgType = msgType
+	m.Cmd = cmd
+	m.Payload = payLoad
+	return m
+}
+
+// Free retrun message to pool
+func (p *MessagePool) Free(m *Message) {
+	p.Pool.Put(m)
+}
 
 //Message mq Message
 type Message struct {
-	SrcID   int
-	DestID  int
-	MsgType int
+	SrcID   int32
+	DestID  int32
+	MsgType int8
 	Cmd     string
 	Payload []byte
+}
+
+// Reset message set to default value
+func (m *Message) Reset() {
+	m.SrcID = InvalidInt32
+	m.DestID = InvalidInt32
+	m.MsgType = MessageType
+	m.Cmd = ""
+	if len(m.Payload) > 0 {
+		GBytesPool.Free(m.Payload)
+		m.Payload = nil
+	}
 }

@@ -29,7 +29,6 @@ package log_test
 
 import (
 	"runtime"
-	"sync"
 	"testing"
 
 	"github.com/gonethopper/nethopper/log"
@@ -55,10 +54,10 @@ func BenchmarkFormatLogWithParams(t *testing.B) {
 	}
 }
 
-func BenchmarkWriteLog(t *testing.B) {
+func BenchmarkWriteLog(b *testing.B) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	m := map[string]interface{}{
-		"filename":    "logs/server.log",
+		"filename":    "/Users/ankye/work/github/nethopper/tests_bench/log/logs/server.log",
 		"level":       7,
 		"maxSize":     50,
 		"maxLines":    100000,
@@ -66,28 +65,15 @@ func BenchmarkWriteLog(t *testing.B) {
 		"dailyEnable": true,
 		"queueSize":   1000,
 	}
+
 	logger, err := log.NewFileLogger(m)
 	if err != nil {
-		t.Error(err)
+		b.Error(err)
 	}
-	go logger.RunLogger()
 
-	var wg sync.WaitGroup
-	writerNum := 5
-	wg.Add(writerNum)
-	for j := 0; j < writerNum; j++ {
-		go func() {
-			for i := 0; i < Step; i++ {
-				logger.Debug("helloword true filename:testserver.log hourEnabled:true level:7 maxLines:100000")
-			}
-			wg.Done()
-		}()
+	for i := 0; i < Step; i++ {
+		logger.Debug("helloword true filename:testserver.log hourEnabled:true level:7 maxLines:100000")
 	}
-	wg.Wait()
 	logger.Close()
 
-	select {
-	case <-logger.QuitChan():
-		return
-	}
 }

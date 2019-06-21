@@ -39,10 +39,9 @@ import (
 type Log interface {
 	ParseConfig(v map[string]interface{}) error
 	InitLogger() error
-	//RunLogger async pop from queue and write to file
-	//RunLogger()
 	SetLevel(level int32) error
 	GetLevel() int32
+
 	// Emergency system is unusable
 	Emergency(v ...interface{}) error
 	// Alert action must be taken immediately
@@ -59,9 +58,7 @@ type Log interface {
 	Info(v ...interface{}) error
 	// Debug debug-level messages
 	Debug(v ...interface{}) error
-	// WriteBytes write buffer to async queue
-	//WriteBytes(buf []byte) error
-	//QuitChan() <-chan struct{}
+	// WriteLog write log to file, return immediately if not meet the conditions
 	WriteLog(msg []byte, count int32) error
 
 	CanLog(msgSize int32, count int32) bool
@@ -110,15 +107,6 @@ func FormatLog(level int32, v ...interface{}) string {
 	}
 	buf.WriteString("\n")
 	return buf.String()
-
-	// msg := utils.TimeYMDHIS() + LogLevelPrefix[level]
-	// if len(v) > 0 {
-	// 	msg = msg + fmt.Sprintf(format, v...)
-	// } else {
-	// 	msg = msg + format
-	// }
-	// return msg + "\n"
-
 }
 
 // ParseValue read config from map,if not exist return default value

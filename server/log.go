@@ -33,11 +33,12 @@ import (
 
 //WriteLog send log to queue
 func WriteLog(level int32, v ...interface{}) error {
-	if level > LogLevel {
+	// UserData return logger level
+	if level > GLoggerService.UserData() {
 		return nil
 	}
 	msg := log.FormatLog(level, v...)
-	if err := logger.SendBytes([]byte(msg)); err != nil {
+	if err := GLoggerService.SendBytes(level, []byte(msg)); err != nil {
 		return err
 	}
 	return nil

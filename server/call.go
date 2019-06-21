@@ -68,11 +68,8 @@ func CallUserMethod(instance interface{}, method string, v ...interface{}) []ref
 func GO(v ...interface{}) {
 	f := v[0]
 	WG.Add(1)
-	//Debug("goroutine start %s", reflect.TypeOf(f))
 	go func() {
 		CallUserFunc(f, v[1:]...)
-		//Debug("gorontine stop %s", reflect.TypeOf(f))
-		//Debug("Goruntine end")
 		WG.Done()
 	}()
 }

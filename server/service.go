@@ -29,6 +29,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"sync/atomic"
@@ -54,93 +55,139 @@ const (
 // Service interface define
 type Service interface {
 	//BaseService start
-	MakeContext(p Service, queueSize int32)
-	GetContext() context.Context
-	ChildAdd()
-	ChildDone()
-	Close()
-	Queue() queue.Queue
-	CanExit(flag bool) (bool, bool)
-	TryExit() bool
-
-	Run(v ...interface{})
-	//BaseService end
-
-	// Setup
-	Setup(m map[string]interface{}) (Service, error)
 	// ID service id
 	ID() int32
 	//SetID set service ID
 	SetID(v int32)
-	// Start create goruntine and run
-	// Start() error
+	// Name service name
+	Name() string
+	//SetName set service name
+	SetName(v string)
+
+	// MakeContext init base service queue and create context
+	MakeContext(p Service, queueSize int32)
+	// Context get service context
+	Context() context.Context
+	// ChildAdd after child service created and tell parent service, ref count +1
+	ChildAdd()
+	// ChildDone child service exit and tell parent service, ref count -1
+	ChildDone()
+	// Close call context cancel ,self and all child service will receive context.Done()
+	Close()
+	// Queue return service queue
+	Queue() queue.Queue
+	// CanExit if receive ctx.Done() and child ref = 0 and queue is empty ,then return true
+	CanExit(doneflag bool) (bool, bool)
+	// TryExit check child ref count , if ref count == 0 then return true, if parent not nil, fire parent.ChildDone()
+	TryExit() bool
+	//BaseService end
+
+	// UserData service custom option, can you store you data and you must keep goruntine safe
+	UserData() int32
+	// Setup init custom service and pass config map to service
+	Setup(m map[string]interface{}) (Service, error)
+	//Reload reload config
+	Reload(m map[string]interface{}) error
+	// Run create goruntine and run, always use ServiceRun to call this function
+	Run()
 	// Stop goruntine
 	Stop() error
-	// Send async send message to other goruntine
-	Send(msg *Message) error
-	SendBytes(buf []byte) error
+	// SendMessage async send message to service
+	SendMessage(option int32, msg *Message) error
+	// SendBytes async send string or bytes to queue
+	SendBytes(option int32, buf []byte) error
 }
 
-func ServiceRun(s Service, v ...interface{}) {
-	ctxClosed := false
+// ServiceRun wrapper service goruntine and in an orderly way to exit
+func ServiceRun(s Service) {
+	ctxDone := false
 	exitFlag := false
 	for {
-		s.Run(v...)
-		if ctxClosed, exitFlag = s.CanExit(ctxClosed); exitFlag {
+		s.Run()
+		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
 			return
 		}
-
 	}
 }
 
+// ServiceName get the service name
 func ServiceName(s Service) string {
 	t := reflect.TypeOf(s)
 	return t.Elem().Name()
 }
 
+//BaseService use context to close all service and using the bubbling method to exit
 type BaseService struct {
-	ctx        context.Context
-	cancel     context.CancelFunc
-	parent     Service
-	childCount int32
-	q          queue.Queue
-	Name       string
+	ctx      context.Context
+	cancel   context.CancelFunc
+	parent   Service
+	childRef int32
+	q        queue.Queue
+	name     string
+	id       int32
 }
 
+// MakeContext init base service queue and create context
 func (a *BaseService) MakeContext(p Service, queueSize int32) {
 	a.parent = p
 	a.q = queue.NewChanQueue(queueSize)
 	if p == nil {
 		a.ctx, a.cancel = context.WithCancel(context.Background())
 	} else {
-		a.ctx, a.cancel = context.WithCancel(p.GetContext())
+		a.ctx, a.cancel = context.WithCancel(p.Context())
 		p.ChildAdd()
 	}
 }
+
+// Queue return service queue
 func (a *BaseService) Queue() queue.Queue {
 	return a.q
 }
 
-func (a *BaseService) GetContext() context.Context {
+// Context get service context
+func (a *BaseService) Context() context.Context {
 	return a.ctx
 }
+
+// ChildAdd child service created and tell parent service, ref count +1
 func (a *BaseService) ChildAdd() {
-	atomic.AddInt32(&a.childCount, 1)
-}
-func (a *BaseService) ChildDone() {
-	atomic.AddInt32(&a.childCount, -1)
+	atomic.AddInt32(&a.childRef, 1)
 }
 
+// ChildDone child service exit and tell parent service, ref count -1
+func (a *BaseService) ChildDone() {
+	atomic.AddInt32(&a.childRef, -1)
+}
+
+// Close call context cancel ,self and all child service will receive context.Done()
 func (a *BaseService) Close() {
 	a.cancel()
 }
 
-func (a *BaseService) Run(v ...interface{}) {
-	fmt.Printf("service %s do Nothing \n", a.Name)
+//ID service ID
+func (a *BaseService) ID() int32 {
+	return a.id
 }
+
+//SetID set service id
+func (a *BaseService) SetID(v int32) {
+	a.id = v
+}
+
+//Name service name
+func (a *BaseService) Name() string {
+	return a.name
+}
+
+//SetName set service name
+func (a *BaseService) SetName(v string) {
+	a.name = v
+}
+
+// TryExit check child ref count , if ref count == 0 then return true, if parent not nil, and will fire parent.ChildDone()
 func (a *BaseService) TryExit() bool {
 
-	count := atomic.LoadInt32(&a.childCount)
+	count := atomic.LoadInt32(&a.childRef)
 	if count > 0 {
 		return false
 	}
@@ -150,35 +197,41 @@ func (a *BaseService) TryExit() bool {
 	return true
 }
 
-func (a *BaseService) CanExit(flag bool) (bool, bool) {
-	if flag {
+// CanExit if receive ctx.Done() and all child exit and queue is empty ,then return true
+func (a *BaseService) CanExit(doneFlag bool) (bool, bool) {
+	if doneFlag {
 		if a.q.Length() == 0 && a.TryExit() {
-			return flag, true
+			return doneFlag, true
 		}
 	}
 	select {
 	case <-a.ctx.Done():
-		flag = true
+		doneFlag = true
 		if a.q.Length() == 0 && a.TryExit() {
-			return flag, true
+			return doneFlag, true
 		}
 	default:
 	}
-	return flag, false
+	return doneFlag, false
+}
+
+// Run service run
+func (a *BaseService) Run() {
+	fmt.Printf("service %s do Nothing \n", a.Name())
 }
 
 // RegisterService register service name to create function mapping
 func RegisterService(name string, createFunc func() (Service, error)) error {
-	if _, ok := refServices[name]; ok {
+	if _, ok := relServices[name]; ok {
 		return fmt.Errorf("Already register Service %s", name)
 	}
-	refServices[name] = createFunc
+	relServices[name] = createFunc
 	return nil
 }
 
 // CreateService create service by name
 func CreateService(name string) (Service, error) {
-	if f, ok := refServices[name]; ok {
+	if f, ok := relServices[name]; ok {
 		return f()
 	}
 	return nil, fmt.Errorf("You need register Service %s first", name)
@@ -194,29 +247,35 @@ func GetServiceByID(serviceID int32) (Service, error) {
 }
 
 // NewNamedService create named service
-func NewNamedService(serviceID int32, name string, m map[string]interface{}) (Service, error) {
-	return createServiceByID(serviceID, name, m)
+func NewNamedService(serviceID int32, name string, parent Service, m map[string]interface{}) (Service, error) {
+	return createServiceByID(serviceID, name, parent, m)
 }
-func createServiceByID(serviceID int32, name string, m map[string]interface{}) (Service, error) {
+func createServiceByID(serviceID int32, name string, parent Service, m map[string]interface{}) (Service, error) {
 	se, err := CreateService(name)
 	if err != nil {
 		return nil, err
 	}
+	queueSize, ok := m["queueSize"]
+	if !ok {
+		return nil, errors.New("params queueSize needed")
+	}
+	se.MakeContext(nil, int32(queueSize.(int)))
+	se.SetName(ServiceName(se))
 	se.Setup(m)
 	se.SetID(serviceID)
 	App.Services.Store(serviceID, se)
 	if serviceID == ServiceIDLog {
-		logger = se
+		GLoggerService = se
 	}
 	GO(ServiceRun, se)
 	return se, nil
 }
 
 // NewService create anonymous service
-func NewService(name string, m map[string]interface{}) (Service, error) {
+func NewService(name string, parent Service, m map[string]interface{}) (Service, error) {
 	//Inc AnonymousServiceID count = count +1
 	serviceID := atomic.AddInt32(&AnonymousServiceID, 1)
-	return createServiceByID(serviceID, name, m)
+	return createServiceByID(serviceID, name, parent, m)
 }
 
 // DeleteService unregister service
@@ -240,10 +299,10 @@ func DeleteAllServices() {
 }
 
 // SendMessage send message to services
-func SendMessage(serviceID int32, msg *Message) error {
+func SendMessage(serviceID int32, option int32, msg *Message) error {
 	s, err := GetServiceByID(serviceID)
 	if err != nil {
 		return err
 	}
-	return s.Send(msg)
+	return s.SendMessage(option, msg)
 }

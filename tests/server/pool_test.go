@@ -21,62 +21,37 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-12 15:53:22
+// * @Date: 2019-06-21 13:42:42
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-12 15:53:22
+// * @Last Modified time: 2019-06-21 13:42:42
 
-package server
+package server_test
 
 import (
-	"fmt"
-	"sync"
+	"testing"
+
+	. "github.com/gonethopper/nethopper/server"
 )
 
-// GBytesPool pre-create []byte pool
-var GBytesPool *BytesPool
-
-// GMessagePool pre-create message pool
-var GMessagePool *MessagePool
-
-// log variable start
-
-// GLoggerService global log service
-var GLoggerService Service
-
-// WG global goruntine wait group
-var WG sync.WaitGroup
-
-// service variable start
-
-// AnonymousServiceID Anonymous Service Counter
-var AnonymousServiceID int32 = ServiceIDNamedMax
-
-// relServices relate name to create service function
-var relServices = make(map[string]func() (Service, error))
-
-// service variable end
-
-// App server instance
-var App *Server
-
-// Server server entity, only one instance
-type Server struct {
-	// GoCount total goruntine count
-	GoCount  int32
-	Services sync.Map
-}
-
-func init() {
-	GBytesPool = NewBytesPool()
-	GMessagePool = NewMessagePool()
-	App = &Server{
-		GoCount: 0,
+func TestCalcPower(t *testing.T) {
+	pw := NewBytesPool()
+	if pw.CalcIndex(1) != 0 || pw.CalcIndex(0) != 0 || pw.CalcIndex(32) != 0 || pw.CalcIndex(1<<MinSizePower) != 0 {
+		t.Error("calc Index 0 failed")
+	}
+	var power uint8 = 10
+	var value int32 = 1 << power
+	var value2 int32 = 1 << (power + 1)
+	if pw.CalcIndex(value+1) != int32(power-MinSizePower+1) || pw.CalcIndex(value2-1) != int32(power-MinSizePower+1) {
+		t.Errorf("calc Index %d failed", power-MinSizePower+1)
+	}
+	if pw.CalcIndex(MaxBufferSize) != MaxSizePower-MinSizePower {
+		t.Error("calc Index MaxSizePower failed")
+	}
+	if pw.CalcIndex(MaxBufferSize-1) != MaxSizePower-MinSizePower {
+		t.Error("calc Index MaxSizePower failed")
+	}
+	if pw.CalcIndex(MaxBufferSize*2) != OutMaxBufferPower {
+		t.Error("calc Index OutMaxBufferPower failed")
 	}
 
-	fmt.Println("Server Framework init")
-}
-
-// GracefulExit server exit by call root context close
-func GracefulExit() {
-	GLoggerService.Close()
 }

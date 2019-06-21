@@ -28,10 +28,21 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 )
 
+func testByte(buf []byte) []byte {
+	fmt.Printf("%v,%p\n", buf, buf)
+	return buf
+}
 func main() {
 
 	fmt.Println("hello world")
+	var b bytes.Buffer
+	b.WriteString("helloworld")
+	t := b.Bytes()
+	fmt.Printf("%v,%p\n", t, t)
+	o := testByte(t)
+	fmt.Printf("%v,%p\n", o, o)
 }

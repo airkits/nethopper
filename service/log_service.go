@@ -29,7 +29,6 @@ package service
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
 	"github.com/gonethopper/nethopper/log"
@@ -40,8 +39,7 @@ import (
 type LogService struct {
 	BaseService
 	logger log.Log
-	//q      queue.Queue
-	id int32
+
 	//for stat
 	buf     bytes.Buffer
 	count   int32
@@ -65,35 +63,29 @@ func LogServiceCreate() (Service, error) {
 //  "queueSize":1000,
 // }
 func (s *LogService) Setup(m map[string]interface{}) (Service, error) {
-	queueSize, ok := m["queueSize"]
-	if !ok {
-		return nil, errors.New("params queueSize needed")
-	}
-	s.MakeContext(nil, int32(queueSize.(int)))
 
 	logger, err := log.NewFileLogger(m)
 	if err != nil {
 		return nil, err
 	}
 	s.logger = logger
-	SetLogLevel(logger.GetLevel())
-
 	return s, nil
 }
 
-//ID service ID
-func (s *LogService) ID() int32 {
-	return s.id
-}
+// Reload reload config from map
+func (s *LogService) Reload(m map[string]interface{}) error {
+	level, err := log.ParseValue(m, "level", 7)
+	if err != nil {
+		return err
+	}
+	return s.logger.SetLevel(int32(level.(int)))
 
-//SetID set service id
-func (s *LogService) SetID(v int32) {
-	s.id = v
 }
 
 // Run create goruntine and run
-func (s *LogService) Run(v ...interface{}) {
-
+func (s *LogService) Run() {
+	s.msgSize = 0
+	s.count = 0
 	for i := 0; i < 128; i++ {
 
 		if v, err := s.Queue().AsyncPop(); err == nil {
@@ -121,16 +113,22 @@ func (s *LogService) Run(v ...interface{}) {
 
 // Stop goruntine
 func (s *LogService) Stop() error {
+	s.Queue().Close()
 	return s.logger.Close()
 }
 
-// Send async send message to other goruntine
-func (s *LogService) Send(msg *Message) error {
-	return fmt.Errorf("TODO LogServer Send")
+// SendMessage async push message to queue
+func (s *LogService) SendMessage(option int32, msg *Message) error {
+	return fmt.Errorf("TODO LogService SendMessage")
 }
 
-// SendBytes async send buffer to other goruntine
-func (s *LogService) SendBytes(buf []byte) error {
+// UserData service custom option, can you store you self value
+func (s *LogService) UserData() int32 {
+	return s.logger.GetLevel()
+}
+
+// SendBytes async push string or bytes to queue, with option
+func (s *LogService) SendBytes(option int32, buf []byte) error {
 	if err := s.Queue().Push(buf); err != nil {
 		return err
 	}

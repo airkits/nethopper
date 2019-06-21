@@ -69,7 +69,7 @@ func initServer() error {
 		"dailyEnable": true,
 		"queueSize":   1000,
 	}
-	NewNamedService(ServiceIDLog, "log", m)
+	NewNamedService(ServiceIDLog, "log", nil, m)
 
 	return nil
 }
@@ -88,8 +88,7 @@ func TestGO(t *testing.T) {
 
 	GO(func() {
 		time.Sleep(2 * time.Second)
-		//RemoveAllServices()
-
+		GracefulExit()
 	})
 
 	WG.Wait()

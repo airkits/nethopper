@@ -34,7 +34,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
+	"sync/atomic"
 
 	"github.com/gonethopper/nethopper/utils"
 )
@@ -53,7 +53,7 @@ func NewFileLogger(m map[string]interface{}) (Log, error) {
 	return logger, nil
 }
 
-// FileLog implements Log interface
+// FileLog implements Log interface, not goruntine safety
 // write log to file,if file reached limit,rename file match format filename
 // support filesize limit / time frequency / lines limit
 // filename read from config like server.log and the real filename like server_20190101-01.log or server_20190101.log
@@ -64,7 +64,6 @@ func NewFileLogger(m map[string]interface{}) (Log, error) {
 type FileLog struct {
 	//set level and  atomic incr CurrentSize and CurrentLines
 	//write log one by one
-	sync.Mutex
 	level         int32
 	fileName      string //real filename
 	currentTime   string //gen date ymd / ymd-h
@@ -78,63 +77,18 @@ type FileLog struct {
 	hourEnabled   bool  //time frequency
 	dailyEnabled  bool
 	currentWriter *os.File //current File Writer
-	// q             queue.Queue
-	// closedChan    chan struct{}
+	buffer        bytes.Buffer
 }
 
 // InitLogger init logger
 func (l *FileLog) InitLogger() error {
-	//l.q = queue.NewChanQueue(1024)
 
-	//go l.RunLogger()
 	return l.createNewFile()
 }
-
-// QuitChan write all message from queue and tigger closed notify
-// func (l *FileLog) QuitChan() <-chan struct{} {
-// 	return l.closedChan
-// }
-
-//RunLogger async pop from queue and write to file
-// func (l *FileLog) RunLogger() {
-// 	var buf bytes.Buffer
-// 	var count int32
-// 	var msgSize int32
-// 	for {
-// 		count = 0
-// 		msgSize = 0
-// 		for i := 0; i < 128; i++ {
-// 			if v, err := l.q.AsyncPop(); err == nil {
-// 				if n, e := buf.Write(v.([]byte)); e == nil {
-// 					msgSize += int32(n)
-// 					count++
-// 					if (msgSize+l.currentSize) >= l.maxSize || (count+l.currentLines) >= l.maxLines {
-// 						break
-// 					}
-// 				}
-// 			}
-// 		}
-
-// 		if buf.Len() > 0 {
-// 			l.WriteLog(buf.Bytes(), count)
-// 			buf.Reset()
-// 		} else {
-// 			// ensure queue is empty
-// 			if l.q.IsClosed() && l.q.Length() == 0 {
-// 				l.flush()
-// 				l.currentWriter.Close()
-// 				close(l.closedChan)
-// 				return
-// 			}
-// 		}
-// 	}
-// }
 
 // WriteLog write message to file, return immediately if not meet the conditions
 func (l *FileLog) WriteLog(msg []byte, count int32) error {
 
-	// l.Lock()
-	// defer l.Unlock()
 	if l.fileCutTest() {
 		l.moveFile()
 		l.createNewFile()
@@ -162,9 +116,7 @@ func (l *FileLog) SetLevel(level int32) error {
 	if level < EMEGENCY || level > DEBUG {
 		return fmt.Errorf("log level:[%d] invalid", level)
 	}
-	l.Lock()
-	defer l.Unlock()
-	l.level = level
+	atomic.StoreInt32(&l.level, level)
 	return nil
 }
 
@@ -234,26 +186,19 @@ func (l *FileLog) genCurrentTime() string {
 // else if hourEnabled == false, then format = filename_ymd.suffix
 // else if  dailyEnabled == false, then format = filename.suffix
 func (l *FileLog) genFilename(timestr string, num int32) string {
-	var buf bytes.Buffer
-	buf.WriteString(l.prefix)
+	//l.buffer.Reset()
+	var buffer bytes.Buffer
+	buffer.WriteString(l.prefix)
 	if len(timestr) > 0 {
-		buf.WriteString("_")
-		buf.WriteString(timestr)
+		buffer.WriteString("_")
+		buffer.WriteString(timestr)
 	}
 	if num > 0 {
-		buf.WriteString("_")
-		buf.WriteString(strconv.Itoa(int(num)))
+		buffer.WriteString("_")
+		buffer.WriteString(strconv.Itoa(int(num)))
 	}
-	buf.WriteString(l.suffix)
-	return buf.String()
-	// filename := l.prefix
-	// if len(timestr) > 0 {
-	// 	filename += "_" + timestr
-	// }
-	// if num > 0 {
-	// 	filename += "_" + strconv.Itoa(num)
-	// }
-	// return filename + l.suffix
+	buffer.WriteString(l.suffix)
+	return buffer.String()
 }
 
 // nextNumTest test the file actually exists in the filesystem,return the next file num
@@ -352,17 +297,9 @@ func (l *FileLog) PushLog(level int32, v ...interface{}) error {
 
 //GetLevel get current log level
 func (l *FileLog) GetLevel() int32 {
-	return l.level
+	level := atomic.LoadInt32(&l.level)
+	return level
 }
-
-//WriteBytes write to queue
-// func (l *FileLog) WriteBytes(buf []byte) error {
-// 	if err := l.q.Push(buf); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
 
 // Emergency system is unusable
 func (l *FileLog) Emergency(v ...interface{}) error {

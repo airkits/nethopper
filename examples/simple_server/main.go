@@ -47,6 +47,6 @@ func main() {
 		"queueSize":   1000,
 	}
 	server.RegisterService("log", service.LogServiceCreate)
-	server.NewNamedService(server.ServiceIDLog, "log", m)
+	server.NewNamedService(server.ServiceIDLog, "log", nil, m)
 
 }

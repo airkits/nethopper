@@ -29,7 +29,6 @@ package server_test
 
 import (
 	"testing"
-	"time"
 
 	. "github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/service"
@@ -86,12 +85,9 @@ func TestGO(t *testing.T) {
 	GO(f.CallStructName2, 2, "hello2")
 	GO(f.CallStructNameArgs, 3, 4, 5, 6, 7)
 
-	GO(func() {
-		time.Sleep(2 * time.Second)
-		GracefulExit()
-	})
-
 	WG.Wait()
+	GracefulExit()
+
 }
 
 func CallUserFunc0() int {

@@ -5,9 +5,9 @@ import (
 )
 
 // TimeYMDHIS get current time
-// return format year/mouth/day hour:minute:second
+// return format yearmouthday hour:minute:second
 func TimeYMDHIS() string {
-	return time.Now().Format("2006/1/2 15:04:05")
+	return time.Now().Format("20060102 15:04:05")
 }
 
 // TimeYMDH get current time

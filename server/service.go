@@ -267,7 +267,7 @@ func createServiceByID(serviceID int32, name string, parent Service, m map[strin
 	if serviceID == ServiceIDLog {
 		GLoggerService = se
 	}
-	GO(ServiceRun, se)
+	GOWithContext(ServiceRun, se)
 	return se, nil
 }
 

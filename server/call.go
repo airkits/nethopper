@@ -73,3 +73,11 @@ func GO(v ...interface{}) {
 		WG.Done()
 	}()
 }
+
+// GOWithContext wapper exec goruntine and use context to manager goruntine
+func GOWithContext(v ...interface{}) {
+	f := v[0]
+	go func() {
+		CallUserFunc(f, v[1:]...)
+	}()
+}

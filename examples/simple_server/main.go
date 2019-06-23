@@ -46,7 +46,7 @@ func main() {
 		"dailyEnable": true,
 		"queueSize":   1000,
 	}
-	server.RegisterService("log", service.LogServiceCreate)
+	server.RegisterService("log", log.LogServiceCreate)
 	server.NewNamedService(server.ServiceIDLog, "log", nil, m)
 
 }

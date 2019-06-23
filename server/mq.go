@@ -81,17 +81,19 @@ func (p *MessagePool) Free(m *Message) {
 
 //Message mq Message
 type Message struct {
-	SrcID   int32
-	DestID  int32
-	MsgType int8
-	Cmd     string
-	Payload []byte
+	SrcID     int32
+	DestID    int32
+	SessionID string
+	MsgType   int8
+	Cmd       string
+	Payload   []byte
 }
 
 // Reset message set to default value
 func (m *Message) Reset() {
 	m.SrcID = InvalidInt32
 	m.DestID = InvalidInt32
+	m.SessionID = ""
 	m.MsgType = MessageType
 	m.Cmd = ""
 	if len(m.Payload) > 0 {

@@ -57,8 +57,8 @@ func BenchmarkFormatLogWithParams(t *testing.B) {
 func BenchmarkWriteLog(b *testing.B) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	m := map[string]interface{}{
-		"filename":    "/Users/ankye/work/github/nethopper/tests_bench/log/logs/server.log",
-		"level":       7,
+		"filename":    "logs/server.log",
+		"level":       4,
 		"maxSize":     50,
 		"maxLines":    100000,
 		"hourEnabled": false,

@@ -44,19 +44,9 @@ func WriteLog(level int32, v ...interface{}) error {
 	return nil
 }
 
-// Emergency system is unusable
-func Emergency(v ...interface{}) error {
-	return WriteLog(log.EMEGENCY, v...)
-}
-
-// Alert action must be taken immediately
-func Alert(v ...interface{}) error {
-	return WriteLog(log.ALERT, v...)
-}
-
-// Critical critical conditions
-func Critical(v ...interface{}) error {
-	return WriteLog(log.CRITICAL, v...)
+// Fatal system is unusable
+func Fatal(v ...interface{}) error {
+	return WriteLog(log.FATAL, v...)
 }
 
 // Error error conditions
@@ -67,11 +57,6 @@ func Error(v ...interface{}) error {
 // Warning warning conditions
 func Warning(v ...interface{}) error {
 	return WriteLog(log.WARNING, v...)
-}
-
-// Notice normal but significant condition
-func Notice(v ...interface{}) error {
-	return WriteLog(log.NOTICE, v...)
 }
 
 // Info informational messages

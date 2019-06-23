@@ -75,7 +75,7 @@ type Service interface {
 	// Close call context cancel ,self and all child service will receive context.Done()
 	Close()
 	// Queue return service queue
-	Queue() queue.Queue
+	MQ() queue.Queue
 	// CanExit if receive ctx.Done() and child ref = 0 and queue is empty ,then return true
 	CanExit(doneflag bool) (bool, bool)
 	// TryExit check child ref count , if ref count == 0 then return true, if parent not nil, fire parent.ChildDone()
@@ -139,8 +139,8 @@ func (a *BaseService) MakeContext(p Service, queueSize int32) {
 	}
 }
 
-// Queue return service queue
-func (a *BaseService) Queue() queue.Queue {
+// MQ return service queue
+func (a *BaseService) MQ() queue.Queue {
 	return a.q
 }
 

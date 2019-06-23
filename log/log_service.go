@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-14 14:40:51
 
-package service
+package log
 
 import (
 	"bytes"
@@ -55,7 +55,7 @@ func LogServiceCreate() (Service, error) {
 // Log config
 // m := map[string]interface{}{
 // 	"filename":    "server.log",
-// 	"level":       7,
+// 	"level":       4,
 // 	"maxSize":     50,
 // 	"maxLines":    1000,
 // 	"hourEnabled": false,
@@ -88,7 +88,7 @@ func (s *LogService) Run() {
 	s.count = 0
 	for i := 0; i < 128; i++ {
 
-		if v, err := s.Queue().AsyncPop(); err == nil {
+		if v, err := s.MQ().AsyncPop(); err == nil {
 			if n, e := s.buf.Write(v.([]byte)); e == nil {
 				s.msgSize += int32(n)
 				s.count++
@@ -104,7 +104,7 @@ func (s *LogService) Run() {
 		s.buf.Reset()
 	} else {
 		// ensure queue is empty
-		if s.Queue().IsClosed() && s.Queue().Length() == 0 {
+		if s.MQ().IsClosed() && s.MQ().Length() == 0 {
 			s.logger.Close()
 		}
 	}
@@ -113,7 +113,7 @@ func (s *LogService) Run() {
 
 // Stop goruntine
 func (s *LogService) Stop() error {
-	s.Queue().Close()
+	s.MQ().Close()
 	return s.logger.Close()
 }
 
@@ -129,7 +129,7 @@ func (s *LogService) UserData() int32 {
 
 // SendBytes async push string or bytes to queue, with option
 func (s *LogService) SendBytes(option int32, buf []byte) error {
-	if err := s.Queue().Push(buf); err != nil {
+	if err := s.MQ().Push(buf); err != nil {
 		return err
 	}
 	return nil

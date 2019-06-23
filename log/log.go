@@ -42,18 +42,12 @@ type Log interface {
 	SetLevel(level int32) error
 	GetLevel() int32
 
-	// Emergency system is unusable
-	Emergency(v ...interface{}) error
-	// Alert action must be taken immediately
-	Alert(v ...interface{}) error
-	// Critical critical conditions
-	Critical(v ...interface{}) error
+	// Fatal system is unusable
+	Fatal(v ...interface{}) error
 	// Error error conditions
 	Error(v ...interface{}) error
 	// Warning warning conditions
 	Warning(v ...interface{}) error
-	// Notice normal but significant condition
-	Notice(v ...interface{}) error
 	// Info informational messages
 	Info(v ...interface{}) error
 	// Debug debug-level messages
@@ -66,34 +60,28 @@ type Log interface {
 	Close() error
 }
 
-// Log Levels Define rfc5424  https://tools.ietf.org/html/rfc5424
-// 0       Emergency: system is unusable
-// 1       Alert: action must be taken immediately
-// 2       Critical: critical conditions
-// 3       Error: error conditions
-// 4       Warning: warning conditions
-// 5       Notice: normal but significant condition
-// 6       Informational: informational messages
-// 7       Debug: debug-level messages
+// Log Levels Define
+// 0       Fatal: system is unusable
+// 1       Error: error conditions
+// 2       Warning: warning conditions
+// 3       Info: informational messages
+// 4       Debug: debug-level messages
 const (
-	EMEGENCY = iota
-	ALERT
-	CRITICAL
+	FATAL = iota
 	ERROR
 	WARNING
-	NOTICE
 	INFO
 	DEBUG
 )
 
 // LogLevelPrefix level format to string
-var LogLevelPrefix = [DEBUG + 1]string{" [EMEGENCY] ", " [ALERT] ", " [CRITICAL] ", " [ERROR] ", " [WARNING] ", " [NOTICE] ", " [INFO] ", " [DEBUG] "}
+var LogLevelPrefix = [DEBUG + 1]string{" [FATAL] ", " [ERROR] ", " [WARNING] ", " [INFO] ", " [DEBUG] "}
 
 // FormatLog format log and return string
 // if len(v) > 1 ,format = v[0]
 func FormatLog(level int32, v ...interface{}) string {
-	if level < EMEGENCY || level > DEBUG {
-		level = EMEGENCY
+	if level < FATAL || level > DEBUG {
+		level = FATAL
 	}
 	var buf bytes.Buffer
 	buf.WriteString(utils.TimeYMDHIS())

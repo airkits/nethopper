@@ -30,6 +30,7 @@ package server
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 )
 
 // GBytesPool pre-create []byte pool
@@ -59,13 +60,6 @@ var relServices = make(map[string]func() (Service, error))
 // App server instance
 var App *Server
 
-// Server server entity, only one instance
-type Server struct {
-	// GoCount total goruntine count
-	GoCount  int32
-	Services sync.Map
-}
-
 func init() {
 	GBytesPool = NewBytesPool()
 	GMessagePool = NewMessagePool()
@@ -79,4 +73,16 @@ func init() {
 // GracefulExit server exit by call root context close
 func GracefulExit() {
 	GLoggerService.Close()
+}
+
+// Server server entity, only one instance
+type Server struct {
+	// GoCount total goruntine count
+	GoCount  int32
+	Services sync.Map
+}
+
+// UpdateGoCount update goruntine use count ,+/- is all ok
+func (s *Server) UpdateGoCount(value int32) {
+	atomic.AddInt32(&s.GoCount, value)
 }

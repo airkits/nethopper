@@ -41,7 +41,7 @@ func TestFormatLog(t *testing.T) {
 	msg := "format log test"
 	format := "%s%s%s\n"
 	var level int32
-	for level = log.EMEGENCY; level < log.DEBUG; level++ {
+	for level = log.FATAL; level < log.DEBUG; level++ {
 		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], msg)
 		result := log.FormatLog(level, msg)
 		if expect != result {
@@ -50,7 +50,7 @@ func TestFormatLog(t *testing.T) {
 	}
 	//test msg with params
 	msg = "format %s log test %d"
-	for level = log.EMEGENCY; level < log.DEBUG; level++ {
+	for level = log.FATAL; level < log.DEBUG; level++ {
 		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], fmt.Sprintf(msg, strconv.Itoa(int(level)), level))
 		result := log.FormatLog(level, msg, strconv.Itoa(int(level)), level)
 		if expect != result {

@@ -68,8 +68,10 @@ func CallUserMethod(instance interface{}, method string, v ...interface{}) []ref
 func GO(v ...interface{}) {
 	f := v[0]
 	WG.Add(1)
+	App.UpdateGoCount(1)
 	go func() {
 		CallUserFunc(f, v[1:]...)
+		App.UpdateGoCount(-1)
 		WG.Done()
 	}()
 }
@@ -77,7 +79,9 @@ func GO(v ...interface{}) {
 // GOWithContext wapper exec goruntine and use context to manager goruntine
 func GOWithContext(v ...interface{}) {
 	f := v[0]
+	App.UpdateGoCount(1)
 	go func() {
 		CallUserFunc(f, v[1:]...)
+		App.UpdateGoCount(-1)
 	}()
 }

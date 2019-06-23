@@ -31,7 +31,6 @@ import (
 	"testing"
 
 	. "github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/service"
 )
 
 type Factory struct {
@@ -58,10 +57,10 @@ func (g *Factory) CallStructNameArgs(v ...interface{}) int {
 	return v[0].(int)
 }
 func initServer() error {
-	RegisterService("log", service.LogServiceCreate)
+	RegisterService("log", log.LogServiceCreate)
 	m := map[string]interface{}{
 		"filename":    "logs/server_call.log",
-		"level":       7,
+		"level":       4,
 		"maxSize":     50,
 		"maxLines":    1000,
 		"hourEnabled": false,

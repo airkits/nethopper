@@ -113,7 +113,7 @@ func (l *FileLog) CanLog(msgSize int32, count int32) bool {
 
 // SetLevel update log level
 func (l *FileLog) SetLevel(level int32) error {
-	if level < EMEGENCY || level > DEBUG {
+	if level < FATAL || level > DEBUG {
 		return fmt.Errorf("log level:[%d] invalid", level)
 	}
 	atomic.StoreInt32(&l.level, level)
@@ -301,19 +301,9 @@ func (l *FileLog) GetLevel() int32 {
 	return level
 }
 
-// Emergency system is unusable
-func (l *FileLog) Emergency(v ...interface{}) error {
-	return l.PushLog(EMEGENCY, v...)
-}
-
-// Alert action must be taken immediately
-func (l *FileLog) Alert(v ...interface{}) error {
-	return l.PushLog(ALERT, v...)
-}
-
-// Critical critical conditions
-func (l *FileLog) Critical(v ...interface{}) error {
-	return l.PushLog(CRITICAL, v...)
+// Fatal system is unusable
+func (l *FileLog) Fatal(v ...interface{}) error {
+	return l.PushLog(FATAL, v...)
 }
 
 // Error error conditions
@@ -324,11 +314,6 @@ func (l *FileLog) Error(v ...interface{}) error {
 // Warning warning conditions
 func (l *FileLog) Warning(v ...interface{}) error {
 	return l.PushLog(WARNING, v...)
-}
-
-// Notice normal but significant condition
-func (l *FileLog) Notice(v ...interface{}) error {
-	return l.PushLog(NOTICE, v...)
 }
 
 // Info informational messages

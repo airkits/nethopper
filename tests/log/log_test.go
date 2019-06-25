@@ -33,6 +33,7 @@ import (
 	"testing"
 
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/utils"
 )
 
@@ -41,18 +42,18 @@ func TestFormatLog(t *testing.T) {
 	msg := "format log test"
 	format := "%s%s%s\n"
 	var level int32
-	for level = log.FATAL; level < log.DEBUG; level++ {
-		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], msg)
-		result := log.FormatLog(level, msg)
+	for level = server.FATAL; level < server.DEBUG; level++ {
+		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), server.LogLevelPrefix[level], msg)
+		result := server.FormatLog(level, msg)
 		if expect != result {
 			t.Errorf("\nexpect :%s,\nresult :%s", expect, result)
 		}
 	}
 	//test msg with params
 	msg = "format %s log test %d"
-	for level = log.FATAL; level < log.DEBUG; level++ {
-		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], fmt.Sprintf(msg, strconv.Itoa(int(level)), level))
-		result := log.FormatLog(level, msg, strconv.Itoa(int(level)), level)
+	for level = server.FATAL; level < server.DEBUG; level++ {
+		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), server.LogLevelPrefix[level], fmt.Sprintf(msg, strconv.Itoa(int(level)), level))
+		result := server.FormatLog(level, msg, strconv.Itoa(int(level)), level)
 		if expect != result {
 			t.Errorf("\nexpect :%s,\nresult :%s", expect, result)
 		}

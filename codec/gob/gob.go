@@ -21,33 +21,34 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-14 19:56:49
+// * @Date: 2019-06-24 12:11:09
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-14 19:56:49
+// * @Last Modified time: 2019-06-24 12:11:09
 
-package main
+package gob
 
 import (
-	"fmt"
-
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"bytes"
+	"encoding/gob"
 )
 
-func main() {
-	fmt.Println("helloworld")
+// GobCodec use gob encode/decode
 
-	m := map[string]interface{}{
-		"filename":    "log/server.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
+// Marshal encode message
+func Marshal(v interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(v); err != nil {
+		return nil, err
 	}
-	RegisterService("log", log.LogServiceCreate)
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	Debug("hello game")
-	GracefulExit()
+	return buf.Bytes(), nil
+}
+
+// Unmarshal decode message
+func Unmarshal(data []byte, v interface{}) error {
+	return gob.NewDecoder(bytes.NewBuffer(data)).Decode(v)
+}
+
+// Name of codec
+func Name() string {
+	return "GobCodec"
 }

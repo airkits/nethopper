@@ -30,6 +30,7 @@ package server_test
 import (
 	"testing"
 
+	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
 

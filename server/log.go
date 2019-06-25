@@ -28,8 +28,77 @@
 package server
 
 import (
-	"github.com/gonethopper/nethopper/log"
+	"bytes"
+	"fmt"
+
+	"github.com/gonethopper/nethopper/utils"
 )
+
+// Log Levels Define
+// 0       Fatal: system is unusable
+// 1       Error: error conditions
+// 2       Warning: warning conditions
+// 3       Info: informational messages
+// 4       Debug: debug-level messages
+const (
+	FATAL = iota
+	ERROR
+	WARNING
+	INFO
+	DEBUG
+)
+
+// Log Interface
+type Log interface {
+	// ParseConfig read config from map[string]interface{}
+	ParseConfig(v map[string]interface{}) error
+	// InitLogger init logger
+	InitLogger() error
+	// SetLevel atomic set level value
+	SetLevel(level int32) error
+	// GetLevel atomic get level value
+	GetLevel() int32
+
+	// Fatal system is unusable
+	Fatal(v ...interface{}) error
+	// Error error conditions
+	Error(v ...interface{}) error
+	// Warning warning conditions
+	Warning(v ...interface{}) error
+	// Info informational messages
+	Info(v ...interface{}) error
+	// Debug debug-level messages
+	Debug(v ...interface{}) error
+	// WriteLog write log to file, return immediately if not meet the conditions
+	WriteLog(msg []byte, count int32) error
+	// CanLog check log status
+	CanLog(msgSize int32, count int32) bool
+	// Close and flush
+	Close() error
+}
+
+// LogLevelPrefix level format to string
+var LogLevelPrefix = [DEBUG + 1]string{" [FATAL] ", " [ERROR] ", " [WARNING] ", " [INFO] ", " [DEBUG] "}
+
+// FormatLog format log and return string
+// if len(v) > 1 ,format = v[0]
+func FormatLog(level int32, v ...interface{}) string {
+	if level < FATAL || level > DEBUG {
+		level = FATAL
+	}
+	var buf bytes.Buffer
+	buf.WriteString(utils.TimeYMDHIS())
+	buf.WriteString(LogLevelPrefix[level])
+	format := v[0].(string)
+
+	if len(v) > 1 {
+		buf.WriteString(fmt.Sprintf(format, v[1:]...))
+	} else {
+		buf.WriteString(format)
+	}
+	buf.WriteString("\n")
+	return buf.String()
+}
 
 //WriteLog send log to queue
 func WriteLog(level int32, v ...interface{}) error {
@@ -37,7 +106,7 @@ func WriteLog(level int32, v ...interface{}) error {
 	if level > GLoggerService.UserData() {
 		return nil
 	}
-	msg := log.FormatLog(level, v...)
+	msg := FormatLog(level, v...)
 	if err := GLoggerService.SendBytes(level, []byte(msg)); err != nil {
 		return err
 	}
@@ -46,25 +115,25 @@ func WriteLog(level int32, v ...interface{}) error {
 
 // Fatal system is unusable
 func Fatal(v ...interface{}) error {
-	return WriteLog(log.FATAL, v...)
+	return WriteLog(FATAL, v...)
 }
 
 // Error error conditions
 func Error(v ...interface{}) error {
-	return WriteLog(log.ERROR, v...)
+	return WriteLog(ERROR, v...)
 }
 
 // Warning warning conditions
 func Warning(v ...interface{}) error {
-	return WriteLog(log.WARNING, v...)
+	return WriteLog(WARNING, v...)
 }
 
 // Info informational messages
 func Info(v ...interface{}) error {
-	return WriteLog(log.INFO, v...)
+	return WriteLog(INFO, v...)
 }
 
 // Debug debug-level messages
 func Debug(v ...interface{}) error {
-	return WriteLog(log.DEBUG, v...)
+	return WriteLog(DEBUG, v...)
 }

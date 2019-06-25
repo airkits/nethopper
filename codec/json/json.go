@@ -21,33 +21,29 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-14 19:56:49
+// * @Date: 2019-06-24 12:11:02
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-14 19:56:49
+// * @Last Modified time: 2019-06-24 12:11:02
 
-package main
+package json
 
 import (
-	"fmt"
-
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"encoding/json"
 )
 
-func main() {
-	fmt.Println("helloworld")
+// JSONCodec use gob encode/decode
 
-	m := map[string]interface{}{
-		"filename":    "log/server.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
-	}
-	RegisterService("log", log.LogServiceCreate)
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	Debug("hello game")
-	GracefulExit()
+// Marshal encode message
+func Marshal(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
+}
+
+// Unmarshal decode message
+func Unmarshal(data []byte, v interface{}) error {
+	return json.Unmarshal(data, v)
+}
+
+// Name of codec
+func Name() string {
+	return "JSONCodec"
 }

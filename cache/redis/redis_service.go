@@ -21,33 +21,15 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-14 19:56:49
+// * @Date: 2019-06-24 11:07:19
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-14 19:56:49
+// * @Last Modified time: 2019-06-24 11:07:19
 
-package main
+package redis
 
-import (
-	"fmt"
+import "github.com/gonethopper/nethopper/server"
 
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
-)
-
-func main() {
-	fmt.Println("helloworld")
-
-	m := map[string]interface{}{
-		"filename":    "log/server.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
-	}
-	RegisterService("log", log.LogServiceCreate)
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	Debug("hello game")
-	GracefulExit()
+// RedisService get cache from redis
+type RedisService struct {
+	server.BaseContext
 }

@@ -36,14 +36,13 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/utils"
 )
 
 // NewFileLogger create FileLog instance
-func NewFileLogger(m map[string]interface{}) (Log, error) {
-	logger := &FileLog{
-		//closedChan: make(chan struct{}),
-	}
+func NewFileLogger(m map[string]interface{}) (server.Log, error) {
+	logger := &FileLog{}
 	if err := logger.ParseConfig(m); err != nil {
 		return nil, err
 	}
@@ -113,7 +112,7 @@ func (l *FileLog) CanLog(msgSize int32, count int32) bool {
 
 // SetLevel update log level
 func (l *FileLog) SetLevel(level int32) error {
-	if level < FATAL || level > DEBUG {
+	if level < server.FATAL || level > server.DEBUG {
 		return fmt.Errorf("log level:[%d] invalid", level)
 	}
 	atomic.StoreInt32(&l.level, level)
@@ -121,7 +120,7 @@ func (l *FileLog) SetLevel(level int32) error {
 }
 
 // ParseConfig read config from map[string]interface{}
-// config key
+// config key map
 // filename default server.log
 // level default 7
 // maxSize default 1024
@@ -130,7 +129,7 @@ func (l *FileLog) SetLevel(level int32) error {
 // dailyEnabled default true
 func (l *FileLog) ParseConfig(m map[string]interface{}) error {
 
-	filename, err := ParseValue(m, "filename", "server.log")
+	filename, err := server.ParseValue(m, "filename", "server.log")
 	if err != nil {
 		return err
 	}
@@ -142,28 +141,28 @@ func (l *FileLog) ParseConfig(m map[string]interface{}) error {
 	}
 	l.suffix = filepath.Ext(filename.(string))
 	l.prefix = strings.TrimSuffix(filename.(string), l.suffix)
-	level, err := ParseValue(m, "level", 7)
+	level, err := server.ParseValue(m, "level", 7)
 	if err != nil {
 		return err
 	}
 	l.level = int32(level.(int))
 
-	maxSize, err := ParseValue(m, "maxSize", 1024)
+	maxSize, err := server.ParseValue(m, "maxSize", 1024)
 	if err != nil {
 		return err
 	}
 	l.maxSize = int32(maxSize.(int) * 1024 * 1024)
-	maxLines, err := ParseValue(m, "maxLines", 100000)
+	maxLines, err := server.ParseValue(m, "maxLines", 100000)
 	if err != nil {
 		return err
 	}
 	l.maxLines = int32(maxLines.(int))
-	hourEnabled, err := ParseValue(m, "hourEnabled", false)
+	hourEnabled, err := server.ParseValue(m, "hourEnabled", false)
 	if err != nil {
 		return err
 	}
 	l.hourEnabled = hourEnabled.(bool)
-	dailyEnabled, err := ParseValue(m, "dailyEnabled", true)
+	dailyEnabled, err := server.ParseValue(m, "dailyEnabled", true)
 	if err != nil {
 		return err
 	}
@@ -290,7 +289,7 @@ func (l *FileLog) PushLog(level int32, v ...interface{}) error {
 	if level > l.level {
 		return nil
 	}
-	msg := FormatLog(level, v...)
+	msg := server.FormatLog(level, v...)
 	return l.WriteLog([]byte(msg), 1)
 
 }
@@ -303,25 +302,25 @@ func (l *FileLog) GetLevel() int32 {
 
 // Fatal system is unusable
 func (l *FileLog) Fatal(v ...interface{}) error {
-	return l.PushLog(FATAL, v...)
+	return l.PushLog(server.FATAL, v...)
 }
 
 // Error error conditions
 func (l *FileLog) Error(v ...interface{}) error {
-	return l.PushLog(ERROR, v...)
+	return l.PushLog(server.ERROR, v...)
 }
 
 // Warning warning conditions
 func (l *FileLog) Warning(v ...interface{}) error {
-	return l.PushLog(WARNING, v...)
+	return l.PushLog(server.WARNING, v...)
 }
 
 // Info informational messages
 func (l *FileLog) Info(v ...interface{}) error {
-	return l.PushLog(INFO, v...)
+	return l.PushLog(server.INFO, v...)
 }
 
 // Debug debug-level messages
 func (l *FileLog) Debug(v ...interface{}) error {
-	return l.PushLog(DEBUG, v...)
+	return l.PushLog(server.DEBUG, v...)
 }

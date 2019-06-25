@@ -54,7 +54,7 @@ const (
 
 // Service interface define
 type Service interface {
-	//BaseService start
+	//BaseContext start
 	// ID service id
 	ID() int32
 	//SetID set service ID
@@ -80,7 +80,7 @@ type Service interface {
 	CanExit(doneflag bool) (bool, bool)
 	// TryExit check child ref count , if ref count == 0 then return true, if parent not nil, fire parent.ChildDone()
 	TryExit() bool
-	//BaseService end
+	//BaseContext end
 
 	// UserData service custom option, can you store you data and you must keep goruntine safe
 	UserData() int32
@@ -116,8 +116,8 @@ func ServiceName(s Service) string {
 	return t.Elem().Name()
 }
 
-//BaseService use context to close all service and using the bubbling method to exit
-type BaseService struct {
+//BaseContext use context to close all service and using the bubbling method to exit
+type BaseContext struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
 	parent   Service
@@ -128,7 +128,7 @@ type BaseService struct {
 }
 
 // MakeContext init base service queue and create context
-func (a *BaseService) MakeContext(p Service, queueSize int32) {
+func (a *BaseContext) MakeContext(p Service, queueSize int32) {
 	a.parent = p
 	a.q = queue.NewChanQueue(queueSize)
 	if p == nil {
@@ -140,52 +140,52 @@ func (a *BaseService) MakeContext(p Service, queueSize int32) {
 }
 
 // MQ return service queue
-func (a *BaseService) MQ() queue.Queue {
+func (a *BaseContext) MQ() queue.Queue {
 	return a.q
 }
 
 // Context get service context
-func (a *BaseService) Context() context.Context {
+func (a *BaseContext) Context() context.Context {
 	return a.ctx
 }
 
 // ChildAdd child service created and tell parent service, ref count +1
-func (a *BaseService) ChildAdd() {
+func (a *BaseContext) ChildAdd() {
 	atomic.AddInt32(&a.childRef, 1)
 }
 
 // ChildDone child service exit and tell parent service, ref count -1
-func (a *BaseService) ChildDone() {
+func (a *BaseContext) ChildDone() {
 	atomic.AddInt32(&a.childRef, -1)
 }
 
 // Close call context cancel ,self and all child service will receive context.Done()
-func (a *BaseService) Close() {
+func (a *BaseContext) Close() {
 	a.cancel()
 }
 
 //ID service ID
-func (a *BaseService) ID() int32 {
+func (a *BaseContext) ID() int32 {
 	return a.id
 }
 
 //SetID set service id
-func (a *BaseService) SetID(v int32) {
+func (a *BaseContext) SetID(v int32) {
 	a.id = v
 }
 
 //Name service name
-func (a *BaseService) Name() string {
+func (a *BaseContext) Name() string {
 	return a.name
 }
 
 //SetName set service name
-func (a *BaseService) SetName(v string) {
+func (a *BaseContext) SetName(v string) {
 	a.name = v
 }
 
 // TryExit check child ref count , if ref count == 0 then return true, if parent not nil, and will fire parent.ChildDone()
-func (a *BaseService) TryExit() bool {
+func (a *BaseContext) TryExit() bool {
 
 	count := atomic.LoadInt32(&a.childRef)
 	if count > 0 {
@@ -198,7 +198,7 @@ func (a *BaseService) TryExit() bool {
 }
 
 // CanExit if receive ctx.Done() and all child exit and queue is empty ,then return true
-func (a *BaseService) CanExit(doneFlag bool) (bool, bool) {
+func (a *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 	if doneFlag {
 		if a.q.Length() == 0 && a.TryExit() {
 			return doneFlag, true
@@ -216,7 +216,7 @@ func (a *BaseService) CanExit(doneFlag bool) (bool, bool) {
 }
 
 // Run service run
-func (a *BaseService) Run() {
+func (a *BaseContext) Run() {
 	fmt.Printf("service %s do Nothing \n", a.Name())
 }
 
@@ -276,26 +276,6 @@ func NewService(name string, parent Service, m map[string]interface{}) (Service,
 	//Inc AnonymousServiceID count = count +1
 	serviceID := atomic.AddInt32(&AnonymousServiceID, 1)
 	return createServiceByID(serviceID, name, parent, m)
-}
-
-// DeleteService unregister service
-func DeleteService(serviceID int32) error {
-	se, err := GetServiceByID(serviceID)
-	if err != nil {
-		return err
-	}
-	App.Services.Delete(serviceID)
-	se.Stop()
-
-	return nil
-}
-
-// DeleteAllServices traversing services
-func DeleteAllServices() {
-	App.Services.Range(func(key interface{}, v interface{}) bool {
-		DeleteService(key.(int32))
-		return true
-	})
 }
 
 // SendMessage send message to services

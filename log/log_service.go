@@ -31,15 +31,14 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/server"
 )
 
 // LogService struct implements the interface Service
 type LogService struct {
-	BaseService
-	logger log.Log
-
+	server.BaseContext
+	logger  server.Log
+	console server.Log
 	//for stat
 	buf     bytes.Buffer
 	count   int32
@@ -47,7 +46,7 @@ type LogService struct {
 }
 
 // LogServiceCreate log service create function
-func LogServiceCreate() (Service, error) {
+func LogServiceCreate() (server.Service, error) {
 	return &LogService{}, nil
 }
 
@@ -62,19 +61,24 @@ func LogServiceCreate() (Service, error) {
 // 	"dailyEnable": true,
 //  "queueSize":1000,
 // }
-func (s *LogService) Setup(m map[string]interface{}) (Service, error) {
+func (s *LogService) Setup(m map[string]interface{}) (server.Service, error) {
 
-	logger, err := log.NewFileLogger(m)
+	logger, err := NewFileLogger(m)
 	if err != nil {
 		return nil, err
 	}
 	s.logger = logger
+	console, err := NewConsoleLogger(m)
+	if err != nil {
+		return nil, err
+	}
+	s.console = console
 	return s, nil
 }
 
 // Reload reload config from map
 func (s *LogService) Reload(m map[string]interface{}) error {
-	level, err := log.ParseValue(m, "level", 7)
+	level, err := server.ParseValue(m, "level", 7)
 	if err != nil {
 		return err
 	}
@@ -101,6 +105,7 @@ func (s *LogService) Run() {
 
 	if s.buf.Len() > 0 {
 		s.logger.WriteLog(s.buf.Bytes(), s.count)
+		s.console.WriteLog(s.buf.Bytes(), s.count)
 		s.buf.Reset()
 	} else {
 		// ensure queue is empty
@@ -118,7 +123,7 @@ func (s *LogService) Stop() error {
 }
 
 // SendMessage async push message to queue
-func (s *LogService) SendMessage(option int32, msg *Message) error {
+func (s *LogService) SendMessage(option int32, msg *server.Message) error {
 	return fmt.Errorf("TODO LogService SendMessage")
 }
 

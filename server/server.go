@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 // GBytesPool pre-create []byte pool
@@ -72,7 +73,15 @@ func init() {
 
 // GracefulExit server exit by call root context close
 func GracefulExit() {
+	WG.Wait()
 	GLoggerService.Close()
+	// wait root context done
+	for {
+		if _, exitFlag := GLoggerService.CanExit(true); exitFlag {
+			return
+		}
+		time.Sleep(1 * time.Second)
+	}
 }
 
 // Server server entity, only one instance

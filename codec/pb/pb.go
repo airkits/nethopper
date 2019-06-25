@@ -21,33 +21,29 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-14 19:56:49
+// * @Date: 2019-06-24 12:10:50
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-14 19:56:49
+// * @Last Modified time: 2019-06-24 12:10:50
 
-package main
+package pb
 
 import (
-	"fmt"
-
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"github.com/golang/protobuf/proto"
 )
 
-func main() {
-	fmt.Println("helloworld")
+// PBCodec use protobuf encode/decode
 
-	m := map[string]interface{}{
-		"filename":    "log/server.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
-	}
-	RegisterService("log", log.LogServiceCreate)
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	Debug("hello game")
-	GracefulExit()
+// Marshal encode message
+func Marshal(v interface{}) ([]byte, error) {
+	return proto.Marshal(v.(proto.Message))
+}
+
+// Unmarshal decode message
+func Unmarshal(data []byte, v interface{}) error {
+	return proto.Unmarshal(data, v.(proto.Message))
+}
+
+// Name of codec
+func Name() string {
+	return "PBCodec"
 }

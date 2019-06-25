@@ -21,33 +21,25 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-14 19:56:49
+// * @Date: 2019-06-24 09:49:04
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-14 19:56:49
+// * @Last Modified time: 2019-06-24 09:49:04
 
-package main
+package server
 
 import (
 	"fmt"
-
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"reflect"
 )
 
-func main() {
-	fmt.Println("helloworld")
-
-	m := map[string]interface{}{
-		"filename":    "log/server.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
+// ParseValue read config from map,if not exist return default value,support string,int,bool
+func ParseValue(m map[string]interface{}, key string, opt interface{}) (interface{}, error) {
+	value, ok := m[key]
+	if !ok {
+		return opt, nil
 	}
-	RegisterService("log", log.LogServiceCreate)
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	Debug("hello game")
-	GracefulExit()
+	if reflect.TypeOf(value) != reflect.TypeOf(opt) {
+		return nil, fmt.Errorf("config %s type failed", key)
+	}
+	return value, nil
 }

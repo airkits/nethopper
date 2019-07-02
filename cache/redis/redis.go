@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/pkg/errors"
 )
 
 // NewRedisCache create redis cache instance
@@ -40,15 +41,29 @@ func NewRedisCache(m map[string]interface{}) (*RedisCache, error) {
 	return conn, nil
 }
 
-// NewRedisPool create redis pool by address(ip:port) and password
-func NewRedisPool(address string, password string, maxIdle int, maxActive int, idleTimeout time.Duration) *redis.Pool {
+// NewRedisPool create redis pool by address(ip:port) and pwd
+func NewRedisPool(addr string, pwd string, maxIdle int, maxActive int, idleTimeout time.Duration) *redis.Pool {
 	pool := &redis.Pool{
 		MaxIdle:     maxIdle,   // 最大链接 default 8
 		MaxActive:   maxActive, //0：表示最大空闲连接个数
 		IdleTimeout: idleTimeout,
 		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", address)
+			c, err := redis.Dial("tcp", addr)
+			if err != nil {
+				return nil, errors.Wrap(err, "[backend] Redis Dial failed")
+			}
+			if pwd != "" {
+				if _, err := c.Do("AUTH", pwd); err != nil {
+					c.Close()
+					return nil, errors.Wrap(err, "[backend] Redis AUTH failed")
+				}
+			}
+			if _, err := c.Do("SELECT", params.Get("db")); err != nil {
+				c.Close()
+				return nil, errors.Wrap(err, "[backend] Redis DB select failed")
+			}
+			return c, nil
 		},
 	}
 	return pool
@@ -69,15 +84,7 @@ type RedisCache struct {
 // server default 127.0.0.1:6379
 // password default ""
 func (c *RedisCache) Setup(m map[string]interface{}) (*RedisCache, error) {
-	c.pool = &redis.Pool{
-		MaxIdle:     8, // 最大链接
-		MaxActive:   0, //0：表示最大空闲连接个数
-		IdleTimeout: 300,
-		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
-		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", "127.0.0.1:6379")
-		},
-	}
+	c.pool = NewRedisPool(c.Address, c.Password, 8, 0, 300)
 	return c, nil
 }
 

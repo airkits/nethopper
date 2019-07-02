@@ -4,3 +4,5 @@ github.com/gomodule/redigo v2.0.0+incompatible h1:K/R+8tc58AaqLkqG2Ol3Qk+DR/TlNu
 github.com/gomodule/redigo v2.0.0+incompatible/go.mod h1:B4C85qUVwatsJoIUNIfCRsp7qO0iAmpGFZ4EELWSbC4=
 github.com/gonethopper/queue v0.0.0-20190620101229-0ece0ae0c580 h1:eM0D1GofXGYLjvqsiZUb64klTPGRHSLFx5LgAJOJAX8=
 github.com/gonethopper/queue v0.0.0-20190620101229-0ece0ae0c580/go.mod h1:u9+ZwLto+Cm1Y0a0rn4hu6eILA/xgBKZ/975Qn743zI=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

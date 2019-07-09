@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/gonethopper/nethopper/server"
 	"github.com/pkg/errors"
 )
 
@@ -42,11 +43,12 @@ func NewRedisCache(m map[string]interface{}) (*RedisCache, error) {
 }
 
 // NewRedisPool create redis pool by address(ip:port) and pwd
-func NewRedisPool(addr string, pwd string, maxIdle int, maxActive int, idleTimeout time.Duration) *redis.Pool {
+func NewRedisPool(addr string, pwd string, db int, maxIdle int, maxActive int, idleTimeout int) *redis.Pool {
 	pool := &redis.Pool{
 		MaxIdle:     maxIdle,   // 最大链接 default 8
 		MaxActive:   maxActive, //0：表示最大空闲连接个数
-		IdleTimeout: idleTimeout,
+		IdleTimeout: time.Duration(idleTimeout) * time.Second,
+		Wait:        false,
 		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", addr)
@@ -59,11 +61,18 @@ func NewRedisPool(addr string, pwd string, maxIdle int, maxActive int, idleTimeo
 					return nil, errors.Wrap(err, "[backend] Redis AUTH failed")
 				}
 			}
-			if _, err := c.Do("SELECT", params.Get("db")); err != nil {
+			if _, err := c.Do("SELECT", db); err != nil {
 				c.Close()
 				return nil, errors.Wrap(err, "[backend] Redis DB select failed")
 			}
 			return c, nil
+		},
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			if time.Since(t) < time.Minute {
+				return nil
+			}
+			_, err := c.Do("PING")
+			return err
 		},
 	}
 	return pool
@@ -71,30 +80,76 @@ func NewRedisPool(addr string, pwd string, maxIdle int, maxActive int, idleTimeo
 
 // RedisCache use redis as cache
 type RedisCache struct {
-	Address  string
-	Password string
-	pool     *redis.Pool
+	Address     string
+	Password    string
+	maxIdle     int
+	maxActive   int
+	idleTimeout int
+	db          int
+	pool        *redis.Pool
 }
 
 // Setup init cache with config
-// config map
-// maxIdle default 8
-// maxActive default 0
-// idleTimeout default 300
-// server default 127.0.0.1:6379
-// password default ""
 func (c *RedisCache) Setup(m map[string]interface{}) (*RedisCache, error) {
-	c.pool = NewRedisPool(c.Address, c.Password, 8, 0, 300)
+	if err := c.readConfig(m); err != nil {
+		return nil, err
+	}
+	c.pool = NewRedisPool(c.Address, c.Password, c.db, c.maxIdle, c.maxActive, c.idleTimeout)
 	return c, nil
 }
 
+// config map
+// maxIdle default 8
+// maxActive default 10
+// idleTimeout default 300
+// address default 127.0.0.1:6379
+// password default ""
 func (c *RedisCache) readConfig(m map[string]interface{}) error {
+	maxIdle, err := server.ParseValue(m, "maxIdle", 8)
+	if err != nil {
+		return err
+	}
+	c.maxIdle = maxIdle.(int)
+
+	maxActive, err := server.ParseValue(m, "maxActive", 10)
+	if err != nil {
+		return err
+	}
+	c.maxActive = maxActive.(int)
+
+	idleTimeout, err := server.ParseValue(m, "idleTimeout", 300)
+	if err != nil {
+		return err
+	}
+	c.idleTimeout = idleTimeout.(int)
+
+	address, err := server.ParseValue(m, "address", "127.0.0.1:6379")
+	if err != nil {
+		return err
+	}
+	c.Address = address.(string)
+	password, err := server.ParseValue(m, "password", "")
+	if err != nil {
+		return err
+	}
+	c.Password = password.(string)
+	db, err := server.ParseValue(m, "db", 0)
+	if err != nil {
+		return err
+	}
+	c.db = db.(int)
+
 	return nil
 }
 
 // Version cache version
 func (c *RedisCache) Version() string {
-	return ""
+	conn := c.pool.Get()
+	r, e := redis.String(conn.Do("INFO"))
+	if e != nil && e != redis.ErrNil {
+		return e.Error()
+	}
+	return r
 }
 
 // Ping to check connection is alive

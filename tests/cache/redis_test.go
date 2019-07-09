@@ -36,7 +36,7 @@ import (
 
 func TestRedis(t *testing.T) {
 	m := map[string]interface{}{
-		"address": "127.0.0.1:6739",
+		"address": "127.0.0.1:6379",
 	}
 	redisCache, err := redis.NewRedisCache(m)
 	if err != nil {

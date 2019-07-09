@@ -29,7 +29,6 @@ package cache
 
 import (
 	"context"
-	"time"
 )
 
 // Cache interface
@@ -42,18 +41,18 @@ type Cache interface {
 	Ping() error
 	// Get command to get value from cache, control with context
 	Get(ctx context.Context, key string) (interface{}, error)
-	// Set command to set value to cache,key is string, if timeout is setted, than key will have Expire, in seconds,
-	Set(ctx context.Context, key string, val interface{}, timeout time.Duration) error
+	// Set command to set value to cache,key is string, if expire(in seconds) is setted, than key will have Expire, in seconds,
+	Set(ctx context.Context, key string, val interface{}, expire int64) error
 	// Del key from cache
 	Del(ctx context.Context, key string) error
 	// Exists key in redis, exist return true
-	Exists(key string) bool
+	Exists(key string) (bool, error)
 	// SetExpire set expire time for key,in seconds
-	SetExpire(ctx context.Context, key string, timeout time.Duration) error
+	SetExpire(ctx context.Context, key string, expire int64) error
 	// Incr auto-Increment get key and set v++
-	Incr(ctx context.Context, key string) error
+	Incr(ctx context.Context, key string) (int64, error)
 	// Decr auto-Decrement get key and set v--
-	Decr(ctx context.Context, key string) error
+	Decr(ctx context.Context, key string) (int64, error)
 	// Gets command to get multi keys from cache
 	Gets(ctx context.Context, keys ...string) (map[string]interface{}, error)
 	// Do command to exec custom command

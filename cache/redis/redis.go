@@ -38,8 +38,9 @@ import (
 
 // NewRedisCache create redis cache instance
 func NewRedisCache(m map[string]interface{}) (*RedisCache, error) {
-	conn := &RedisCache{}
-	return conn, nil
+	cache := &RedisCache{}
+	return cache.Setup(m)
+
 }
 
 // NewRedisPool create redis pool by address(ip:port) and pwd
@@ -48,7 +49,6 @@ func NewRedisPool(addr string, pwd string, db int, maxIdle int, maxActive int, i
 		MaxIdle:     maxIdle,   // 最大链接 default 8
 		MaxActive:   maxActive, //0：表示最大空闲连接个数
 		IdleTimeout: time.Duration(idleTimeout) * time.Second,
-		Wait:        false,
 		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", addr)
@@ -95,6 +95,7 @@ func (c *RedisCache) Setup(m map[string]interface{}) (*RedisCache, error) {
 		return nil, err
 	}
 	c.pool = NewRedisPool(c.Address, c.Password, c.db, c.maxIdle, c.maxActive, c.idleTimeout)
+
 	return c, nil
 }
 
@@ -154,50 +155,86 @@ func (c *RedisCache) Version() string {
 
 // Ping to check connection is alive
 func (c *RedisCache) Ping() error {
-	return nil
+	return errors.New("redis pool internal processing")
 }
 
 // Get command to get value from cache, control with context
 func (c *RedisCache) Get(ctx context.Context, key string) (interface{}, error) {
-	return nil, nil
+	return c.Do(ctx, "GET", key)
 }
 
-// Set command to set value to cache,key is string, if timeout is setted, than key will have Expire, in seconds,
-func (c *RedisCache) Set(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
+// Set command to set value to cache,key is string, if expire(second) is setted, than key will have Expire, in seconds,
+func (c *RedisCache) Set(ctx context.Context, key string, val interface{}, expire int64) error {
+
+	if expire > 0 {
+		_, err := c.Do(ctx, "SETEX", key, expire, val)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := c.Do(ctx, "SET", key, val)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 // Del key from cache
 func (c *RedisCache) Del(ctx context.Context, key string) error {
+	if _, err := c.Do(ctx, "DEL", key); err != nil {
+		return err
+	}
 	return nil
 }
 
 // Exists key in redis, exist return true
-func (c *RedisCache) Exists(key string) bool {
-	return true
+func (c *RedisCache) Exists(ctx context.Context, key string) (bool, error) {
+	ret, err := c.Do(ctx, "EXISTS", key)
+	if err != nil {
+		return false, err
+	}
+	return redis.Bool(ret, err)
 }
 
-// SetExpire set expire time for key,in seconds
-func (c *RedisCache) SetExpire(ctx context.Context, key string, timeout time.Duration) error {
+// SetExpire set expire time for key,expire(in seconds)
+func (c *RedisCache) SetExpire(ctx context.Context, key string, expire int64) error {
+	_, err := c.Do(ctx, "EXPIRE", key, expire)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // Incr auto-Increment get key and set v++
-func (c *RedisCache) Incr(ctx context.Context, key string) error {
-	return nil
+func (c *RedisCache) Incr(ctx context.Context, key string) (int64, error) {
+	ret, err := c.Do(ctx, "INCR", key)
+	if err != nil {
+		return -1, err
+	}
+	return redis.Int64(ret, err)
 }
 
 // Decr auto-Decrement get key and set v--
-func (c *RedisCache) Decr(ctx context.Context, key string) error {
-	return nil
+func (c *RedisCache) Decr(ctx context.Context, key string) (int64, error) {
+	ret, err := c.Do(ctx, "DECR", key)
+	if err != nil {
+		return -1, err
+	}
+	return redis.Int64(ret, err)
 }
 
 // Gets command to get multi keys from cache
 func (c *RedisCache) Gets(ctx context.Context, keys ...string) (map[string]interface{}, error) {
-	return nil, nil
+
+	return c.Do(ctx, "MGET", keys)
 }
 
 // Do command to exec custom command
 func (c *RedisCache) Do(ctx context.Context, commandName string, args ...interface{}) (reply interface{}, err error) {
-	return nil, nil
+	conn, err := c.pool.GetContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return conn.Do(commandName, args...)
 }

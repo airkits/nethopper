@@ -28,7 +28,7 @@
 package cache_test
 
 import (
-	"fmt"
+	"context"
 	"testing"
 
 	"github.com/gonethopper/nethopper/cache/redis"
@@ -42,5 +42,30 @@ func TestRedis(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(redisCache.Version())
+	//fmt.Println(redisCache.Version())
+
+	ctx := context.Background()
+	key := "aaaa"
+	val := "bbb"
+	var expr int64 = 0
+	if err := redisCache.Set(ctx, key, val, expr); err != nil {
+		t.Error(err)
+	}
+	if v, err := redisCache.GetString(ctx, key); err != nil || val != v {
+		t.Error(err)
+	}
+	if err := redisCache.Del(ctx, key); err != nil {
+		t.Error(err)
+	}
+	var valInt int64 = 99
+	if err := redisCache.Set(ctx, key, valInt, expr); err != nil {
+		t.Error(err)
+	}
+	if ret, err := redisCache.Incr(ctx, key); err != nil || ret != valInt+1 {
+		t.Error(err)
+	}
+	if ret, err := redisCache.Decr(ctx, key); err != nil || ret != valInt {
+		t.Error(err)
+	}
+
 }

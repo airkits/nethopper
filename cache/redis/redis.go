@@ -163,7 +163,60 @@ func (c *RedisCache) Get(ctx context.Context, key string) (interface{}, error) {
 	return c.Do(ctx, "GET", key)
 }
 
-// Set command to set value to cache,key is string, if expire(second) is setted, than key will have Expire, in seconds,
+// GetInt command
+func (c *RedisCache) GetInt(ctx context.Context, key string) (int, error) {
+	return redis.Int(c.Get(ctx, key))
+}
+
+// GetInt64 command
+func (c *RedisCache) GetInt64(ctx context.Context, key string) (int64, error) {
+	return redis.Int64(c.Get(ctx, key))
+}
+
+// GetFloat64 command
+func (c *RedisCache) GetFloat64(ctx context.Context, key string) (float64, error) {
+	return redis.Float64(c.Get(ctx, key))
+}
+
+// GetString command
+func (c *RedisCache) GetString(ctx context.Context, key string) (string, error) {
+	return redis.String(c.Get(ctx, key))
+}
+
+// GetInts command
+func (c *RedisCache) GetInts(ctx context.Context, keys ...interface{}) (map[string]int, error) {
+	return redis.IntMap(c.Do(ctx, "MGET", keys))
+}
+
+// GetInt64s command
+func (c *RedisCache) GetInt64s(ctx context.Context, keys ...interface{}) (map[string]int64, error) {
+	return redis.Int64Map(c.Do(ctx, "MGET", keys))
+}
+
+// GetStrings command
+func (c *RedisCache) GetStrings(ctx context.Context, keys ...interface{}) (map[string]string, error) {
+	return redis.StringMap(c.Do(ctx, "MGET", keys))
+}
+
+// Gets command to get multi keys from cache
+func (c *RedisCache) Gets(ctx context.Context, keys ...string) (map[string]interface{}, error) {
+
+	v, err := redis.Values(c.Do(ctx, "MGET", keys))
+	// If field is not found then return map with fields as nil
+	if len(v) == 0 || err == redis.ErrNil {
+		v = make([]interface{}, len(keys))
+	}
+
+	// Form a map with returned results
+	res := make(map[string]interface{})
+	for i, k := range keys {
+		res[k] = v[i]
+	}
+	return res, err
+
+}
+
+// Set command to set value to cache,key is string, if expire(second) is setted bigger than 0, than key will have Expire time, in seconds,
 func (c *RedisCache) Set(ctx context.Context, key string, val interface{}, expire int64) error {
 
 	if expire > 0 {
@@ -224,17 +277,16 @@ func (c *RedisCache) Decr(ctx context.Context, key string) (int64, error) {
 	return redis.Int64(ret, err)
 }
 
-// Gets command to get multi keys from cache
-func (c *RedisCache) Gets(ctx context.Context, keys ...string) (map[string]interface{}, error) {
-
-	return c.Do(ctx, "MGET", keys)
-}
-
 // Do command to exec custom command
+// if redis return redis.ErrNil should convert to value null and err null
 func (c *RedisCache) Do(ctx context.Context, commandName string, args ...interface{}) (reply interface{}, err error) {
 	conn, err := c.pool.GetContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return conn.Do(commandName, args...)
+	ret, err := conn.Do(commandName, args...)
+	if err != nil && err == redis.ErrNil {
+		return nil, nil
+	}
+	return ret, err
 }

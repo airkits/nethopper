@@ -41,6 +41,20 @@ type Cache interface {
 	Ping() error
 	// Get command to get value from cache, control with context
 	Get(ctx context.Context, key string) (interface{}, error)
+	// GetInt command
+	GetInt(ctx context.Context, key string) (int, error)
+	// GetInt64 command
+	GetInt64(ctx context.Context, key string) (int64, error)
+	// GetFloat64 command
+	GetFloat64(ctx context.Context, key string) (float64, error)
+	// GetString command
+	GetString(ctx context.Context, key string) (string, error)
+	// GetInts command
+	GetInts(ctx context.Context, keys ...interface{}) (map[string]int, error)
+	// GetInt64s command
+	GetInt64s(ctx context.Context, keys ...interface{}) (map[string]int64, error)
+	// GetStrings command
+	GetStrings(ctx context.Context, keys ...interface{}) (map[string]string, error)
 	// Set command to set value to cache,key is string, if expire(in seconds) is setted, than key will have Expire, in seconds,
 	Set(ctx context.Context, key string, val interface{}, expire int64) error
 	// Del key from cache

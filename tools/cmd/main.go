@@ -21,8 +21,14 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-07-16 08:29:14
+// * @Date: 2019-07-16 08:55:09
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-07-16 08:29:14
+// * @Last Modified time: 2019-07-16 08:55:09
 
-package database
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("hello world")
+}

@@ -25,22 +25,22 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package redis
+package orm
 
 import "github.com/gonethopper/nethopper/server"
 
-// RedisService struct to define service
-type RedisService struct {
+// OrmService struct to define service
+type OrmService struct {
 	server.BaseContext
 }
 
-// RedisServiceCreate  service create function
-func RedisServiceCreate() (server.Service, error) {
-	return &RedisService{}, nil
+// OrmServiceCreate  service create function
+func OrmServiceCreate() (server.Service, error) {
+	return &OrmService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *RedisService) UserData() int32 {
+func (s *OrmService) UserData() int32 {
 	return 0
 }
 
@@ -49,31 +49,31 @@ func (s *RedisService) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *RedisService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *OrmService) Setup(m map[string]interface{}) (server.Service, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *RedisService) Reload(m map[string]interface{}) error {
+func (s *OrmService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // Run create goruntine and run, always use ServiceRun to call this function
-func (s *RedisService) Run() {
+func (s *OrmService) Run() {
 
 }
 
 // Stop goruntine
-func (s *RedisService) Stop() error {
+func (s *OrmService) Stop() error {
 	return nil
 }
 
 // SendMessage async send message to service
-func (s *RedisService) SendMessage(option int32, msg *server.Message) error {
+func (s *OrmService) SendMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
 // SendBytes async send string or bytes to queue
-func (s *RedisService) SendBytes(option int32, buf []byte) error {
+func (s *OrmService) SendBytes(option int32, buf []byte) error {
 	return nil
 }

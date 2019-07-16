@@ -25,22 +25,22 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package redis
+package mysql
 
 import "github.com/gonethopper/nethopper/server"
 
-// RedisService struct to define service
-type RedisService struct {
+// MysqlService struct to define service
+type MysqlService struct {
 	server.BaseContext
 }
 
-// RedisServiceCreate  service create function
-func RedisServiceCreate() (server.Service, error) {
-	return &RedisService{}, nil
+// MysqlServiceCreate  service create function
+func MysqlServiceCreate() (server.Service, error) {
+	return &MysqlService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *RedisService) UserData() int32 {
+func (s *MysqlService) UserData() int32 {
 	return 0
 }
 
@@ -49,31 +49,31 @@ func (s *RedisService) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *RedisService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *MysqlService) Setup(m map[string]interface{}) (server.Service, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *RedisService) Reload(m map[string]interface{}) error {
+func (s *MysqlService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // Run create goruntine and run, always use ServiceRun to call this function
-func (s *RedisService) Run() {
+func (s *MysqlService) Run() {
 
 }
 
 // Stop goruntine
-func (s *RedisService) Stop() error {
+func (s *MysqlService) Stop() error {
 	return nil
 }
 
 // SendMessage async send message to service
-func (s *RedisService) SendMessage(option int32, msg *server.Message) error {
+func (s *MysqlService) SendMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
 // SendBytes async send string or bytes to queue
-func (s *RedisService) SendBytes(option int32, buf []byte) error {
+func (s *MysqlService) SendBytes(option int32, buf []byte) error {
 	return nil
 }

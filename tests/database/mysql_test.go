@@ -21,21 +21,33 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-07-16 21:53:29
+// * @Date: 2019-06-21 13:42:42
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-07-16 21:53:29
+// * @Last Modified time: 2019-06-21 13:42:42
 
-package mysql
+package database_test
 
-// MysqlDB use redis as cache
-type MysqlDB struct {
-	Address  string
-	Password string
-	dbName   string
-}
+import (
+	"testing"
 
-// Setup init cache with config
-func (c *MysqlDB) Setup(m map[string]interface{}) (*MysqlDB, error) {
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gonethopper/nethopper/database/sql"
+	. "github.com/gonethopper/nethopper/server"
+)
 
-	return c, nil
+func TestSQLConnection(t *testing.T) {
+	m := map[string]interface{}{
+		"queueSize": 1000,
+		"dsn":       "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
+		"driver":    "mysql",
+	}
+	if conn, err := sql.NewConnection(m); err == nil {
+		if err := conn.Open(); err != nil {
+			t.Error(err)
+			Error("error")
+		}
+	} else {
+		t.Error(err)
+	}
+
 }

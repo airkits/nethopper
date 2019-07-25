@@ -1,6 +1,8 @@
 package kcp
 
 import (
+	"net"
+
 	"github.com/gonethopper/nethopper/server"
 	"github.com/xtaci/kcp-go"
 )
@@ -121,20 +123,20 @@ func (c *KCPConnect) Listen() {
 	if err := listener.SetDSCP(c.Dscp); err != nil {
 		server.Error("SetDSCP %s", err.Error())
 	}
-	// loop accepting
-	for {
-		conn, err := listener.AcceptKCP()
-		if err != nil {
-			server.Warning("accept failed: %s", err.Error())
-			continue
-		}
-		// set kcp parameters
-		conn.SetWindowSize(c.Sndwnd, c.Rcvwnd)
-		conn.SetNoDelay(c.Nodelay, c.Interval, c.Resend, c.Nc)
-		conn.SetStreamMode(true)
-		conn.SetMtu(c.Mtu)
 
-		// start a goroutine for every incoming connection for reading
-		//go handleClient(conn, config)
+}
+
+// Accept accepts the next incoming call and returns the new connection.
+func (c *KCPConnect) Accept() (net.Conn, error) {
+	conn, err := c.listener.AcceptKCP()
+	if err != nil {
+		server.Warning("accept failed: %s", err.Error())
+		return nil, err
 	}
+	// set kcp parameters
+	conn.SetWindowSize(c.Sndwnd, c.Rcvwnd)
+	conn.SetNoDelay(c.Nodelay, c.Interval, c.Resend, c.Nc)
+	conn.SetStreamMode(true)
+	conn.SetMtu(c.Mtu)
+	return conn, nil
 }

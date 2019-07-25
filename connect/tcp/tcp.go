@@ -70,18 +70,18 @@ func (c *TCPConnect) Listen() {
 	c.tcpListener = listener
 	server.Info("listening on: %s %s", c.Network, listener.Addr())
 
-	// loop accepting
-	for {
-		conn, err := listener.AcceptTCP()
-		if err != nil {
-			server.Warning("accept failed: %s", err.Error())
-			continue
-		}
-		// set socket read buffer
-		conn.SetReadBuffer(c.ReadBufferSize)
-		// set socket write buffer
-		conn.SetWriteBuffer(c.WriteBufferSize)
-		// start a goroutine for every incoming connection for reading
-		//	go handleClient(conn, config)
+}
+
+// Accept accepts the next incoming call and returns the new connection.
+func (c *TCPConnect) Accept() (net.Conn, error) {
+	conn, err := c.tcpListener.AcceptTCP()
+	if err != nil {
+		server.Warning("accept failed: %s", err.Error())
+		return nil, err
 	}
+	// set socket read buffer
+	conn.SetReadBuffer(c.ReadBufferSize)
+	// set socket write buffer
+	conn.SetWriteBuffer(c.WriteBufferSize)
+	return conn, nil
 }

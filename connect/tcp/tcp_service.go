@@ -73,6 +73,19 @@ func (s *TCPService) Setup(m map[string]interface{}) (server.Service, error) {
 	if err := s.readConfig(m); err != nil {
 		panic(err)
 	}
+
+	tcpAddr, err := net.ResolveTCPAddr(s.Network, s.Address)
+	if err != nil {
+		panic(err)
+	}
+
+	listener, err := net.ListenTCP("tcp", tcpAddr)
+	if err != nil {
+		panic(err)
+	}
+	s.tcpListener = listener
+	server.Info("listening on: %s %s", s.Network, listener.Addr())
+
 	return s, nil
 }
 
@@ -121,29 +134,15 @@ func (s *TCPService) Reload(m map[string]interface{}) error {
 }
 
 // Run create goruntine and run, always use ServiceRun to call this function
-// Listen and bind local ip
+// Listen and bind local ip and loop accepting
 func (s *TCPService) Run() {
 
-	tcpAddr, err := net.ResolveTCPAddr(s.Network, s.Address)
+	conn, err := s.accept()
 	if err != nil {
-		panic(err)
+		return
 	}
+	go s.handler(conn, s.ReadDeadline)
 
-	listener, err := net.ListenTCP("tcp", tcpAddr)
-	if err != nil {
-		panic(err)
-	}
-	s.tcpListener = listener
-	server.Info("listening on: %s %s", s.Network, listener.Addr())
-
-	// loop accepting
-	for {
-		conn, err := s.accept()
-		if err != nil {
-			continue
-		}
-		go s.handler(conn, s.ReadDeadline)
-	}
 }
 
 // accept the next incoming call and returns the new connection.
@@ -164,6 +163,7 @@ func (s *TCPService) handler(conn net.Conn, readDeadline time.Duration) {
 	defer conn.Close()
 	// for reading the 2-Byte header
 	header := make([]byte, 2)
+	cmd := make([]byte, 2)
 
 	host, port, err := net.SplitHostPort(conn.RemoteAddr().String())
 	if err != nil {
@@ -191,15 +191,36 @@ func (s *TCPService) handler(conn net.Conn, readDeadline time.Duration) {
 		}
 		size := binary.BigEndian.Uint16(header)
 
+		n, err = io.ReadFull(conn, cmd)
+		if err != nil {
+			server.Warning("read cmd failed, ip:%v reason:%v size:%v", sess.IP, err, n)
+			return
+		}
+		cmdLength := binary.BigEndian.Uint16(cmd)
+
+		cmdBuffer := make([]byte, cmdLength)
+		n, err = io.ReadFull(conn, cmdBuffer)
+		if err != nil {
+			server.Warning("read cmdBuffer failed, ip:%v reason:%v size:%v", sess.IP, err, n)
+			return
+		}
+
 		// alloc a byte slice of the size defined in the header for reading data
-		payload := make([]byte, size)
+		payload := make([]byte, size-cmdLength-2)
 		n, err = io.ReadFull(conn, payload)
 		if err != nil {
 			server.Warning("read payload failed, ip:%v reason:%v size:%v", sess.IP, err, n)
 			return
 		}
-		message := server.CreateMessage(s.ID(), server.ServiceIDC2S, server.MTRequest, cmd, payload)
-		s.SendMessage(0, message)
+		message := server.CreateMessage(s.ID(), server.ServiceIDC2S, server.MTRequest, string(cmdBuffer), payload)
+		server.SendMessage(message.DestID, 0, message)
+		for i := 0; i < 8; i++ {
+			m, err := sess.MQ.AsyncPop()
+			if err == nil {
+				payload2 := m.(*server.Message).Payload
+				conn.Write(payload2)
+			}
+		}
 		// deliver the data to the input queue of agent()
 		select {
 		case <-sess.Die:

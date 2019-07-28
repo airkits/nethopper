@@ -65,7 +65,7 @@ type MessagePool struct {
 // Alloc borrow message from pool
 func (p *MessagePool) Alloc(srcID int32, destID int32, msgType int8, cmd string, payLoad []byte) *Message {
 	m := p.Pool.Get().(*Message)
-	m.Reset()
+
 	m.SrcID = srcID
 	m.DestID = destID
 	m.MsgType = msgType
@@ -76,7 +76,18 @@ func (p *MessagePool) Alloc(srcID int32, destID int32, msgType int8, cmd string,
 
 // Free retrun message to pool
 func (p *MessagePool) Free(m *Message) {
+	m.Reset()
 	p.Pool.Put(m)
+}
+
+// CreateMessage get message from pool
+func CreateMessage(srcID int32, destID int32, msgType int8, cmd string, payLoad []byte) *Message {
+	return GMessagePool.Alloc(srcID, destID, msgType, cmd, payLoad)
+}
+
+// RemoveMessage return message to pool
+func RemoveMessage(m *Message) {
+	GMessagePool.Free(m)
 }
 
 //Message mq Message

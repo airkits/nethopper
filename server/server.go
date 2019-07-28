@@ -40,6 +40,9 @@ var GBytesPool *BytesPool
 // GMessagePool pre-create message pool
 var GMessagePool *MessagePool
 
+// GSessionPool pre-create session
+var GSessionPool *SessionPool
+
 // log variable start
 
 // GLoggerService global log service
@@ -64,6 +67,7 @@ var App *Server
 func init() {
 	GBytesPool = NewBytesPool()
 	GMessagePool = NewMessagePool()
+	GSessionPool = NewSessionPool()
 	App = &Server{
 		GoCount: 0,
 	}

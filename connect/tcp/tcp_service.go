@@ -164,15 +164,16 @@ func (s *TCPService) handler(conn net.Conn, readDeadline time.Duration) {
 	defer conn.Close()
 	// for reading the 2-Byte header
 	header := make([]byte, 2)
-	
+
 	host, port, err := net.SplitHostPort(conn.RemoteAddr().String())
 	if err != nil {
 		server.Error("cannot get remote address:", err)
 		return
 	}
+
 	// create a new session object for the connection
 	// and record it's IP address
-	sess := server.NewSession(s.ID(), host, port)
+	sess := server.CreateSession(s.ID(), host, port)
 	server.Info("new connection from:%v port:%v", host, port)
 
 	// read loop
@@ -197,10 +198,10 @@ func (s *TCPService) handler(conn net.Conn, readDeadline time.Duration) {
 			server.Warning("read payload failed, ip:%v reason:%v size:%v", sess.IP, err, n)
 			return
 		}
-
+		message := server.CreateMessage(s.ID(), server.ServiceIDC2S, server.MTRequest, cmd, payload)
+		s.SendMessage(0, message)
 		// deliver the data to the input queue of agent()
 		select {
-		case in <- payload: // payload queued
 		case <-sess.Die:
 			server.Warning("connection closed by logic ip:%v", sess.IP)
 			return

@@ -44,11 +44,15 @@ const (
 	ServiceIDMain
 	// ServiceIDMonitor server monitor service
 	ServiceIDMonitor
-	//ServiceIDLog log service
+	// ServiceIDLog log service
 	ServiceIDLog
-	//ServiceIDUserCustom User custom define named services from 64-128
+	// ServiceIDC2S client to server
+	ServiceIDC2S
+	// ServiceIDS2S server to server
+	ServiceIDS2S
+	// ServiceIDUserCustom User custom define named services from 64-128
 	ServiceIDUserCustom = 64
-	//ServiceIDNamedMax named services max ID
+	// ServiceIDNamedMax named services max ID
 	ServiceIDNamedMax = 128
 )
 

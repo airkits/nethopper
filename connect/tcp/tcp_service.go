@@ -133,9 +133,9 @@ func (s *TCPService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// Run create goruntine and run, always use ServiceRun to call this function
+// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
 // Listen and bind local ip and loop accepting
-func (s *TCPService) Run() {
+func (s *TCPService) OnRun(dt time.Duration) {
 
 	conn, err := s.accept()
 	if err != nil {
@@ -212,13 +212,17 @@ func (s *TCPService) handler(conn net.Conn, readDeadline time.Duration) {
 			server.Warning("read payload failed, ip:%v reason:%v size:%v", sess.IP, err, n)
 			return
 		}
-		message := server.CreateMessage(s.ID(), server.ServiceIDC2S, server.MTRequest, string(cmdBuffer), payload)
+		message := server.CreateMessage(s.ID(), server.ServiceIDLogic, server.MTRequest, string(cmdBuffer), payload)
 		server.SendMessage(message.DestID, 0, message)
+
 		for i := 0; i < 8; i++ {
 			m, err := sess.MQ.AsyncPop()
 			if err == nil {
 				payload2 := m.(*server.Message).Payload
+
 				conn.Write(payload2)
+			} else {
+				break
 			}
 		}
 		// deliver the data to the input queue of agent()
@@ -235,12 +239,12 @@ func (s *TCPService) Stop() error {
 	return nil
 }
 
-// SendMessage async send message to service
-func (s *TCPService) SendMessage(option int32, msg *server.Message) error {
+// PushMessage async send message to service
+func (s *TCPService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
-// SendBytes async send string or bytes to queue
-func (s *TCPService) SendBytes(option int32, buf []byte) error {
+// PushBytes async send string or bytes to queue
+func (s *TCPService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

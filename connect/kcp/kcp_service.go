@@ -27,7 +27,11 @@
 
 package tcp
 
-import "github.com/gonethopper/nethopper/server"
+import (
+	"time"
+
+	"github.com/gonethopper/nethopper/server"
+)
 
 // KCPService struct to define service
 type KCPService struct {
@@ -58,8 +62,8 @@ func (s *KCPService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// Run create goruntine and run, always use ServiceRun to call this function
-func (s *KCPService) Run() {
+// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+func (s *KCPService) OnRun(dt time.Duration) {
 
 }
 
@@ -68,12 +72,12 @@ func (s *KCPService) Stop() error {
 	return nil
 }
 
-// SendMessage async send message to service
-func (s *KCPService) SendMessage(option int32, msg *server.Message) error {
+// PushMessage async send message to service
+func (s *KCPService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
-// SendBytes async send string or bytes to queue
-func (s *KCPService) SendBytes(option int32, buf []byte) error {
+// PushBytes async send string or bytes to queue
+func (s *KCPService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

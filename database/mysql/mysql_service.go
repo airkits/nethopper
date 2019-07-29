@@ -27,7 +27,11 @@
 
 package mysql
 
-import "github.com/gonethopper/nethopper/server"
+import (
+	"time"
+
+	"github.com/gonethopper/nethopper/server"
+)
 
 // MysqlService struct to define service
 type MysqlService struct {
@@ -58,8 +62,8 @@ func (s *MysqlService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// Run create goruntine and run, always use ServiceRun to call this function
-func (s *MysqlService) Run() {
+// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+func (s *MysqlService) OnRun(dt time.Duration) {
 
 }
 
@@ -68,12 +72,12 @@ func (s *MysqlService) Stop() error {
 	return nil
 }
 
-// SendMessage async send message to service
-func (s *MysqlService) SendMessage(option int32, msg *server.Message) error {
+// PushMessage async send message to service
+func (s *MysqlService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
-// SendBytes async send string or bytes to queue
-func (s *MysqlService) SendBytes(option int32, buf []byte) error {
+// PushBytes async send string or bytes to queue
+func (s *MysqlService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

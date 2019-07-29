@@ -27,20 +27,24 @@
 
 package logic
 
-import "github.com/gonethopper/nethopper/server"
+import (
+	"time"
 
-// S2SService struct to define service
-type S2SService struct {
+	"github.com/gonethopper/nethopper/server"
+)
+
+// LogicService struct to define service
+type LogicService struct {
 	server.BaseContext
 }
 
-// S2SServiceCreate  service create function
-func S2SServiceCreate() (server.Service, error) {
-	return &S2SService{}, nil
+// LogicServiceCreate  service create function
+func LogicServiceCreate() (server.Service, error) {
+	return &LogicService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *S2SService) UserData() int32 {
+func (s *LogicService) UserData() int32 {
 	return 0
 }
 
@@ -49,31 +53,31 @@ func (s *S2SService) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *S2SService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *LogicService) Setup(m map[string]interface{}) (server.Service, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *S2SService) Reload(m map[string]interface{}) error {
+func (s *LogicService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// Run create goruntine and run, always use ServiceRun to call this function
-func (s *S2SService) Run() {
+// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+func (s *LogicService) OnRun(dt time.Duration) {
 
 }
 
 // Stop goruntine
-func (s *S2SService) Stop() error {
+func (s *LogicService) Stop() error {
 	return nil
 }
 
-// SendMessage async send message to service
-func (s *S2SService) SendMessage(option int32, msg *server.Message) error {
+// PushMessage async send message to service
+func (s *LogicService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
-// SendBytes async send string or bytes to queue
-func (s *S2SService) SendBytes(option int32, buf []byte) error {
+// PushBytes async send string or bytes to queue
+func (s *LogicService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

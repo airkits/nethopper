@@ -27,7 +27,11 @@
 
 package redis
 
-import "github.com/gonethopper/nethopper/server"
+import (
+	"time"
+
+	"github.com/gonethopper/nethopper/server"
+)
 
 // RedisService struct to define service
 type RedisService struct {
@@ -58,8 +62,8 @@ func (s *RedisService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// Run create goruntine and run, always use ServiceRun to call this function
-func (s *RedisService) Run() {
+// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+func (s *RedisService) OnRun(dt time.Duration) {
 
 }
 
@@ -68,12 +72,12 @@ func (s *RedisService) Stop() error {
 	return nil
 }
 
-// SendMessage async send message to service
-func (s *RedisService) SendMessage(option int32, msg *server.Message) error {
+// PushMessage async send message to service
+func (s *RedisService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
-// SendBytes async send string or bytes to queue
-func (s *RedisService) SendBytes(option int32, buf []byte) error {
+// PushBytes async send string or bytes to queue
+func (s *RedisService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

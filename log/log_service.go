@@ -30,6 +30,7 @@ package log
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/gonethopper/nethopper/server"
 )
@@ -86,8 +87,8 @@ func (s *LogService) Reload(m map[string]interface{}) error {
 
 }
 
-// Run create goruntine and run
-func (s *LogService) Run() {
+// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+func (s *LogService) OnRun(dt time.Duration) {
 	s.msgSize = 0
 	s.count = 0
 	for i := 0; i < 128; i++ {
@@ -122,9 +123,9 @@ func (s *LogService) Stop() error {
 	return s.logger.Close()
 }
 
-// SendMessage async push message to queue
-func (s *LogService) SendMessage(option int32, msg *server.Message) error {
-	return fmt.Errorf("TODO LogService SendMessage")
+// PushMessage async push message to queue
+func (s *LogService) PushMessage(option int32, msg *server.Message) error {
+	return fmt.Errorf("TODO LogService PushMessage")
 }
 
 // UserData service custom option, can you store you self value
@@ -132,8 +133,8 @@ func (s *LogService) UserData() int32 {
 	return s.logger.GetLevel()
 }
 
-// SendBytes async push string or bytes to queue, with option
-func (s *LogService) SendBytes(option int32, buf []byte) error {
+// PushBytes async push string or bytes to queue, with option
+func (s *LogService) PushBytes(option int32, buf []byte) error {
 	if err := s.MQ().Push(buf); err != nil {
 		return err
 	}

@@ -107,7 +107,7 @@ func WriteLog(level int32, v ...interface{}) error {
 		return nil
 	}
 	msg := FormatLog(level, v...)
-	if err := GLoggerService.SendBytes(level, []byte(msg)); err != nil {
+	if err := GLoggerService.PushBytes(level, []byte(msg)); err != nil {
 		return err
 	}
 	return nil

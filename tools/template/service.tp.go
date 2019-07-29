@@ -27,7 +27,11 @@
 
 package sERVICE
 
-import "github.com/gonethopper/nethopper/server"
+import (
+	"time"
+
+	"github.com/gonethopper/nethopper/server"
+)
 
 // SERVICEService struct to define service
 type SERVICEService struct {
@@ -58,8 +62,8 @@ func (s *SERVICEService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// Run create goruntine and run, always use ServiceRun to call this function
-func (s *SERVICEService) Run() {
+// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+func (s *SERVICEService) OnRun(dt time.Duration) {
 
 }
 
@@ -68,12 +72,12 @@ func (s *SERVICEService) Stop() error {
 	return nil
 }
 
-// SendMessage async send message to service
-func (s *SERVICEService) SendMessage(option int32, msg *server.Message) error {
+// PushMessage async send message to service
+func (s *SERVICEService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
-// SendBytes async send string or bytes to queue
-func (s *SERVICEService) SendBytes(option int32, buf []byte) error {
+// PushBytes async send string or bytes to queue
+func (s *SERVICEService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

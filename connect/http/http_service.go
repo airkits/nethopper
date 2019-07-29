@@ -27,7 +27,11 @@
 
 package http
 
-import "github.com/gonethopper/nethopper/server"
+import (
+	"time"
+
+	"github.com/gonethopper/nethopper/server"
+)
 
 // HttpService struct to define service
 type HttpService struct {
@@ -58,8 +62,8 @@ func (s *HttpService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// Run create goruntine and run, always use ServiceRun to call this function
-func (s *HttpService) Run() {
+// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+func (s *HttpService) OnRun(dt time.Duration) {
 
 }
 
@@ -68,12 +72,12 @@ func (s *HttpService) Stop() error {
 	return nil
 }
 
-// SendMessage async send message to service
-func (s *HttpService) SendMessage(option int32, msg *server.Message) error {
+// PushMessage async send message to service
+func (s *HttpService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
-// SendBytes async send string or bytes to queue
-func (s *HttpService) SendBytes(option int32, buf []byte) error {
+// PushBytes async send string or bytes to queue
+func (s *HttpService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

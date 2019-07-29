@@ -33,6 +33,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync/atomic"
+	"time"
 
 	"github.com/gonethopper/queue"
 )
@@ -46,10 +47,8 @@ const (
 	ServiceIDMonitor
 	// ServiceIDLog log service
 	ServiceIDLog
-	// ServiceIDC2S client to server
-	ServiceIDC2S
-	// ServiceIDS2S server to server
-	ServiceIDS2S
+	// ServiceIDLogic logic service
+	ServiceIDLogic
 	// ServiceIDUserCustom User custom define named services from 64-128
 	ServiceIDUserCustom = 64
 	// ServiceIDNamedMax named services max ID
@@ -92,25 +91,27 @@ type Service interface {
 	Setup(m map[string]interface{}) (Service, error)
 	//Reload reload config
 	Reload(m map[string]interface{}) error
-	// Run create goruntine and run, always use ServiceRun to call this function
-	Run()
+	// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+	OnRun(dt time.Duration)
 	// Stop goruntine
 	Stop() error
-	// SendMessage async send message to service
-	SendMessage(option int32, msg *Message) error
-	// SendBytes async send string or bytes to queue
-	SendBytes(option int32, buf []byte) error
+	// PushMessage async send message to service
+	PushMessage(option int32, msg *Message) error
+	// PushBytes async send string or bytes to queue
+	PushBytes(option int32, buf []byte) error
 }
 
 // ServiceRun wrapper service goruntine and in an orderly way to exit
 func ServiceRun(s Service) {
 	ctxDone := false
 	exitFlag := false
+	start := time.Now()
 	for {
-		s.Run()
+		s.OnRun(time.Since(start))
 		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
 			return
 		}
+		start = time.Now()
 	}
 }
 
@@ -219,8 +220,8 @@ func (a *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 	return doneFlag, false
 }
 
-// Run service run
-func (a *BaseContext) Run() {
+// OnRun service run
+func (a *BaseContext) OnRun(dt time.Duration) {
 	fmt.Printf("service %s do Nothing \n", a.Name())
 }
 
@@ -288,5 +289,5 @@ func SendMessage(serviceID int32, option int32, msg *Message) error {
 	if err != nil {
 		return err
 	}
-	return s.SendMessage(option, msg)
+	return s.PushMessage(option, msg)
 }

@@ -21,40 +21,33 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-14 19:56:49
+// * @Date: 2019-07-29 21:21:00
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-14 19:56:49
+// * @Last Modified time: 2019-07-29 21:21:00
 
-package main
+package server
 
 import (
-
-	//"github.com/gonethopper/nethopper/cache/redis"
-	"github.com/gonethopper/nethopper/connect/tcp"
-	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/logic"
-	. "github.com/gonethopper/nethopper/server"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-func main() {
-
-	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
+// InitSignal register signals handler.
+func InitSignal() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGINT, syscall.SIGHUP)
+	defer close(c)
+	for {
+		s := <-c
+		Info("server get a signal %s", s.String())
+		switch s {
+		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGINT:
+			return
+		case syscall.SIGHUP:
+			continue
+		default:
+			return
+		}
 	}
-	RegisterService("log", log.LogServiceCreate)
-	RegisterService("tcp", tcp.TCPServiceCreate)
-	RegisterService("logic", logic.LogicServiceCreate)
-	//	RegisterService("redis", redis.RedisServiceCreate)
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	NewNamedService(ServiceIDTCP, "tcp", nil, m)
-	NewNamedService(ServiceIDLogic, "logic", nil, m)
-	//	NewNamedService(ServiceIDRedis, "redis", nil, m)
-	InitSignal()
-	//GracefulExit()
 }

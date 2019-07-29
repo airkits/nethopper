@@ -21,40 +21,22 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-14 19:56:49
+// * @Date: 2019-07-29 21:21:00
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-14 19:56:49
+// * @Last Modified time: 2019-07-29 21:21:00
 
-package main
+package server
 
 import (
-
-	//"github.com/gonethopper/nethopper/cache/redis"
-	"github.com/gonethopper/nethopper/connect/tcp"
-	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/logic"
-	. "github.com/gonethopper/nethopper/server"
+	"os"
+	"os/signal"
 )
 
-func main() {
-
-	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
-	}
-	RegisterService("log", log.LogServiceCreate)
-	RegisterService("tcp", tcp.TCPServiceCreate)
-	RegisterService("logic", logic.LogicServiceCreate)
-	//	RegisterService("redis", redis.RedisServiceCreate)
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	NewNamedService(ServiceIDTCP, "tcp", nil, m)
-	NewNamedService(ServiceIDLogic, "logic", nil, m)
-	//	NewNamedService(ServiceIDRedis, "redis", nil, m)
-	InitSignal()
-	//GracefulExit()
+// InitSignal register signals handler.
+func InitSignal() {
+	chanSig := make(chan os.Signal, 1)
+	defer close(chanSig)
+	signal.Notify(chanSig, os.Interrupt, os.Kill)
+	sig := <-chanSig
+	Info("recv kill %s", sig.String())
 }

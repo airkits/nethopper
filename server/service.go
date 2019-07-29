@@ -47,8 +47,16 @@ const (
 	ServiceIDMonitor
 	// ServiceIDLog log service
 	ServiceIDLog
+	// ServiceIDTCP tcp service
+	ServiceIDTCP
+	// ServiceIDKCP kcp service
+	ServiceIDKCP
+	// ServiceIDHTTP http service
+	ServiceIDHTTP
 	// ServiceIDLogic logic service
 	ServiceIDLogic
+	// ServiceIDRedis redis service
+	ServiceIDRedis
 	// ServiceIDUserCustom User custom define named services from 64-128
 	ServiceIDUserCustom = 64
 	// ServiceIDNamedMax named services max ID
@@ -106,12 +114,17 @@ func ServiceRun(s Service) {
 	ctxDone := false
 	exitFlag := false
 	start := time.Now()
+	Info("Service %s start ", s.Name())
 	for {
 		s.OnRun(time.Since(start))
 		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
 			return
 		}
 		start = time.Now()
+		if s.MQ().Length() == 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+
 	}
 }
 

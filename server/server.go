@@ -72,7 +72,7 @@ func init() {
 		GoCount: 0,
 	}
 
-	fmt.Println("Server Framework init")
+	fmt.Println("Nethopper Framework init")
 }
 
 // GracefulExit server exit by call root context close

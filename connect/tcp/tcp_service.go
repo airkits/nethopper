@@ -63,7 +63,7 @@ func (s *TCPService) UserData() int32 {
 // m := map[string]interface{}{
 //	"readBufferSize":32767,
 //  "writeBufferSize":32767,
-// 	"address":":8080",
+// 	"address":":8888",
 //  "network":"tcp4",
 //  "readDeadline":15,
 //  "queueSize":1000,
@@ -73,7 +73,7 @@ func (s *TCPService) Setup(m map[string]interface{}) (server.Service, error) {
 	if err := s.readConfig(m); err != nil {
 		panic(err)
 	}
-
+	// Listen and bind local ip
 	tcpAddr, err := net.ResolveTCPAddr(s.Network, s.Address)
 	if err != nil {
 		panic(err)
@@ -92,7 +92,7 @@ func (s *TCPService) Setup(m map[string]interface{}) (server.Service, error) {
 // config map
 // readBufferSize default 32767
 // writeBufferSize default 32767
-// address default :8080
+// address default :8888
 // network default "tcp4"  use "tcp4/tcp6"
 // readDeadline default 15
 func (s *TCPService) readConfig(m map[string]interface{}) error {
@@ -108,7 +108,7 @@ func (s *TCPService) readConfig(m map[string]interface{}) error {
 	}
 	s.WriteBufferSize = writeBufferSize.(int)
 
-	address, err := server.ParseValue(m, "address", ":8080")
+	address, err := server.ParseValue(m, "address", ":8888")
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (s *TCPService) Reload(m map[string]interface{}) error {
 }
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-// Listen and bind local ip and loop accepting
+// loop accepting
 func (s *TCPService) OnRun(dt time.Duration) {
 
 	conn, err := s.accept()

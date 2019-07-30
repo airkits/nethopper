@@ -57,6 +57,13 @@ const (
 	ServiceIDLogic
 	// ServiceIDRedis redis service
 	ServiceIDRedis
+	// ServiceIDTCPClient tcp client service
+	ServiceIDTCPClient
+	// ServiceIDKCPClient kcp client service
+	ServiceIDKCPClient
+	// ServiceIDHTTPClient http client service
+	ServiceIDHTTPClient
+
 	// ServiceIDUserCustom User custom define named services from 64-128
 	ServiceIDUserCustom = 64
 	// ServiceIDNamedMax named services max ID

@@ -48,7 +48,7 @@ func main() {
 		"queueSize":   1000,
 	}
 	RegisterService("log", log.LogServiceCreate)
-	RegisterService("tcp", tcp.TCPServiceCreate)
+	RegisterService("tcp", tcp.SocketServiceCreate)
 	RegisterService("logic", logic.LogicServiceCreate)
 	//	RegisterService("redis", redis.RedisServiceCreate)
 	NewNamedService(ServiceIDLog, "log", nil, m)

@@ -31,7 +31,7 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gonethopper/nethopper/database/sql"
+	"github.com/gonethopper/nethopper/database/sqlx"
 	. "github.com/gonethopper/nethopper/server"
 )
 
@@ -41,7 +41,7 @@ func TestSQLConnection(t *testing.T) {
 		"dsn":       "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
 		"driver":    "mysql",
 	}
-	if conn, err := sql.NewConnection(m); err == nil {
+	if conn, err := sqlx.NewSQLConnection(m); err == nil {
 		if err := conn.Open(); err != nil {
 			t.Error(err)
 			Error("error")

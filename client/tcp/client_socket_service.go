@@ -34,8 +34,8 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// TCPClientService struct to define service
-type TCPClientService struct {
+// ClientSocketService struct to define service
+type ClientSocketService struct {
 	server.BaseContext
 	Address         string
 	Network         string
@@ -45,14 +45,14 @@ type TCPClientService struct {
 	conn            net.Conn
 }
 
-// TCPClientServiceCreate  service create function
-func TCPClientServiceCreate() (server.Service, error) {
+// ClientSocketServiceCreate  service create function
+func ClientSocketServiceCreate() (server.Service, error) {
 
-	return &TCPClientService{}, nil
+	return &ClientSocketService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *TCPClientService) UserData() int32 {
+func (s *ClientSocketService) UserData() int32 {
 	return 0
 }
 
@@ -66,7 +66,7 @@ func (s *TCPClientService) UserData() int32 {
 //  "readDeadline":15,
 //  "queueSize":1000,
 // }
-func (s *TCPClientService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *ClientSocketService) Setup(m map[string]interface{}) (server.Service, error) {
 
 	if err := s.readConfig(m); err != nil {
 		panic(err)
@@ -90,7 +90,7 @@ func (s *TCPClientService) Setup(m map[string]interface{}) (server.Service, erro
 // address default :8888
 // network default "tcp4"  use "tcp4/tcp6"
 // readDeadline default 15
-func (s *TCPClientService) readConfig(m map[string]interface{}) error {
+func (s *ClientSocketService) readConfig(m map[string]interface{}) error {
 	readBufferSize, err := server.ParseValue(m, "readBufferSize", 32767)
 	if err != nil {
 		return err
@@ -124,13 +124,13 @@ func (s *TCPClientService) readConfig(m map[string]interface{}) error {
 }
 
 //Reload reload config
-func (s *TCPClientService) Reload(m map[string]interface{}) error {
+func (s *ClientSocketService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
 // loop accepting
-func (s *TCPClientService) OnRun(dt time.Duration) {
+func (s *ClientSocketService) OnRun(dt time.Duration) {
 
 	ticker := time.NewTicker(time.Second * 5)
 
@@ -144,16 +144,16 @@ func (s *TCPClientService) OnRun(dt time.Duration) {
 }
 
 // Stop goruntine
-func (s *TCPClientService) Stop() error {
+func (s *ClientSocketService) Stop() error {
 	return nil
 }
 
 // PushMessage async send message to service
-func (s *TCPClientService) PushMessage(option int32, msg *server.Message) error {
+func (s *ClientSocketService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *TCPClientService) PushBytes(option int32, buf []byte) error {
+func (s *ClientSocketService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

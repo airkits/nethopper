@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-07-16 22:00:24
 
-package orm
+package database
 
 // Database use redis as cache
 type Database struct {

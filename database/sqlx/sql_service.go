@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package mysql
+package sqlx
 
 import (
 	"time"
@@ -33,18 +33,18 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// MysqlService struct to define service
-type MysqlService struct {
+// SQLService struct to define service
+type SQLService struct {
 	server.BaseContext
 }
 
-// MysqlServiceCreate  service create function
-func MysqlServiceCreate() (server.Service, error) {
-	return &MysqlService{}, nil
+// SQLServiceCreate  service create function
+func SQLServiceCreate() (server.Service, error) {
+	return &SQLService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *MysqlService) UserData() int32 {
+func (s *SQLService) UserData() int32 {
 	return 0
 }
 
@@ -53,31 +53,31 @@ func (s *MysqlService) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *MysqlService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *SQLService) Setup(m map[string]interface{}) (server.Service, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *MysqlService) Reload(m map[string]interface{}) error {
+func (s *SQLService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *MysqlService) OnRun(dt time.Duration) {
+func (s *SQLService) OnRun(dt time.Duration) {
 
 }
 
 // Stop goruntine
-func (s *MysqlService) Stop() error {
+func (s *SQLService) Stop() error {
 	return nil
 }
 
 // PushMessage async send message to service
-func (s *MysqlService) PushMessage(option int32, msg *server.Message) error {
+func (s *SQLService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *MysqlService) PushBytes(option int32, buf []byte) error {
+func (s *SQLService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

@@ -36,8 +36,8 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// TCPService struct to define service
-type TCPService struct {
+// SocketService struct to define service
+type SocketService struct {
 	server.BaseContext
 	Address         string
 	Network         string
@@ -47,14 +47,14 @@ type TCPService struct {
 	tcpListener     *net.TCPListener
 }
 
-// TCPServiceCreate  service create function
-func TCPServiceCreate() (server.Service, error) {
+// SocketServiceCreate  service create function
+func SocketServiceCreate() (server.Service, error) {
 
-	return &TCPService{}, nil
+	return &SocketService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *TCPService) UserData() int32 {
+func (s *SocketService) UserData() int32 {
 	return 0
 }
 
@@ -68,7 +68,7 @@ func (s *TCPService) UserData() int32 {
 //  "readDeadline":15,
 //  "queueSize":1000,
 // }
-func (s *TCPService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *SocketService) Setup(m map[string]interface{}) (server.Service, error) {
 
 	if err := s.readConfig(m); err != nil {
 		panic(err)
@@ -95,7 +95,7 @@ func (s *TCPService) Setup(m map[string]interface{}) (server.Service, error) {
 // address default :8888
 // network default "tcp4"  use "tcp4/tcp6"
 // readDeadline default 15
-func (s *TCPService) readConfig(m map[string]interface{}) error {
+func (s *SocketService) readConfig(m map[string]interface{}) error {
 	readBufferSize, err := server.ParseValue(m, "readBufferSize", 32767)
 	if err != nil {
 		return err
@@ -129,13 +129,13 @@ func (s *TCPService) readConfig(m map[string]interface{}) error {
 }
 
 //Reload reload config
-func (s *TCPService) Reload(m map[string]interface{}) error {
+func (s *SocketService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
 // loop accepting
-func (s *TCPService) OnRun(dt time.Duration) {
+func (s *SocketService) OnRun(dt time.Duration) {
 
 	conn, err := s.accept()
 	if err != nil {
@@ -146,7 +146,7 @@ func (s *TCPService) OnRun(dt time.Duration) {
 }
 
 // accept the next incoming call and returns the new connection.
-func (s *TCPService) accept() (net.Conn, error) {
+func (s *SocketService) accept() (net.Conn, error) {
 	conn, err := s.tcpListener.AcceptTCP()
 	if err != nil {
 		server.Warning("accept failed: %s", err.Error())
@@ -159,7 +159,7 @@ func (s *TCPService) accept() (net.Conn, error) {
 	return conn, nil
 }
 
-func (s *TCPService) handler(conn net.Conn, readDeadline time.Duration) {
+func (s *SocketService) handler(conn net.Conn, readDeadline time.Duration) {
 	defer conn.Close()
 	// for reading the 2-Byte header
 	header := make([]byte, 2)
@@ -235,16 +235,16 @@ func (s *TCPService) handler(conn net.Conn, readDeadline time.Duration) {
 }
 
 // Stop goruntine
-func (s *TCPService) Stop() error {
+func (s *SocketService) Stop() error {
 	return nil
 }
 
 // PushMessage async send message to service
-func (s *TCPService) PushMessage(option int32, msg *server.Message) error {
+func (s *SocketService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *TCPService) PushBytes(option int32, buf []byte) error {
+func (s *SocketService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

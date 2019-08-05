@@ -17,7 +17,7 @@
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// OUT OF OR IN SQLConnection WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
 // * @Author: ankye
@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-07-16 21:53:29
 
-package sql
+package sqlx
 
 import (
 	"database/sql"
@@ -34,22 +34,22 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// NewConnection create redis cache instance
-func NewConnection(m map[string]interface{}) (*Connection, error) {
-	conn := &Connection{}
+// NewSQLConnection create redis cache instance
+func NewSQLConnection(m map[string]interface{}) (*SQLConnection, error) {
+	conn := &SQLConnection{}
 	return conn.Setup(m)
 
 }
 
-// Connection connect to db by dsn
-type Connection struct {
+// SQLConnection connect to db by dsn
+type SQLConnection struct {
 	db     *sqlx.DB
 	Driver string
 	DSN    string
 }
 
 // Setup init cache with config
-func (s *Connection) Setup(m map[string]interface{}) (*Connection, error) {
+func (s *SQLConnection) Setup(m map[string]interface{}) (*SQLConnection, error) {
 	if err := s.readConfig(m); err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *Connection) Setup(m map[string]interface{}) (*Connection, error) {
 // config map
 // driver default mysql
 // dsn default "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
-func (s *Connection) readConfig(m map[string]interface{}) error {
+func (s *SQLConnection) readConfig(m map[string]interface{}) error {
 
 	driver, err := server.ParseValue(m, "driver", "mysql")
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *Connection) readConfig(m map[string]interface{}) error {
 }
 
 //Open connect and ping
-func (s *Connection) Open() error {
+func (s *SQLConnection) Open() error {
 	var err error
 	if s.db, err = sqlx.Connect(s.Driver, s.DSN); err != nil {
 		panic(err.Error())
@@ -84,9 +84,9 @@ func (s *Connection) Open() error {
 	return s.Ping()
 }
 
-//Ping test connection
-func (s *Connection) Ping() error {
-	// force a connection and test ping
+//Ping test SQLConnection
+func (s *SQLConnection) Ping() error {
+	// force a SQLConnection and test ping
 	err := s.db.Ping()
 	if err != nil {
 		server.Error("couldn't connect to database: %s %s", s.Driver, s.DSN)
@@ -95,25 +95,25 @@ func (s *Connection) Ping() error {
 	return err
 }
 
-//Close close connection
-func (s *Connection) Close() {
+//Close close SQLConnection
+func (s *SQLConnection) Close() {
 	if s.db != nil {
 		s.db.Close()
 	}
 }
 
 //IsErrNoRows 判断是否有数据
-func (s *Connection) IsErrNoRows(err error) bool {
+func (s *SQLConnection) IsErrNoRows(err error) bool {
 	return sql.ErrNoRows == err
 }
 
 //Select select operate
-func (s *Connection) Select(dest interface{}, query string, args ...interface{}) error {
+func (s *SQLConnection) Select(dest interface{}, query string, args ...interface{}) error {
 	return s.db.Select(dest, query, args...)
 }
 
 //Exec process sql and get result
-func (s *Connection) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (s *SQLConnection) Exec(query string, args ...interface{}) (sql.Result, error) {
 	result, err := s.db.Exec(query, args...)
 	if err != nil {
 		return nil, err
@@ -123,11 +123,11 @@ func (s *Connection) Exec(query string, args ...interface{}) (sql.Result, error)
 }
 
 //QueryRow by sql
-func (s *Connection) QueryRow(query string, args ...interface{}) *sqlx.Row {
+func (s *SQLConnection) QueryRow(query string, args ...interface{}) *sqlx.Row {
 	return s.db.QueryRowx(query, args...)
 }
 
 //Query sql and return rows
-func (s *Connection) Query(query string, args ...interface{}) (*sqlx.Rows, error) {
+func (s *SQLConnection) Query(query string, args ...interface{}) (*sqlx.Rows, error) {
 	return s.db.Queryx(query, args...)
 }

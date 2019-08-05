@@ -45,7 +45,7 @@ func main() {
 		"queueSize":   1000,
 	}
 	RegisterService("log", log.LogServiceCreate)
-	RegisterService("tcp_client", tcp.TCPClientServiceCreate)
+	RegisterService("tcp_client", tcp.ClientSocketServiceCreate)
 
 	NewNamedService(ServiceIDLog, "log", nil, m)
 	NewNamedService(ServiceIDTCPClient, "tcp_client", nil, m)

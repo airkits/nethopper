@@ -34,13 +34,13 @@ import (
 // PBCodec use protobuf encode/decode
 
 // Marshal encode message
-func Marshal(v interface{}) ([]byte, error) {
+func Marshal(v interface{}, template []byte) ([]byte, error) {
 	return proto.Marshal(v.(proto.Message))
 }
 
 // Unmarshal decode message
-func Unmarshal(data []byte, v interface{}) error {
-	return proto.Unmarshal(data, v.(proto.Message))
+func Unmarshal(buf []byte, v interface{}, template []byte) error {
+	return proto.Unmarshal(buf, v.(proto.Message))
 }
 
 // Name of codec

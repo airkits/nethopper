@@ -35,7 +35,7 @@ import (
 // GobCodec use gob encode/decode
 
 // Marshal encode message
-func Marshal(v interface{}) ([]byte, error) {
+func Marshal(v interface{}, template []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(v); err != nil {
 		return nil, err
@@ -44,8 +44,8 @@ func Marshal(v interface{}) ([]byte, error) {
 }
 
 // Unmarshal decode message
-func Unmarshal(data []byte, v interface{}) error {
-	return gob.NewDecoder(bytes.NewBuffer(data)).Decode(v)
+func Unmarshal(buf []byte, v interface{}, template []byte) error {
+	return gob.NewDecoder(bytes.NewBuffer(buf)).Decode(v)
 }
 
 // Name of codec

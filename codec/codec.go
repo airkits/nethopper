@@ -28,6 +28,7 @@
 package codec
 
 import (
+	"github.com/gonethopper/nethopper/codec/binary"
 	"github.com/gonethopper/nethopper/codec/gob"
 	"github.com/gonethopper/nethopper/codec/json"
 	"github.com/gonethopper/nethopper/codec/pb"
@@ -36,9 +37,9 @@ import (
 // Codec encodes/decodes
 type Codec struct {
 	// marshal encode message
-	Marshal func(v interface{}) ([]byte, error)
+	Marshal func(v interface{}, template []byte) ([]byte, error)
 	// Unmarshal decode message
-	Unmarshal func([]byte, interface{}) error
+	Unmarshal func(buf []byte, v interface{}, template []byte) error
 	// Name of codec
 	Name func() string
 }
@@ -50,4 +51,6 @@ var (
 	JSONCodec = Codec{json.Marshal, json.Unmarshal, json.Name}
 	// GobCodec gob encode/decode
 	GobCodec = Codec{gob.Marshal, gob.Unmarshal, gob.Name}
+	// BinaryCodec binary encode/decode
+	BinaryCodec = Codec{binary.Marshal, binary.Unmarshal, binary.Name}
 )

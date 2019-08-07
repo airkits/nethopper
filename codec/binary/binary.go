@@ -1,5 +1,7 @@
 package binary
 
+import "encoding/binary"
+
 // BinaryCodec use binary encode/decode
 
 const (
@@ -46,6 +48,88 @@ func Unmarshal(buf []byte, v interface{}, template []byte) error {
 // Name of codec
 func Name() string {
 	return "BinaryCodec"
+}
+
+// DecodeBEuint8 get uint8 from big endian bytes
+func DecodeBEuint8(b []byte) uint8 {
+	return uint8(b[0])
+}
+
+// DecodeBEuint16 get uint16 from big endian bytes
+func DecodeBEuint16(b []byte) uint16 {
+	return binary.BigEndian.Uint16(b)
+}
+
+// DecodeBEuint32 get uint32 from big endian bytes
+func DecodeBEuint32(b []byte) uint32 {
+	return binary.BigEndian.Uint32(b)
+}
+
+// DecodeBEuint64 get uint64 from big endian bytes
+func DecodeBEuint64(b []byte) uint64 {
+	return binary.BigEndian.Uint64(b)
+}
+
+// DecodeBEString get string from big endian bytes
+func DecodeBEString(b []byte) (string, uint16) {
+	len := DecodeBEuint16(b)
+	var str string
+	if len > 0 {
+		str = string(b[:len])
+	}
+	return str, len
+}
+
+// DecodeBEBytes get bytes from big endian bytes
+func DecodeBEBytes(b []byte) ([]byte, uint16) {
+	len := DecodeBEuint16(b)
+	var buf []byte
+	if len > 0 {
+		buf = make([]byte, len)
+		copy(buf, b)
+	}
+	return buf, len
+}
+
+// DecodeLEuint8 get uint8 from little endian bytes
+func DecodeLEuint8(b []byte) uint8 {
+	return uint8(b[0])
+}
+
+// DecodeLEuint16 get uint16 from little endian bytes
+func DecodeLEuint16(b []byte) uint16 {
+	return binary.LittleEndian.Uint16(b)
+}
+
+// DecodeLEuint32 get uint32 from little endian bytes
+func DecodeLEuint32(b []byte) uint32 {
+	return binary.LittleEndian.Uint32(b)
+}
+
+// DecodeLEuint64 get uint64 from little endian bytes
+func DecodeLEuint64(b []byte) uint64 {
+	return binary.LittleEndian.Uint64(b)
+}
+
+// DecodeLEString get string from little endian bytes
+func DecodeLEString(b []byte) (string, uint16) {
+	len := DecodeLEuint16(b)
+	var str string
+	if len > 0 {
+		str = string(b[:len])
+	}
+	return str, len
+}
+
+// DecodeLEBytes get bytes from little endian bytes
+func DecodeLEBytes(b []byte) ([]byte, uint16) {
+	len := DecodeLEuint16(b)
+	var buf []byte
+	if len > 0 {
+		buf = make([]byte, len)
+		copy(buf, b)
+	}
+	return buf, len
 }
 
 // //取出unit16的小端存储数据

@@ -51,8 +51,8 @@ const (
 	ServiceIDTCP
 	// ServiceIDKCP kcp service
 	ServiceIDKCP
-	// ServiceIDHTTP http service
-	ServiceIDHTTP
+	// ServiceIDWebHTTP http service
+	ServiceIDWebHTTP
 	// ServiceIDLogic logic service
 	ServiceIDLogic
 	// ServiceIDRedis redis service

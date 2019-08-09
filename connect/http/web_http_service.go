@@ -28,23 +28,27 @@
 package http
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gonethopper/nethopper/server"
+	"github.com/julienschmidt/httprouter"
 )
 
-// HttpService struct to define service
-type HttpService struct {
-	server.BaseContext
+// WebHTTPServiceCreate  service create function
+func WebHTTPServiceCreate() (server.Service, error) {
+	return &WebHTTPService{}, nil
 }
 
-// HttpServiceCreate  service create function
-func HttpServiceCreate() (server.Service, error) {
-	return &HttpService{}, nil
+// WebHTTPService struct to define service
+type WebHTTPService struct {
+	server.BaseContext
+	Address string
+	router  *httprouter.Router
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *HttpService) UserData() int32 {
+func (s *WebHTTPService) UserData() int32 {
 	return 0
 }
 
@@ -53,31 +57,61 @@ func (s *HttpService) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *HttpService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *WebHTTPService) Setup(m map[string]interface{}) (server.Service, error) {
+	if err := s.readConfig(m); err != nil {
+		panic(err)
+	}
+
+	router := httprouter.New()
+	s.router = router
+	RegisterAPI(router)
+	server.Info("http listening on:  %s", s.Address)
+
+	server.GO(s.web)
+
 	return s, nil
+}
+func (s *WebHTTPService) web() {
+	if err := http.ListenAndServe(s.Address, s.router); err != nil {
+		panic(err)
+	}
+
+}
+
+// config map
+// address default :80
+func (s *WebHTTPService) readConfig(m map[string]interface{}) error {
+
+	address, err := server.ParseValue(m, "address", ":11080")
+	if err != nil {
+		return err
+	}
+	s.Address = address.(string)
+
+	return nil
 }
 
 //Reload reload config
-func (s *HttpService) Reload(m map[string]interface{}) error {
+func (s *WebHTTPService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *HttpService) OnRun(dt time.Duration) {
+func (s *WebHTTPService) OnRun(dt time.Duration) {
 
 }
 
 // Stop goruntine
-func (s *HttpService) Stop() error {
+func (s *WebHTTPService) Stop() error {
 	return nil
 }
 
 // PushMessage async send message to service
-func (s *HttpService) PushMessage(option int32, msg *server.Message) error {
+func (s *WebHTTPService) PushMessage(option int32, msg *server.Message) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *HttpService) PushBytes(option int32, buf []byte) error {
+func (s *WebHTTPService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

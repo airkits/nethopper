@@ -5,36 +5,24 @@ import (
 	"math"
 )
 
-// BinaryCodec use binary encode/decode
+const initialBufferSize = 1024
 
+// BinaryCodec use binary Write/Read
 const (
 	// BinaryCodecType type enum
 	BinaryCodecType = iota
-	// BEuint8 big endian uint8 type
-	BEuint8
-	// BEuint16 big endian uint16 type
-	BEuint16
-	// BEuint32 big endian uint32 type
-	BEuint32
-	// BEuint54 big endian uint64 type
-	BEuint54
-	// BEstring big endian string type
-	BEstring
-	// BEbytes big endian bytes type
-	BEbytes
-
-	// LEuint8 little endian uint8 type
-	LEuint8
-	// LEuint16 little endian uint16 type
-	LEuint16
-	// LEuint32 little endian uint32 type
-	LEuint32
-	// LEuint54 little endian uint64 type
-	LEuint54
-	// LEstring little endian string type
-	LEstring
-	// LEbytes little endian bytes type
-	LEbytes
+	// BCuint8 big endian uint8 type
+	BCuint8 = 0x01
+	// BCuint16 big endian uint16 type
+	BCuint16 = 0x02
+	// BCuint32 big endian uint32 type
+	BCuint32 = 0x03
+	// BCuint64 big endian uint64 type
+	BCuint64 = 0x04
+	// BCstring big endian string type
+	BCstring = 0x05
+	// BCbytes big endian bytes type
+	BCbytes = 0x06
 )
 
 // Marshal encode message
@@ -53,194 +41,416 @@ func Name() string {
 	return "BinaryCodec"
 }
 
-//////// big endian //////////////////////////////
-
-// DecodeBEuint8 get uint8 from big endian bytes
-func DecodeBEuint8(b []byte) uint8 {
-	return uint8(b[0])
-}
-
-// EncodeBEuint8 put uint8 to big endian bytes
-func EncodeBEuint8(b []byte, v uint8) {
-	b[0] = byte(v)
-}
-
-// DecodeBEuint16 get uint16 from big endian bytes
-func DecodeBEuint16(b []byte) uint16 {
-	return binary.BigEndian.Uint16(b)
-}
-
-// EncodeBEuint16 put uint16 to big endian bytes
-func EncodeBEuint16(b []byte, v uint16) {
-	binary.BigEndian.PutUint16(b, v)
-}
-
-// DecodeBEuint32 get uint32 from big endian bytes
-func DecodeBEuint32(b []byte) uint32 {
-	return binary.BigEndian.Uint32(b)
-}
-
-// EncodeBEuint32 put uint32 to big endian bytes
-func EncodeBEuint32(b []byte, v uint32) {
-	binary.BigEndian.PutUint32(b, v)
-}
-
-// DecodeBEuint64 get uint64 from big endian bytes
-func DecodeBEuint64(b []byte) uint64 {
-	return binary.BigEndian.Uint64(b)
-}
-
-// EncodeBEuint64 put uint64 to big endian bytes
-func EncodeBEuint64(b []byte, v uint64) {
-	binary.BigEndian.PutUint64(b, v)
-
-}
-
-// DecodeBEfloat32 get float32 from big endian bytes
-func DecodeBEfloat32(b []byte) float32 {
-	return math.Float32frombits(DecodeBEuint32(b))
-}
-
-// EncodeBEfloat32 put float32 to big endian bytes
-func EncodeBEfloat32(b []byte, v float32) {
-	EncodeBEuint32(b, math.Float32bits(v))
-
-}
-
-// DecodeBEfloat64 get float64 from big endian bytes
-func DecodeBEfloat64(b []byte) float64 {
-	return math.Float64frombits(DecodeBEuint64(b))
-}
-
-// EncodeBEfloat64 put uint64 to big endian bytes
-func EncodeBEfloat64(b []byte, v float64) {
-	EncodeBEuint64(b, math.Float64bits(v))
-}
-
-// DecodeBEString get string from big endian bytes
-func DecodeBEString(b []byte) (string, uint16) {
-	len := DecodeBEuint16(b)
-	var str string
-	if len > 0 {
-		str = string(b[:len])
+// NewCoder create binary coder to Write/Read
+func NewCoder(buffer []byte, bigEndian bool) *Coder {
+	c := &Coder{
+		Offset:    0,
+		BigEndian: bigEndian,
 	}
-	return str, len
-}
-
-// EncodeBEString put string to big endian bytes
-func EncodeBEString(b []byte, s string) {
-	EncodeBEuint16(b, uint16(len(s)))
-	copy(b, []byte(s))
-}
-
-// DecodeBEBytes get bytes from big endian bytes
-func DecodeBEBytes(b []byte) ([]byte, uint16) {
-	len := DecodeBEuint16(b)
-	var buf []byte
-	if len > 0 {
-		buf = make([]byte, len)
-		copy(buf, b)
+	if buffer == nil {
+		c.Buffer = make([]byte, initialBufferSize)
+	} else {
+		c.Buffer = buffer
 	}
-	return buf, len
+
+	return c
 }
 
-// EncodeBEBytes put bytes to big endian bytes
-func EncodeBEBytes(b []byte, buf []byte) {
-	EncodeBEuint16(b, uint16(len(buf)))
-	copy(b, buf)
+// Coder Write/Read codec
+type Coder struct {
+	Buffer    []byte //raw buffer
+	Offset    uint32 //Write/Read offset
+	BigEndian bool
 }
 
-///////// little endian //////////////////////////////
-
-// DecodeLEuint8 get uint8 from little endian bytes
-func DecodeLEuint8(b []byte) uint8 {
-	return uint8(b[0])
-}
-
-// EncodeLEuint8 put uint8 to little endian bytes
-func EncodeLEuint8(b []byte, v uint8) {
-	b[0] = byte(v)
-}
-
-// DecodeLEuint16 get uint16 from little endian bytes
-func DecodeLEuint16(b []byte) uint16 {
-	return binary.LittleEndian.Uint16(b)
-}
-
-// EncodeLEuint16 put uint16 to little endian bytes
-func EncodeLEuint16(b []byte, v uint16) {
-	binary.LittleEndian.PutUint16(b, v)
-}
-
-// DecodeLEuint32 get uint32 from little endian bytes
-func DecodeLEuint32(b []byte) uint32 {
-	return binary.LittleEndian.Uint32(b)
-}
-
-// EncodeLEuint32 put uint32 to little endian bytes
-func EncodeLEuint32(b []byte, v uint32) {
-	binary.LittleEndian.PutUint32(b, v)
-}
-
-// DecodeLEuint64 get uint64 from little endian bytes
-func DecodeLEuint64(b []byte) uint64 {
-	return binary.LittleEndian.Uint64(b)
-}
-
-// EncodeLEuint64 put uint64 to little endian bytes
-func EncodeLEuint64(b []byte, v uint64) {
-	binary.LittleEndian.PutUint64(b, v)
-}
-
-// DecodeLEfloat32 get float32 from little endian bytes
-func DecodeLEfloat32(b []byte) float32 {
-	return math.Float32frombits(DecodeLEuint32(b))
-}
-
-// EncodeLEfloat32 put float32 to little endian bytes
-func EncodeLEfloat32(b []byte, v float32) {
-	EncodeLEuint32(b, math.Float32bits(v))
-}
-
-// DecodeLEfloat64 get float64 from little endian bytes
-func DecodeLEfloat64(b []byte) float64 {
-	return math.Float64frombits(DecodeLEuint64(b))
-}
-
-// EncodeLEfloat64 put float64 to little endian bytes
-func EncodeLEfloat64(b []byte, v float64) {
-	EncodeLEuint64(b, math.Float64bits(v))
-}
-
-// DecodeLEString get string from little endian bytes
-func DecodeLEString(b []byte) (string, uint16) {
-	len := DecodeLEuint16(b)
-	var str string
-	if len > 0 {
-		str = string(b[:len])
+func (c *Coder) ensureCapacity(n uint32) {
+	length := uint32(len(c.Buffer))
+	if c.Offset+n <= length {
+		return
 	}
-	return str, len
-}
-
-// EncodeLEString put string to little endian bytes
-func EncodeLEString(b []byte, s string) {
-	EncodeLEuint16(b, uint16(len(s)))
-	copy(b, []byte(s))
-}
-
-// DecodeLEBytes get bytes from little endian bytes
-func DecodeLEBytes(b []byte) ([]byte, uint16) {
-	len := DecodeLEuint16(b)
-	var buf []byte
-	if len > 0 {
-		buf = make([]byte, len)
-		copy(buf, b)
+	oldBuffer := c.Buffer
+	for c.Offset+n > length {
+		length = length * 2
 	}
-	return buf, len
+	c.Buffer = make([]byte, length)
+	copy(c.Buffer, oldBuffer)
 }
 
-// EncodeLEBytes put bytes to little endian bytes
-func EncodeLEBytes(b []byte, buf []byte) {
-	EncodeLEuint16(b, uint16(len(buf)))
-	copy(b, buf)
+// RawData get current pos Write raw data
+func (c *Coder) RawData() []byte {
+	return c.Buffer[0:c.Offset]
+}
+
+// ByteSlice get slice from buffer
+func (c *Coder) ByteSlice(start, end uint32) []byte {
+	return c.Buffer[start:end]
+}
+
+// Reset the codec to init status
+func (c *Coder) Reset() {
+	c.Offset = 0
+}
+
+// Pos get the buffer offset position
+func (c *Coder) Pos() uint32 {
+	return c.Offset
+}
+
+// SkipUint8 skip uint8
+func (c *Coder) SkipUint8() {
+	c.Offset++
+}
+
+// SkipUint16 skip uint16
+func (c *Coder) SkipUint16() {
+	c.Offset += 2
+}
+
+// SkipUint32 skip uint32
+func (c *Coder) SkipUint32() {
+	c.Offset += 4
+}
+
+// SkipUint64 skip uint64
+func (c *Coder) SkipUint64() {
+	c.Offset += 8
+}
+
+// SkipFloat32 skip float32
+func (c *Coder) SkipFloat32() {
+	c.Offset += 4
+}
+
+// SkipFloat64 skip float64
+func (c *Coder) SkipFloat64() {
+	c.Offset += 8
+}
+
+// SkipString skip string length
+func (c *Coder) SkipString() {
+	size := uint32(c.ReadUint16())
+	if size == 0 {
+		c.Offset++
+	} else {
+		c.Offset += size
+	}
+}
+
+// SkipRaw skip raw buffer length
+func (c *Coder) SkipRaw() {
+	size := uint32(c.ReadUint16())
+	c.Offset += size
+}
+
+// ReadUint8 get uint8 value
+func (c *Coder) ReadUint8() uint8 {
+	v := uint8(c.Buffer[c.Offset])
+	c.Offset++
+	return v
+}
+
+// WriteUint8 set uint8 to byte
+func (c *Coder) WriteUint8(v uint8) {
+	c.ensureCapacity(1)
+	c.Buffer[c.Offset] = byte(v)
+	c.Offset++
+}
+
+// ReadUint16 get uint16 value
+func (c *Coder) ReadUint16() uint16 {
+	var v uint16
+	if c.BigEndian {
+		v = binary.BigEndian.Uint16(c.Buffer[c.Offset:])
+	} else {
+		v = binary.LittleEndian.Uint16(c.Buffer[c.Offset:])
+	}
+	c.Offset += 2
+	return v
+}
+
+// WriteUint16 set uint16 to byte
+func (c *Coder) WriteUint16(v uint16) {
+	c.ensureCapacity(2)
+	if c.BigEndian {
+		binary.BigEndian.PutUint16(c.Buffer[c.Offset:], v)
+	} else {
+		binary.LittleEndian.PutUint16(c.Buffer[c.Offset:], v)
+	}
+	c.Offset += 2
+}
+
+// ReadUint32 get uint32 value
+func (c *Coder) ReadUint32() uint32 {
+	var v uint32
+	if c.BigEndian {
+		v = binary.BigEndian.Uint32(c.Buffer[c.Offset:])
+	} else {
+		v = binary.LittleEndian.Uint32(c.Buffer[c.Offset:])
+	}
+
+	c.Offset += 4
+	return v
+}
+
+// WriteUint32 set uint32 to byte
+func (c *Coder) WriteUint32(v uint32) {
+	c.ensureCapacity(4)
+	if c.BigEndian {
+		binary.BigEndian.PutUint32(c.Buffer[c.Offset:], v)
+	} else {
+		binary.LittleEndian.PutUint32(c.Buffer[c.Offset:], v)
+	}
+	c.Offset += 4
+}
+
+// ReadUint64 get uint64 value
+func (c *Coder) ReadUint64() uint64 {
+	var v uint64
+	if c.BigEndian {
+		v = binary.BigEndian.Uint64(c.Buffer[c.Offset:])
+	} else {
+		v = binary.LittleEndian.Uint64(c.Buffer[c.Offset:])
+	}
+	c.Offset += 8
+	return v
+}
+
+// WriteUint64 set uint64 to byte
+func (c *Coder) WriteUint64(v uint64) {
+	c.ensureCapacity(8)
+	if c.BigEndian {
+		binary.BigEndian.PutUint64(c.Buffer[c.Offset:], v)
+	} else {
+		binary.LittleEndian.PutUint64(c.Buffer[c.Offset:], v)
+	}
+	c.Offset += 8
+}
+
+// ReadFloat32 get float32 value
+func (c *Coder) ReadFloat32() float32 {
+	var v float32
+	if c.BigEndian {
+		v = math.Float32frombits(binary.BigEndian.Uint32(c.Buffer[c.Offset:]))
+	} else {
+		v = math.Float32frombits(binary.LittleEndian.Uint32(c.Buffer[c.Offset:]))
+	}
+	c.Offset += 4
+	return v
+}
+
+// WriteFloat32 set float32 to byte
+func (c *Coder) WriteFloat32(v float32) {
+	c.ensureCapacity(4)
+	if c.BigEndian {
+		binary.BigEndian.PutUint32(c.Buffer[c.Offset:], math.Float32bits(v))
+	} else {
+		binary.LittleEndian.PutUint32(c.Buffer[c.Offset:], math.Float32bits(v))
+	}
+	c.Offset += 4
+}
+
+// ReadFloat64 get float64 value
+func (c *Coder) ReadFloat64() float64 {
+	var v float64
+	if c.BigEndian {
+		v = math.Float64frombits(binary.BigEndian.Uint64(c.Buffer[c.Offset:]))
+	} else {
+		v = math.Float64frombits(binary.LittleEndian.Uint64(c.Buffer[c.Offset:]))
+	}
+	c.Offset += 8
+	return v
+}
+
+// WriteFloat64 set float64 to byte
+func (c *Coder) WriteFloat64(v float64) {
+	c.ensureCapacity(8)
+	if c.BigEndian {
+		binary.BigEndian.PutUint64(c.Buffer[c.Offset:], math.Float64bits(v))
+	} else {
+		binary.LittleEndian.PutUint64(c.Buffer[c.Offset:], math.Float64bits(v))
+	}
+	c.Offset += 8
+}
+
+// ReadString get string value
+// Use a zero byte to represent an empty string.
+func (c *Coder) ReadString() string {
+	size := uint32(c.ReadUint16())
+	if size == 0 {
+		c.Offset++
+		return ""
+	}
+	v := string(c.Buffer[c.Offset : c.Offset+size])
+	c.Offset += size
+	return v
+}
+
+// WriteString set string to bytes
+func (c *Coder) WriteString(s string) {
+	size := uint32(len(s))
+	c.WriteUint16(uint16(size))
+	if size == 0 {
+		c.WriteUint8(0x00)
+	} else {
+		c.ensureCapacity(size)
+		copy(c.Buffer[c.Offset:], []byte(s))
+		c.Offset += size
+	}
+}
+
+// ReadRaw use uint16 length and raw bytes
+func (c *Coder) ReadRaw() []byte {
+	size := uint32(c.ReadUint16())
+	if size == 0 {
+		return []byte{}
+	}
+	b := make([]byte, size)
+	copy(b, c.Buffer[c.Offset:c.Offset+size])
+	c.Offset += size
+	return b
+}
+
+// WriteRaw use uint16 length and copy raw bytes to buffer
+func (c *Coder) WriteRaw(b []byte) {
+	size := uint32(len(b))
+	c.ensureCapacity(uint32(size))
+	copy(c.Buffer[c.Offset:], b)
+	c.Offset += size
+}
+
+///// seek function ////////////////////////
+
+// SeekReadUint8 get uint8 value
+func (c *Coder) SeekReadUint8(offset uint32) uint8 {
+	return uint8(c.Buffer[offset])
+}
+
+// SeekWriteUint8 set uint8 to byte
+func (c *Coder) SeekWriteUint8(offset uint32, v uint8) {
+	c.Buffer[offset] = byte(v)
+}
+
+// SeekReadUint16 get uint16 value
+func (c *Coder) SeekReadUint16(offset uint32) uint16 {
+	var v uint16
+	if c.BigEndian {
+		v = binary.BigEndian.Uint16(c.Buffer[offset:])
+	} else {
+		v = binary.LittleEndian.Uint16(c.Buffer[offset:])
+	}
+	return v
+}
+
+// SeekWriteUint16 set uint16 to byte
+func (c *Coder) SeekWriteUint16(offset uint32, v uint16) {
+	if c.BigEndian {
+		binary.BigEndian.PutUint16(c.Buffer[offset:], v)
+	} else {
+		binary.LittleEndian.PutUint16(c.Buffer[offset:], v)
+	}
+}
+
+// SeekReadUint32 get uint32 value
+func (c *Coder) SeekReadUint32(offset uint32) uint32 {
+	var v uint32
+	if c.BigEndian {
+		v = binary.BigEndian.Uint32(c.Buffer[offset:])
+	} else {
+		v = binary.LittleEndian.Uint32(c.Buffer[offset:])
+	}
+	return v
+}
+
+// SeekWriteUint32 set uint32 to byte
+func (c *Coder) SeekWriteUint32(offset uint32, v uint32) {
+	if c.BigEndian {
+		binary.BigEndian.PutUint32(c.Buffer[offset:], v)
+	} else {
+		binary.LittleEndian.PutUint32(c.Buffer[offset:], v)
+	}
+}
+
+// SeekReadUint64 get uint64 value
+func (c *Coder) SeekReadUint64(offset uint32) uint64 {
+	var v uint64
+	if c.BigEndian {
+		v = binary.BigEndian.Uint64(c.Buffer[offset:])
+	} else {
+		v = binary.LittleEndian.Uint64(c.Buffer[offset:])
+	}
+	return v
+}
+
+// SeekWriteUint64 set uint64 to byte
+func (c *Coder) SeekWriteUint64(offset uint32, v uint64) {
+	if c.BigEndian {
+		binary.BigEndian.PutUint64(c.Buffer[offset:], v)
+	} else {
+		binary.LittleEndian.PutUint64(c.Buffer[offset:], v)
+	}
+}
+
+// SeekReadFloat32 get float32 value
+func (c *Coder) SeekReadFloat32(offset uint32) float32 {
+	var v float32
+	if c.BigEndian {
+		v = math.Float32frombits(binary.BigEndian.Uint32(c.Buffer[offset:]))
+	} else {
+		v = math.Float32frombits(binary.LittleEndian.Uint32(c.Buffer[offset:]))
+	}
+	return v
+}
+
+// SeekWriteFloat32 set float32 to byte
+func (c *Coder) SeekWriteFloat32(offset uint32, v float32) {
+	if c.BigEndian {
+		binary.BigEndian.PutUint32(c.Buffer[offset:], math.Float32bits(v))
+	} else {
+		binary.LittleEndian.PutUint32(c.Buffer[offset:], math.Float32bits(v))
+	}
+
+}
+
+// SeekReadFloat64 get float64 value
+func (c *Coder) SeekReadFloat64(offset uint32) float64 {
+	var v float64
+	if c.BigEndian {
+		v = math.Float64frombits(binary.BigEndian.Uint64(c.Buffer[offset:]))
+	} else {
+		v = math.Float64frombits(binary.LittleEndian.Uint64(c.Buffer[offset:]))
+	}
+	return v
+}
+
+// SeekWriteFloat64 set float64 to byte
+func (c *Coder) SeekWriteFloat64(offset uint32, v float64) {
+	if c.BigEndian {
+		binary.BigEndian.PutUint64(c.Buffer[offset:], math.Float64bits(v))
+	} else {
+		binary.LittleEndian.PutUint64(c.Buffer[offset:], math.Float64bits(v))
+	}
+}
+
+// SeekReadString get string value
+// Use a zero byte to represent an empty string.
+func (c *Coder) SeekReadString(offset uint32) string {
+	size := uint32(c.SeekReadUint16(offset))
+	if size == 0 {
+		return ""
+	}
+	offset += 2
+	v := string(c.Buffer[offset : offset+size])
+	return v
+}
+
+// SeekReadRaw use uint16 length and raw bytes
+func (c *Coder) SeekReadRaw(offset uint32) []byte {
+	size := uint32(c.SeekReadUint16(offset))
+	if size == 0 {
+		return []byte{}
+	}
+	b := make([]byte, size)
+	offset += 2
+	copy(b, c.Buffer[offset:offset+size])
+	return b
 }

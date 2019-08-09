@@ -30,6 +30,7 @@ package main
 import (
 
 	//"github.com/gonethopper/nethopper/cache/redis"
+	"github.com/gonethopper/nethopper/connect/http"
 	"github.com/gonethopper/nethopper/connect/tcp"
 	"github.com/gonethopper/nethopper/log"
 	"github.com/gonethopper/nethopper/logic"
@@ -50,10 +51,12 @@ func main() {
 	RegisterService("log", log.LogServiceCreate)
 	RegisterService("tcp", tcp.SocketServiceCreate)
 	RegisterService("logic", logic.LogicServiceCreate)
+	RegisterService("web_http", http.WebHTTPServiceCreate)
 	//	RegisterService("redis", redis.RedisServiceCreate)
 	NewNamedService(ServiceIDLog, "log", nil, m)
 	NewNamedService(ServiceIDTCP, "tcp", nil, m)
 	NewNamedService(ServiceIDLogic, "logic", nil, m)
+	NewNamedService(ServiceIDWebHTTP, "web_http", nil, m)
 	//	NewNamedService(ServiceIDRedis, "redis", nil, m)
 	InitSignal()
 	//GracefulExit()

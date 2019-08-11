@@ -32,7 +32,7 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/server"
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 )
 
 // WebHTTPServiceCreate  service create function
@@ -44,7 +44,7 @@ func WebHTTPServiceCreate() (server.Service, error) {
 type WebHTTPService struct {
 	server.BaseContext
 	Address string
-	router  *httprouter.Router
+	router  *mux.Router
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
@@ -62,7 +62,7 @@ func (s *WebHTTPService) Setup(m map[string]interface{}) (server.Service, error)
 		panic(err)
 	}
 
-	router := httprouter.New()
+	router := mux.NewRouter()
 	s.router = router
 	RegisterAPI(router)
 	server.Info("http listening on:  %s", s.Address)

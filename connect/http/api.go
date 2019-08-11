@@ -4,22 +4,24 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 )
 
 // RegisterAPI register web api
-func RegisterAPI(router *httprouter.Router) {
-	router.GET("/", Index)
-	router.GET("/hello/:name", Hello)
+func RegisterAPI(router *mux.Router) {
+	router.HandleFunc("/", Index)
+	router.HandleFunc("/hello/:name", Hello)
 }
 
 // Index api index
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Welcome!\n")
 
 }
 
 // Hello api hello
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
+func Hello(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Category: %v\n", vars["category"])
 }

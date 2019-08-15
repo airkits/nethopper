@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
 
@@ -16,6 +17,7 @@ func RegisterAPI(router *mux.Router) {
 // Index api index
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Welcome!\n")
+	fmt.Fprint(w, context.Get(r, "token").(string))
 
 }
 

@@ -29,15 +29,36 @@ package http
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
 
 // WebHTTPServiceCreate  service create function
 func WebHTTPServiceCreate() (server.Service, error) {
 	return &WebHTTPService{}, nil
+}
+
+// SessionHTTPMiddleware define http middleware to create session id
+func SessionHTTPMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		// Do stuff here
+		// log.Println(r.RequestURI)
+		authStr := req.Header.Get("Authorization")
+		if authStr == "" {
+			arr := strings.Split(req.RemoteAddr, ":")
+			host := arr[0]
+			port := arr[1]
+			sess := server.CreateSession(server.ServiceIDWebHTTP, host, port)
+			server.Info("new connection from:%v port:%v sessionid:%s", host, port, sess.SessionID)
+			context.Set(req, "token", sess.SessionID)
+		}
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, req)
+	})
 }
 
 // WebHTTPService struct to define service
@@ -66,6 +87,7 @@ func (s *WebHTTPService) Setup(m map[string]interface{}) (server.Service, error)
 	s.router = router
 	RegisterAPI(router)
 	server.Info("http listening on:  %s", s.Address)
+	router.Use(SessionHTTPMiddleware)
 
 	server.GO(s.web)
 

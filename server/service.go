@@ -304,8 +304,8 @@ func NewService(name string, parent Service, m map[string]interface{}) (Service,
 }
 
 // SendMessage send message to services
-func SendMessage(serviceID int32, option int32, msg *Message) error {
-	s, err := GetServiceByID(serviceID)
+func SendMessage(destServiceID int32, option int32, msg *Message) error {
+	s, err := GetServiceByID(destServiceID)
 	if err != nil {
 		return err
 	}

@@ -7,8 +7,9 @@ require (
 	github.com/golang/protobuf v1.3.1
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gonethopper/queue v0.0.0-20190620101229-0ece0ae0c580
+	github.com/gorilla/context v1.1.1
+	github.com/gorilla/mux v1.7.3
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/julienschmidt/httprouter v1.2.0
 	github.com/klauspost/cpuid v1.2.1 // indirect
 	github.com/klauspost/reedsolomon v1.9.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect

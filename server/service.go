@@ -63,7 +63,8 @@ const (
 	ServiceIDKCPClient
 	// ServiceIDHTTPClient http client service
 	ServiceIDHTTPClient
-
+	// ServideIDDB common db service
+	ServideIDDB
 	// ServiceIDUserCustom User custom define named services from 64-128
 	ServiceIDUserCustom = 64
 	// ServiceIDNamedMax named services max ID

@@ -36,10 +36,12 @@ import (
 // SQLService struct to define service
 type SQLService struct {
 	server.BaseContext
+	conn *SQLConnection
 }
 
 // SQLServiceCreate  service create function
 func SQLServiceCreate() (server.Service, error) {
+
 	return &SQLService{}, nil
 }
 
@@ -52,8 +54,19 @@ func (s *SQLService) UserData() int32 {
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
+//  "driver:"mysql",
+//  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
 func (s *SQLService) Setup(m map[string]interface{}) (server.Service, error) {
+
+	conn, err := NewSQLConnection(m)
+	if err != nil {
+		return nil, err
+	}
+	s.conn = conn
+	if err := s.conn.Open(); err != nil {
+		panic(err)
+	}
 	return s, nil
 }
 

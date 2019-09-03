@@ -77,7 +77,30 @@ func (s *SQLService) Reload(m map[string]interface{}) error {
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
 func (s *SQLService) OnRun(dt time.Duration) {
+	for i := 0; i < 128; i++ {
+		m, err := s.MQ().AsyncPop()
+		if err != nil {
+			break
+		}
+		message := m.(*server.Message)
+		s.ProcessMessage(message)
+	}
+}
 
+// ProcessMessage receive message from mq and process message
+func (s *SQLService) ProcessMessage(message *server.Message) {
+
+	// msgType := message.MsgType
+	// switch msgType {
+	// case server.MTRequest:
+	// 	{
+	// 		server.Info("receive message %s", message.Cmd)
+	// 		message.SrcID = s.ID()
+
+	// 		server.SendMessage(message.DestID, 0, message)
+	// 		break
+	// 	}
+	// }
 }
 
 // Stop goruntine

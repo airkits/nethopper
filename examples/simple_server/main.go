@@ -31,11 +31,8 @@ import (
 
 	//"github.com/gonethopper/nethopper/cache/redis"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gonethopper/nethopper/connect/http"
-	"github.com/gonethopper/nethopper/connect/tcp"
-	"github.com/gonethopper/nethopper/database/sqlx"
+	"github.com/gonethopper/nethopper/examples/simple_server/services"
 	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/logic"
 	. "github.com/gonethopper/nethopper/server"
 )
 
@@ -53,16 +50,18 @@ func main() {
 		"dsn":         "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
 	}
 	RegisterService("log", log.LogServiceCreate)
-	RegisterService("tcp", tcp.SocketServiceCreate)
-	RegisterService("logic", logic.LogicServiceCreate)
-	RegisterService("web_http", http.WebHTTPServiceCreate)
-	RegisterService("mysql", sqlx.SQLServiceCreate)
+	RegisterService("mysql", services.DBServiceCreate)
+	//	RegisterService("tcp", tcp.SocketServiceCreate)
+	RegisterService("logic", services.LogicServiceCreate)
+	RegisterService("web_http", services.HTTPServiceCreate)
+
 	//	RegisterService("redis", redis.RedisServiceCreate)
 	NewNamedService(ServiceIDLog, "log", nil, m)
-	NewNamedService(ServiceIDTCP, "tcp", nil, m)
-	NewNamedService(ServiceIDLogic, "logic", nil, m)
-	NewNamedService(ServiceIDWebHTTP, "web_http", nil, m)
 	NewNamedService(ServideIDDB, "mysql", nil, m)
+	//NewNamedService(ServiceIDTCP, "tcp", nil, m)
+	NewNamedService(ServiceIDLogic, "logic", nil, m)
+	NewNamedService(ServiceIDHTTP, "web_http", nil, m)
+
 	//	NewNamedService(ServiceIDRedis, "redis", nil, m)
 	InitSignal()
 	//GracefulExit()

@@ -34,7 +34,7 @@ func (p *SessionPool) Alloc(srcID int32, host string, port string) *Session {
 	sess.SrcID = srcID
 	sess.Die = make(chan struct{})
 	sess.MQ = queue.NewChanQueue(16)
-
+	sess.Done = make(chan *Session)
 	sess.SessionID = uuid.NewV4().String()
 	p.Objs.Store(sess.SessionID, sess)
 	return sess
@@ -72,6 +72,8 @@ type Session struct {
 	SrcID     int32 //service id
 	MQ        queue.Queue
 	SessionID string
+	Done      chan *Session
+	Message   *Message
 	Die       chan struct{} // session die signal, will be triggered by others
 }
 
@@ -81,5 +83,17 @@ func (s *Session) Reset() {
 	s.Port = ""
 	s.SrcID = 0
 	s.SessionID = ""
+	s.Done = make(chan *Session)
+	s.Message = nil
 	s.Die = make(chan struct{})
+}
+
+// NotifyDone tigger done notify
+func (s *Session) NotifyDone() {
+	select {
+	case s.Done <- s:
+	// ok
+	default:
+		// 阻塞情况处理,这里忽略
+	}
 }

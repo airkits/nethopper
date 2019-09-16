@@ -13,5 +13,6 @@
 tests_bench/log/test/*
 .vscode/ipch
 *.log
-simple_server
-simple_client
+logs/*
+simple_server/simple_server
+simple_client/simple_client

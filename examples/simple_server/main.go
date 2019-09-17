@@ -47,17 +47,18 @@ func main() {
 		"dailyEnable": true,
 		"queueSize":   1000,
 		"driver":      "mysql",
-		"dsn":         "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
+		"dsn":         "root:godankye@tcp(192.168.1.178:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
 	}
 	RegisterService("log", log.LogServiceCreate)
 	RegisterService("mysql", services.DBServiceCreate)
 	//	RegisterService("tcp", tcp.SocketServiceCreate)
 	RegisterService("logic", services.LogicServiceCreate)
 	RegisterService("web_http", services.HTTPServiceCreate)
-
+	RegisterService("redis", services.RedisServiceCreate)
 	//	RegisterService("redis", redis.RedisServiceCreate)
 	NewNamedService(ServiceIDLog, "log", nil, m)
-	NewNamedService(ServideIDDB, "mysql", nil, m)
+	NewNamedService(ServiceIDDB, "mysql", nil, m)
+	NewNamedService(ServiceIDRedis, "redis", nil, m)
 	//NewNamedService(ServiceIDTCP, "tcp", nil, m)
 	NewNamedService(ServiceIDLogic, "logic", nil, m)
 	NewNamedService(ServiceIDHTTP, "web_http", nil, m)

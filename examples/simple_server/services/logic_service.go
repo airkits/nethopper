@@ -75,9 +75,9 @@ func (s *LogicService) OnRun(dt time.Duration) {
 		case server.MTRequest:
 			{
 				server.Info("%s receive one request message from mq,cmd = %s", s.Name(), message.Cmd)
-
-				message.PushSrcID(s.ID())
-				message.DestID = server.ServideIDDB
+				message.SrcID = s.ID()
+				message.PushSeqID(s.ID())
+				message.DestID = server.ServiceIDRedis
 				server.SendMessage(message.DestID, 0, message)
 				break
 			}
@@ -85,8 +85,22 @@ func (s *LogicService) OnRun(dt time.Duration) {
 			{
 				server.Info("%s receive one response message from mq,cmd = %s", s.Name(), message.Cmd)
 
-				message.DestID = message.PopSrcID()
-				server.SendMessage(message.DestID, 0, message)
+				if message.SrcID == server.ServiceIDRedis {
+					if len(message.Payload) > 0 {
+						message.DestID = message.PopSeqID()
+						server.SendMessage(message.DestID, 0, message)
+						break
+					} else {
+						message.SrcID = s.ID()
+						message.PushSeqID(s.ID())
+						message.DestID = server.ServiceIDDB
+						message.MsgType = server.MTRequest
+						server.SendMessage(message.DestID, 0, message)
+					}
+				} else if message.SrcID == server.ServiceIDDB {
+					message.DestID = message.PopSeqID()
+					server.SendMessage(message.DestID, 0, message)
+				}
 				break
 			}
 		}

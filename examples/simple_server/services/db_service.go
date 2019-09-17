@@ -107,7 +107,8 @@ func (s *DBService) ProcessMessage(message *server.Message) {
 		if err := row.Scan(&pasword); err == nil {
 			server.Info(pasword)
 		}
-		message.DestID = message.PopSrcID()
+		message.SrcID = s.ID()
+		message.DestID = message.PopSeqID()
 		message.MsgType = server.MTResponse
 		message.Payload = []byte(pasword)
 		server.SendMessage(message.DestID, 0, message)

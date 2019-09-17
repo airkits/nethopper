@@ -132,8 +132,8 @@ func (s *HTTPService) OnRun(dt time.Duration) {
 		case server.MTRequest:
 			{
 				server.Info("%s receive one request message from mq,cmd = %s", s.Name(), message.Cmd)
-				message.PushSrcID(s.ID())
-				message.DestID = server.ServideIDDB
+				message.PushSeqID(s.ID())
+				message.DestID = server.ServiceIDDB
 				server.SendMessage(message.DestID, 0, message)
 				break
 			}

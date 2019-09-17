@@ -44,6 +44,8 @@ const (
 const (
 	// InvalidInt32 Invalid values set to -1
 	InvalidInt32 = -1
+	// ErrorCodeOK Define error code = 0 if success
+	ErrorCodeOK = 0
 )
 
 // NewMessagePool new message pool
@@ -66,10 +68,12 @@ type MessagePool struct {
 func (p *MessagePool) Alloc(srcID int32, destID int32, msgType int8, cmd string, payLoad []byte) *Message {
 	m := p.Pool.Get().(*Message)
 	m.Reset()
-	m.SrcIDs.Push(srcID)
+	m.PushSeqID(srcID)
+	m.SrcID = srcID
 	m.DestID = destID
 	m.MsgType = msgType
 	m.Cmd = cmd
+	m.ErrCode = ErrorCodeOK
 	m.Payload = payLoad
 	return m
 }
@@ -119,23 +123,27 @@ func (s *IDStack) Reset() {
 
 //Message mq Message
 type Message struct {
-	SrcIDs    *IDStack
+	SrcID     int32
+	seqIDs    *IDStack
 	DestID    int32
 	SessionID string
 	MsgType   int8
 	Cmd       string
 	Payload   []byte
+	ErrCode   int32
 }
 
 // Reset message set to default value
 func (m *Message) Reset() {
-	if m.SrcIDs == nil {
-		m.SrcIDs = &IDStack{}
+	if m.seqIDs == nil {
+		m.seqIDs = &IDStack{}
 	} else {
-		m.SrcIDs.Reset()
+		m.seqIDs.Reset()
 	}
+	m.SrcID = InvalidInt32
 	m.DestID = InvalidInt32
 	m.SessionID = ""
+	m.ErrCode = ErrorCodeOK
 	m.MsgType = MessageType
 	m.Cmd = ""
 	if len(m.Payload) > 0 {
@@ -144,12 +152,12 @@ func (m *Message) Reset() {
 	}
 }
 
-// PushSrcID add SrcID to message src seq
-func (m *Message) PushSrcID(srcID int32) {
-	m.SrcIDs.Push(srcID)
+// PushSeqID add SrcID to message src seq
+func (m *Message) PushSeqID(srcID int32) {
+	m.seqIDs.Push(srcID)
 }
 
-// PopSrcID get last srcID
-func (m *Message) PopSrcID() int32 {
-	return m.SrcIDs.Pop()
+// PopSeqID get last srcID
+func (m *Message) PopSeqID() int32 {
+	return m.seqIDs.Pop()
 }

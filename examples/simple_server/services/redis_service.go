@@ -81,49 +81,57 @@ func (s *RedisService) OnRun(dt time.Duration) {
 		if err != nil {
 			break
 		}
-		message := m.(*server.Message)
-		server.Info("%s receive one request message from mq,cmd = %s", s.Name(), message.Cmd)
 
-		s.ProcessMessage(message)
+		message := m.(*server.Message)
+		msgType := message.MsgType
+		switch msgType {
+		case server.MTRequest:
+			{
+				s.processRequest(message)
+				break
+			}
+		case server.MTResponse:
+			{
+				s.processResponse(message)
+				break
+			}
+		}
 	}
 }
 
 // ProcessMessage receive message from mq and process message
 func (s *RedisService) ProcessMessage(message *server.Message) {
-	cmd := message.Cmd
-	if cmd == "login" {
-		var v = make(map[string]interface{})
-		server.Info("%s", string(message.Payload))
-		if err := codec.JSONCodec.Unmarshal(message.Payload, &v, nil); err != nil {
-			server.Info(err)
-			return
-		}
-		password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", v["uid"]))
-		if err != nil {
-			server.Info(err.Error())
-			message.ErrCode = common.ErrorCodeRedisKeyNotExist
-		} else {
-			message.ErrCode = server.ErrorCodeOK
-			message.Payload = []byte(password)
-		}
-		message.SrcID = s.ID()
-		message.DestID = message.PopSeqID()
-		message.MsgType = server.MTResponse
 
-		server.SendMessage(message.DestID, 0, message)
-
+}
+func (s *RedisService) processRequest(req *server.Message) {
+	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
+	switch req.MsgID {
+	case common.MessageIDLogin:
+		{
+			var v = make(map[string]interface{})
+			server.Info("%s", string(req.Payload))
+			if err := codec.JSONCodec.Unmarshal(req.Payload, &v, nil); err != nil {
+				server.Info(err)
+				return
+			}
+			password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", v["uid"]))
+			m := server.CreateMessage(req.MsgID, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
+			if err != nil {
+				server.Info(err.Error())
+				m.ErrCode = common.ErrorCodeRedisKeyNotExist
+			} else {
+				m.ErrCode = server.ErrorCodeOK
+				m.SetBody([]byte(password))
+			}
+			server.SendMessage(m.DestID, 0, m)
+		}
+		break
 	}
-	// msgType := message.MsgType
-	// switch msgType {
-	// case server.MTRequest:
-	// 	{
-	// 		server.Info("receive message %s", message.Cmd)
-	// 		message.SrcID = s.ID()
 
-	// 		server.SendMessage(message.DestID, 0, message)
-	// 		break
-	// 	}
-	// }
+}
+func (s *RedisService) processResponse(resp *server.Message) {
+	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
+
 }
 
 // Stop goruntine

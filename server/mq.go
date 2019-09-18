@@ -65,16 +65,16 @@ type MessagePool struct {
 }
 
 // Alloc borrow message from pool
-func (p *MessagePool) Alloc(srcID int32, destID int32, msgType int8, cmd string, payLoad []byte) *Message {
+func (p *MessagePool) Alloc(msgID int32, srcID int32, destID int32, msgType int8, cmd string, sessionID string) *Message {
 	m := p.Pool.Get().(*Message)
 	m.Reset()
-	m.PushSeqID(srcID)
+	m.MsgID = msgID
 	m.SrcID = srcID
 	m.DestID = destID
 	m.MsgType = msgType
 	m.Cmd = cmd
 	m.ErrCode = ErrorCodeOK
-	m.Payload = payLoad
+	m.SessionID = sessionID
 	return m
 }
 
@@ -85,8 +85,8 @@ func (p *MessagePool) Free(m *Message) {
 }
 
 // CreateMessage get message from pool
-func CreateMessage(srcID int32, destID int32, msgType int8, cmd string, payLoad []byte) *Message {
-	return GMessagePool.Alloc(srcID, destID, msgType, cmd, payLoad)
+func CreateMessage(msgID int32, srcID int32, destID int32, msgType int8, cmd string, sessionID string) *Message {
+	return GMessagePool.Alloc(msgID, srcID, destID, msgType, cmd, sessionID)
 }
 
 // RemoveMessage return message to pool
@@ -97,34 +97,10 @@ func RemoveMessage(m *Message) {
 // MaxIDSequence max srcid sequence
 const MaxIDSequence = 10
 
-// IDStack store srcIDs,max
-type IDStack struct {
-	i    int
-	data [MaxIDSequence]int32
-}
-
-// Push id to stack
-func (s *IDStack) Push(v int32) {
-	s.data[s.i] = v
-	s.i++
-}
-
-// Pop id from stack
-func (s *IDStack) Pop() (ret int32) {
-	s.i--
-	ret = s.data[s.i]
-	return
-}
-
-// Reset data
-func (s *IDStack) Reset() {
-	s.i = 0
-}
-
 //Message mq Message
 type Message struct {
+	MsgID     int32
 	SrcID     int32
-	seqIDs    *IDStack
 	DestID    int32
 	SessionID string
 	MsgType   int8
@@ -133,13 +109,14 @@ type Message struct {
 	ErrCode   int32
 }
 
+// SetBody set message body
+func (m *Message) SetBody(payload []byte) {
+	m.Payload = payload
+}
+
 // Reset message set to default value
 func (m *Message) Reset() {
-	if m.seqIDs == nil {
-		m.seqIDs = &IDStack{}
-	} else {
-		m.seqIDs.Reset()
-	}
+	m.MsgID = InvalidInt32
 	m.SrcID = InvalidInt32
 	m.DestID = InvalidInt32
 	m.SessionID = ""
@@ -150,14 +127,4 @@ func (m *Message) Reset() {
 		GBytesPool.Free(m.Payload)
 		m.Payload = nil
 	}
-}
-
-// PushSeqID add SrcID to message src seq
-func (m *Message) PushSeqID(srcID int32) {
-	m.seqIDs.Push(srcID)
-}
-
-// PopSeqID get last srcID
-func (m *Message) PopSeqID() int32 {
-	return m.seqIDs.Pop()
 }

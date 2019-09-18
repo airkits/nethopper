@@ -131,24 +131,28 @@ func (s *HTTPService) OnRun(dt time.Duration) {
 		switch msgType {
 		case server.MTRequest:
 			{
-				server.Info("%s receive one request message from mq,cmd = %s", s.Name(), message.Cmd)
-				message.PushSeqID(s.ID())
-				message.DestID = server.ServiceIDDB
-				server.SendMessage(message.DestID, 0, message)
+				s.processRequest(message)
 				break
 			}
 		case server.MTResponse:
 			{
-				server.Info("%s receive one response message from mq,cmd = %s", s.Name(), message.Cmd)
-
-				sess := server.GetSession(message.SessionID)
-				if sess != nil {
-					sess.Message = message
-					sess.NotifyDone()
-				}
+				s.processResponse(message)
 				break
 			}
 		}
+	}
+}
+func (s *HTTPService) processRequest(req *server.Message) {
+	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
+
+}
+func (s *HTTPService) processResponse(resp *server.Message) {
+	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
+
+	sess := server.GetSession(resp.SessionID)
+	if sess != nil {
+		sess.Response = resp
+		sess.NotifyDone()
 	}
 }
 

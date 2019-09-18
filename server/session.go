@@ -8,6 +8,30 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+// IDStack store srcIDs,max
+type IDStack struct {
+	i    int
+	data [MaxIDSequence]int32
+}
+
+// Push id to stack
+func (s *IDStack) Push(v int32) {
+	s.data[s.i] = v
+	s.i++
+}
+
+// Pop id from stack
+func (s *IDStack) Pop() (ret int32) {
+	s.i--
+	ret = s.data[s.i]
+	return
+}
+
+// Reset data
+func (s *IDStack) Reset() {
+	s.i = 0
+}
+
 // NewSessionPool new session pool
 func NewSessionPool() *SessionPool {
 	sp := &SessionPool{}
@@ -28,10 +52,11 @@ type SessionPool struct {
 // Alloc borrow session from pool
 func (p *SessionPool) Alloc(srcID int32, host string, port string) *Session {
 	sess := p.Pool.Get().(*Session)
-
+	sess.Reset()
 	sess.IP = net.ParseIP(host)
 	sess.Port = port
 	sess.SrcID = srcID
+	sess.PushSrcID(srcID)
 	sess.Die = make(chan struct{})
 	sess.MQ = queue.NewChanQueue(16)
 	sess.Done = make(chan *Session)
@@ -73,19 +98,37 @@ type Session struct {
 	MQ        queue.Queue
 	SessionID string
 	Done      chan *Session
-	Message   *Message
+	srcIDs    *IDStack
+	Request   *Message
+	Response  *Message
 	Die       chan struct{} // session die signal, will be triggered by others
 }
 
 // Reset session set to default value
 func (s *Session) Reset() {
+	if s.srcIDs == nil {
+		s.srcIDs = &IDStack{}
+	} else {
+		s.srcIDs.Reset()
+	}
 	s.IP = nil
 	s.Port = ""
 	s.SrcID = 0
 	s.SessionID = ""
 	s.Done = make(chan *Session)
-	s.Message = nil
+	s.Request = nil
+	s.Response = nil
 	s.Die = make(chan struct{})
+}
+
+// PushSrcID add SrcID to message src seq
+func (s *Session) PushSrcID(srcID int32) {
+	s.srcIDs.Push(srcID)
+}
+
+// PopSrcID get last srcID
+func (s *Session) PopSrcID() int32 {
+	return s.srcIDs.Pop()
 }
 
 // NotifyDone tigger done notify

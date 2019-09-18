@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/codec"
+	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -40,16 +41,16 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 	sess := server.GetSession(token)
 	if sess != nil {
-		m := server.CreateMessage(server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, "login", sbody)
-		m.SessionID = token
+		m := server.CreateMessage(common.MessageIDLogin, server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, common.MessageIDLoginCmd, token)
+		m.SetBody(sbody)
 		server.SendMessage(m.DestID, 0, m)
 	}
 	defer close(sess.Die)
 
 	result := <-sess.Done //等待Done的通知，此时call.Reply发生了变化。
 
-	server.Info("message done,get pwd  %s", string(result.Message.Payload))
-	fmt.Fprint(w, string(result.Message.Payload))
+	server.Info("message done,get pwd  %s", string(result.Response.Payload))
+	fmt.Fprint(w, string(result.Response.Payload))
 
 	// var i int
 	// for start := time.Now(); ; {

@@ -30,6 +30,7 @@ package services
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -74,34 +75,60 @@ func (s *LogicService) OnRun(dt time.Duration) {
 		switch msgType {
 		case server.MTRequest:
 			{
-				server.Info("%s receive one request message from mq,cmd = %s", s.Name(), message.Cmd)
-				message.SrcID = s.ID()
-				message.PushSeqID(s.ID())
-				message.DestID = server.ServiceIDRedis
-				server.SendMessage(message.DestID, 0, message)
+				s.processRequest(message)
 				break
 			}
 		case server.MTResponse:
 			{
-				server.Info("%s receive one response message from mq,cmd = %s", s.Name(), message.Cmd)
-
-				if message.SrcID == server.ServiceIDRedis {
-					if message.ErrCode == server.ErrorCodeOK {
-						message.DestID = message.PopSeqID()
-						server.SendMessage(message.DestID, 0, message)
-						break
-					} else {
-						message.SrcID = s.ID()
-						message.PushSeqID(s.ID())
-						message.DestID = server.ServiceIDDB
-						message.MsgType = server.MTRequest
-						server.SendMessage(message.DestID, 0, message)
-					}
-				} else if message.SrcID == server.ServiceIDDB {
-					message.DestID = message.PopSeqID()
-					server.SendMessage(message.DestID, 0, message)
-				}
+				s.processResponse(message)
 				break
+			}
+		}
+	}
+
+}
+func (s *LogicService) processRequest(req *server.Message) {
+	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
+	switch req.MsgID {
+	case common.MessageIDLogin:
+		{
+			m := server.CreateMessage(req.MsgID, s.ID(), server.ServiceIDRedis, server.MTRequest, req.Cmd, req.SessionID)
+			m.SetBody(req.Payload)
+			server.SendMessage(m.DestID, 0, m)
+			break
+		}
+	}
+}
+func (s *LogicService) processResponse(resp *server.Message) {
+	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
+	switch resp.MsgID {
+	case common.MessageIDLogin:
+		{
+			switch resp.SrcID {
+
+			case server.ServiceIDRedis:
+				{
+					if resp.ErrCode == server.ErrorCodeOK {
+						sess := server.GetSession(resp.SessionID)
+						resp.DestID = sess.PopSrcID()
+						resp.SrcID = s.ID()
+						server.SendMessage(resp.DestID, 0, resp)
+
+					} else {
+						resp.SrcID = s.ID()
+						resp.DestID = server.ServiceIDDB
+						resp.MsgType = server.MTRequest
+						server.SendMessage(resp.DestID, 0, resp)
+					}
+					break
+				}
+
+			case server.ServiceIDDB:
+				{
+					sess := server.GetSession(resp.SessionID)
+					resp.DestID = sess.PopSrcID()
+					server.SendMessage(resp.DestID, 0, resp)
+				}
 			}
 		}
 	}

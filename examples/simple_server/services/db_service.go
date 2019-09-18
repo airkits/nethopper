@@ -32,6 +32,7 @@ import (
 
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/database/sqlx"
+	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -85,46 +86,48 @@ func (s *DBService) OnRun(dt time.Duration) {
 			break
 		}
 		message := m.(*server.Message)
-		server.Info("%s receive one request message from mq,cmd = %s", s.Name(), message.Cmd)
 
-		s.ProcessMessage(message)
+		msgType := message.MsgType
+		switch msgType {
+		case server.MTRequest:
+			{
+				s.processRequest(message)
+				break
+			}
+		case server.MTResponse:
+			{
+				s.processResponse(message)
+				break
+			}
+		}
+
 	}
 }
 
-// ProcessMessage receive message from mq and process message
-func (s *DBService) ProcessMessage(message *server.Message) {
-	cmd := message.Cmd
+func (s *DBService) processRequest(req *server.Message) {
+	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
+	cmd := req.Cmd
 	if cmd == "login" {
 		var v = make(map[string]interface{})
-		server.Info("%s", string(message.Payload))
-		if err := codec.JSONCodec.Unmarshal(message.Payload, &v, nil); err != nil {
+		server.Info("%s", string(req.Payload))
+		if err := codec.JSONCodec.Unmarshal(req.Payload, &v, nil); err != nil {
 			server.Info(err)
 			return
 		}
 		sql := "select password from user.user where uid= ?"
 		row := s.conn.QueryRow(sql, v["uid"])
-		var pasword string
-		if err := row.Scan(&pasword); err == nil {
-			server.Info(pasword)
+		var password string
+		if err := row.Scan(&password); err == nil {
+			server.Info(password)
 		}
-		message.SrcID = s.ID()
-		message.DestID = message.PopSeqID()
-		message.MsgType = server.MTResponse
-		message.Payload = []byte(pasword)
-		server.SendMessage(message.DestID, 0, message)
-
+		m := server.CreateMessage(common.MessageIDLogin, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
+		m.SetBody([]byte(password))
+		server.SendMessage(m.DestID, 0, m)
 	}
-	// msgType := message.MsgType
-	// switch msgType {
-	// case server.MTRequest:
-	// 	{
-	// 		server.Info("receive message %s", message.Cmd)
-	// 		message.SrcID = s.ID()
+}
+func (s *DBService) processResponse(resp *server.Message) {
+	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
 
-	// 		server.SendMessage(message.DestID, 0, message)
-	// 		break
-	// 	}
-	// }
 }
 
 // Stop goruntine

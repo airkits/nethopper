@@ -86,7 +86,7 @@ func (s *LogicService) OnRun(dt time.Duration) {
 				server.Info("%s receive one response message from mq,cmd = %s", s.Name(), message.Cmd)
 
 				if message.SrcID == server.ServiceIDRedis {
-					if len(message.Payload) > 0 {
+					if message.ErrCode == server.ErrorCodeOK {
 						message.DestID = message.PopSeqID()
 						server.SendMessage(message.DestID, 0, message)
 						break

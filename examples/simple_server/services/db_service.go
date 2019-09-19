@@ -30,9 +30,9 @@ package services
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/database/sqlx"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -108,20 +108,16 @@ func (s *DBService) processRequest(req *server.Message) {
 	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
 	cmd := req.Cmd
 	if cmd == "login" {
-		var v = make(map[string]interface{})
-		server.Info("%s", string(req.Payload))
-		if err := codec.JSONCodec.Unmarshal(req.Payload, &v, nil); err != nil {
-			server.Info(err)
-			return
-		}
+		body := (req.Body).(*pb.User)
 		sql := "select password from user.user where uid= ?"
-		row := s.conn.QueryRow(sql, v["uid"])
+		row := s.conn.QueryRow(sql, body.Uid)
 		var password string
 		if err := row.Scan(&password); err == nil {
 			server.Info(password)
 		}
 		m := server.CreateMessage(common.MessageIDLogin, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
-		m.SetBody([]byte(password))
+		body.Passwd = password
+		m.SetBody(body)
 		server.SendMessage(m.DestID, 0, m)
 	}
 }

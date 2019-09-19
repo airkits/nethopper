@@ -27,7 +27,11 @@
 
 package server
 
-import "sync"
+import (
+	"sync"
+
+	proto "github.com/golang/protobuf/proto"
+)
 
 const (
 	// MessageType message type enum
@@ -105,13 +109,13 @@ type Message struct {
 	SessionID string
 	MsgType   int8
 	Cmd       string
-	Payload   []byte
+	Body      proto.Message
 	ErrCode   int32
 }
 
 // SetBody set message body
-func (m *Message) SetBody(payload []byte) {
-	m.Payload = payload
+func (m *Message) SetBody(body proto.Message) {
+	m.Body = body
 }
 
 // Reset message set to default value
@@ -123,8 +127,5 @@ func (m *Message) Reset() {
 	m.ErrCode = ErrorCodeOK
 	m.MsgType = MessageType
 	m.Cmd = ""
-	if len(m.Payload) > 0 {
-		GBytesPool.Free(m.Payload)
-		m.Payload = nil
-	}
+	m.Body = nil
 }

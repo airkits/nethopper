@@ -93,7 +93,7 @@ func (s *LogicService) processRequest(req *server.Message) {
 	case common.MessageIDLogin:
 		{
 			m := server.CreateMessage(req.MsgID, s.ID(), server.ServiceIDRedis, server.MTRequest, req.Cmd, req.SessionID)
-			m.SetBody(req.Payload)
+			m.SetBody(req.Body)
 			server.SendMessage(m.DestID, 0, m)
 			break
 		}

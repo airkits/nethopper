@@ -6,6 +6,18 @@ syntax = "proto3";
 package pb;
 
 
+
+message LoginRequest {
+  string uid = 1;
+  string passwd = 2;
+}
+
+message LoginResponse {
+    string uid = 1;
+  string passwd = 2;
+}
+
+
 message User {
     string uid = 1;
     string passwd = 2;

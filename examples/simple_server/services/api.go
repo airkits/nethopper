@@ -8,6 +8,7 @@ import (
 
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -39,18 +40,23 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		server.Info(err)
 		return
 	}
+	body := &pb.User{
+		Uid:    v["uid"].(string),
+		Passwd: "",
+	}
 	sess := server.GetSession(token)
 	if sess != nil {
 		m := server.CreateMessage(common.MessageIDLogin, server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, common.MessageIDLoginCmd, token)
-		m.SetBody(sbody)
+		m.SetBody(body)
 		server.SendMessage(m.DestID, 0, m)
 	}
 	defer close(sess.Die)
 
 	result := <-sess.Done //等待Done的通知，此时call.Reply发生了变化。
 
-	server.Info("message done,get pwd  %s", string(result.Response.Payload))
-	fmt.Fprint(w, string(result.Response.Payload))
+	respBody := (result.Response).(*pb.User)
+	server.Info("message done,get pwd  %s", respBody.String())
+	fmt.Fprint(w, string(respBody.Passwd))
 
 	// var i int
 	// for start := time.Now(); ; {

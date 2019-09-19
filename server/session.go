@@ -3,7 +3,7 @@ package server
 import (
 	"net"
 	"sync"
-
+	proto "github.com/golang/protobuf/proto"
 	"github.com/gonethopper/queue"
 	uuid "github.com/satori/go.uuid"
 )
@@ -99,8 +99,8 @@ type Session struct {
 	SessionID string
 	Done      chan *Session
 	srcIDs    *IDStack
-	Request   *Message
-	Response  *Message
+	Request   proto.Message
+	Response  proto.Message
 	Die       chan struct{} // session die signal, will be triggered by others
 }
 

@@ -32,8 +32,8 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/cache/redis"
-	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -108,21 +108,18 @@ func (s *RedisService) processRequest(req *server.Message) {
 	switch req.MsgID {
 	case common.MessageIDLogin:
 		{
-			var v = make(map[string]interface{})
-			server.Info("%s", string(req.Payload))
-			if err := codec.JSONCodec.Unmarshal(req.Payload, &v, nil); err != nil {
-				server.Info(err)
-				return
-			}
-			password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", v["uid"]))
+			body := (req.Body).(*pb.User)
+			password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", body.Uid))
 			m := server.CreateMessage(req.MsgID, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
 			if err != nil {
 				server.Info(err.Error())
 				m.ErrCode = common.ErrorCodeRedisKeyNotExist
 			} else {
 				m.ErrCode = server.ErrorCodeOK
-				m.SetBody([]byte(password))
+				body.Passwd = password
+
 			}
+			m.SetBody(body)
 			server.SendMessage(m.DestID, 0, m)
 		}
 		break

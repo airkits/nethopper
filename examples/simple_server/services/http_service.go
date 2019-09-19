@@ -151,7 +151,7 @@ func (s *HTTPService) processResponse(resp *server.Message) {
 
 	sess := server.GetSession(resp.SessionID)
 	if sess != nil {
-		sess.Response = resp
+		sess.Response = resp.Body
 		sess.NotifyDone()
 	}
 }

@@ -28,7 +28,7 @@
 package pb
 
 import (
-	"github.com/golang/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 )
 
 // PBCodec use protobuf encode/decode

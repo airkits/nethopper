@@ -5,14 +5,14 @@ syntax = "proto3";
 //包名，通过protoc生成时go文件时
 package pb;
 
-// 学生
+
 message User {
     string uid = 1;
     string passwd = 2;
     Sex sex = 3;
 }
 
-//性别
+
 enum Sex {
     MAN = 0;
     WOMAN = 1;

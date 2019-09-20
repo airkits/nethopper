@@ -41,7 +41,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	body := &pb.User{
-		Uid:    v["uid"].(string),
+		Uid:    string(int64(v["uid"].(float64))),
 		Passwd: "",
 	}
 	sess := server.GetSession(token)

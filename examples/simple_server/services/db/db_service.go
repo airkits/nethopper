@@ -25,27 +25,31 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package services
+package db
 
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/database/sqlx"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// LogicService struct to define service
-type LogicService struct {
+// DBService struct to define service
+type DBService struct {
 	server.BaseContext
+	conn *sqlx.SQLConnection
 }
 
-// LogicServiceCreate  service create function
-func LogicServiceCreate() (server.Service, error) {
-	return &LogicService{}, nil
+// DBServiceCreate  service create function
+func DBServiceCreate() (server.Service, error) {
+
+	return &DBService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *LogicService) UserData() int32 {
+func (s *DBService) UserData() int32 {
 	return 0
 }
 
@@ -53,24 +57,36 @@ func (s *LogicService) UserData() int32 {
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
+//  "driver:"mysql",
+//  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
-func (s *LogicService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *DBService) Setup(m map[string]interface{}) (server.Service, error) {
+
+	conn, err := sqlx.NewSQLConnection(m)
+	if err != nil {
+		return nil, err
+	}
+	s.conn = conn
+	if err := s.conn.Open(); err != nil {
+		panic(err)
+	}
 	return s, nil
 }
 
 //Reload reload config
-func (s *LogicService) Reload(m map[string]interface{}) error {
+func (s *DBService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *LogicService) OnRun(dt time.Duration) {
+func (s *DBService) OnRun(dt time.Duration) {
 	for i := 0; i < 128; i++ {
 		m, err := s.MQ().AsyncPop()
 		if err != nil {
 			break
 		}
 		message := m.(*server.Message)
+
 		msgType := message.MsgType
 		switch msgType {
 		case server.MTRequest:
@@ -84,64 +100,39 @@ func (s *LogicService) OnRun(dt time.Duration) {
 				break
 			}
 		}
-	}
 
+	}
 }
-func (s *LogicService) processRequest(req *server.Message) {
+
+func (s *DBService) processRequest(req *server.Message) {
 	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-	switch req.MsgID {
-	case common.MessageIDLogin:
-		{
-			m := server.CreateMessage(req.MsgID, s.ID(), server.ServiceIDRedis, server.MTRequest, req.Cmd, req.SessionID)
-			m.SetBody(req.Body)
-			server.SendMessage(m.DestID, 0, m)
-			break
+	cmd := req.Cmd
+	if cmd == "login" {
+		body := (req.Body).(*pb.User)
+		sql := "select password from user.user where uid= ?"
+		row := s.conn.QueryRow(sql, body.Uid)
+		var password string
+		if err := row.Scan(&password); err == nil {
+			server.Info(password)
 		}
+		m := server.CreateMessage(common.MessageIDLogin, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
+		body.Passwd = password
+		m.SetBody(body)
+		server.SendMessage(m.DestID, 0, m)
 	}
 }
-func (s *LogicService) processResponse(resp *server.Message) {
+func (s *DBService) processResponse(resp *server.Message) {
 	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
-	switch resp.MsgID {
-	case common.MessageIDLogin:
-		{
-			switch resp.SrcID {
-
-			case server.ServiceIDRedis:
-				{
-					if resp.ErrCode == server.ErrorCodeOK {
-						sess := server.GetSession(resp.SessionID)
-						resp.DestID = sess.PopSrcID()
-						resp.SrcID = s.ID()
-						server.SendMessage(resp.DestID, 0, resp)
-
-					} else {
-						resp.SrcID = s.ID()
-						resp.DestID = server.ServiceIDDB
-						resp.MsgType = server.MTRequest
-						server.SendMessage(resp.DestID, 0, resp)
-					}
-					break
-				}
-
-			case server.ServiceIDDB:
-				{
-					sess := server.GetSession(resp.SessionID)
-					resp.DestID = sess.PopSrcID()
-					server.SendMessage(resp.DestID, 0, resp)
-				}
-			}
-		}
-	}
 
 }
 
 // Stop goruntine
-func (s *LogicService) Stop() error {
+func (s *DBService) Stop() error {
 	return nil
 }
 
 // PushMessage async send message to service
-func (s *LogicService) PushMessage(option int32, msg *server.Message) error {
+func (s *DBService) PushMessage(option int32, msg *server.Message) error {
 	if err := s.MQ().AsyncPush(msg); err != nil {
 		server.Error(err.Error())
 	}
@@ -149,6 +140,6 @@ func (s *LogicService) PushMessage(option int32, msg *server.Message) error {
 }
 
 // PushBytes async send string or bytes to queue
-func (s *LogicService) PushBytes(option int32, buf []byte) error {
+func (s *DBService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

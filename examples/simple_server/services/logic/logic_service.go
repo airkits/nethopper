@@ -25,31 +25,27 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package services
+package logic
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/gonethopper/nethopper/cache/redis"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
-	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// RedisService struct to define service
-type RedisService struct {
+// LogicService struct to define service
+type LogicService struct {
 	server.BaseContext
-	rdb *redis.RedisCache
 }
 
-// RedisServiceCreate  service create function
-func RedisServiceCreate() (server.Service, error) {
-	return &RedisService{}, nil
+// LogicServiceCreate  service create function
+func LogicServiceCreate() (server.Service, error) {
+	return &LogicService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *RedisService) UserData() int32 {
+func (s *LogicService) UserData() int32 {
 	return 0
 }
 
@@ -58,30 +54,22 @@ func (s *RedisService) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *RedisService) Setup(m map[string]interface{}) (server.Service, error) {
-
-	cache, err := redis.NewRedisCache(m)
-	if err != nil {
-		return nil, err
-	}
-	s.rdb = cache
-
+func (s *LogicService) Setup(m map[string]interface{}) (server.Service, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *RedisService) Reload(m map[string]interface{}) error {
+func (s *LogicService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *RedisService) OnRun(dt time.Duration) {
+func (s *LogicService) OnRun(dt time.Duration) {
 	for i := 0; i < 128; i++ {
 		m, err := s.MQ().AsyncPop()
 		if err != nil {
 			break
 		}
-
 		message := m.(*server.Message)
 		msgType := message.MsgType
 		switch msgType {
@@ -97,55 +85,70 @@ func (s *RedisService) OnRun(dt time.Duration) {
 			}
 		}
 	}
-}
-
-// ProcessMessage receive message from mq and process message
-func (s *RedisService) ProcessMessage(message *server.Message) {
 
 }
-func (s *RedisService) processRequest(req *server.Message) {
+func (s *LogicService) processRequest(req *server.Message) {
 	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
 	switch req.MsgID {
 	case common.MessageIDLogin:
 		{
-			body := (req.Body).(*pb.User)
-			password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", body.Uid))
-			m := server.CreateMessage(req.MsgID, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
-			if err != nil {
-				server.Info(err.Error())
-				m.ErrCode = common.ErrorCodeRedisKeyNotExist
-			} else {
-				m.ErrCode = server.ErrorCodeOK
-				body.Passwd = password
-
-			}
-			m.SetBody(body)
+			m := server.CreateMessage(req.MsgID, s.ID(), server.ServiceIDRedis, server.MTRequest, req.Cmd, req.SessionID)
+			m.SetBody(req.Body)
 			server.SendMessage(m.DestID, 0, m)
+			break
 		}
-		break
 	}
-
 }
-func (s *RedisService) processResponse(resp *server.Message) {
+func (s *LogicService) processResponse(resp *server.Message) {
 	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
+	switch resp.MsgID {
+	case common.MessageIDLogin:
+		{
+			switch resp.SrcID {
+
+			case server.ServiceIDRedis:
+				{
+					if resp.ErrCode == server.ErrorCodeOK {
+						sess := server.GetSession(resp.SessionID)
+						resp.DestID = sess.PopSrcID()
+						resp.SrcID = s.ID()
+						server.SendMessage(resp.DestID, 0, resp)
+
+					} else {
+						resp.SrcID = s.ID()
+						resp.DestID = server.ServiceIDDB
+						resp.MsgType = server.MTRequest
+						server.SendMessage(resp.DestID, 0, resp)
+					}
+					break
+				}
+
+			case server.ServiceIDDB:
+				{
+					sess := server.GetSession(resp.SessionID)
+					resp.DestID = sess.PopSrcID()
+					server.SendMessage(resp.DestID, 0, resp)
+				}
+			}
+		}
+	}
 
 }
 
 // Stop goruntine
-func (s *RedisService) Stop() error {
+func (s *LogicService) Stop() error {
 	return nil
 }
 
 // PushMessage async send message to service
-func (s *RedisService) PushMessage(option int32, msg *server.Message) error {
+func (s *LogicService) PushMessage(option int32, msg *server.Message) error {
 	if err := s.MQ().AsyncPush(msg); err != nil {
 		server.Error(err.Error())
 	}
 	return nil
-
 }
 
 // PushBytes async send string or bytes to queue
-func (s *RedisService) PushBytes(option int32, buf []byte) error {
+func (s *LogicService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

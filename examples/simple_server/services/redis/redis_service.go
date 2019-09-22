@@ -25,31 +25,31 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package services
+package redis
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/gonethopper/nethopper/database/sqlx"
+	"github.com/gonethopper/nethopper/cache/redis"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// DBService struct to define service
-type DBService struct {
+// RedisService struct to define service
+type RedisService struct {
 	server.BaseContext
-	conn *sqlx.SQLConnection
+	rdb *redis.RedisCache
 }
 
-// DBServiceCreate  service create function
-func DBServiceCreate() (server.Service, error) {
-
-	return &DBService{}, nil
+// RedisServiceCreate  service create function
+func RedisServiceCreate() (server.Service, error) {
+	return &RedisService{}, nil
 }
 
 // UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *DBService) UserData() int32 {
+func (s *RedisService) UserData() int32 {
 	return 0
 }
 
@@ -57,36 +57,32 @@ func (s *DBService) UserData() int32 {
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
-//  "driver:"mysql",
-//  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
-func (s *DBService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *RedisService) Setup(m map[string]interface{}) (server.Service, error) {
 
-	conn, err := sqlx.NewSQLConnection(m)
+	cache, err := redis.NewRedisCache(m)
 	if err != nil {
 		return nil, err
 	}
-	s.conn = conn
-	if err := s.conn.Open(); err != nil {
-		panic(err)
-	}
+	s.rdb = cache
+
 	return s, nil
 }
 
 //Reload reload config
-func (s *DBService) Reload(m map[string]interface{}) error {
+func (s *RedisService) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *DBService) OnRun(dt time.Duration) {
+func (s *RedisService) OnRun(dt time.Duration) {
 	for i := 0; i < 128; i++ {
 		m, err := s.MQ().AsyncPop()
 		if err != nil {
 			break
 		}
-		message := m.(*server.Message)
 
+		message := m.(*server.Message)
 		msgType := message.MsgType
 		switch msgType {
 		case server.MTRequest:
@@ -100,46 +96,56 @@ func (s *DBService) OnRun(dt time.Duration) {
 				break
 			}
 		}
-
 	}
 }
 
-func (s *DBService) processRequest(req *server.Message) {
+// ProcessMessage receive message from mq and process message
+func (s *RedisService) ProcessMessage(message *server.Message) {
+
+}
+func (s *RedisService) processRequest(req *server.Message) {
 	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-	cmd := req.Cmd
-	if cmd == "login" {
-		body := (req.Body).(*pb.User)
-		sql := "select password from user.user where uid= ?"
-		row := s.conn.QueryRow(sql, body.Uid)
-		var password string
-		if err := row.Scan(&password); err == nil {
-			server.Info(password)
+	switch req.MsgID {
+	case common.MessageIDLogin:
+		{
+			body := (req.Body).(*pb.User)
+			password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", body.Uid))
+			m := server.CreateMessage(req.MsgID, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
+			if err != nil {
+				server.Info(err.Error())
+				m.ErrCode = common.ErrorCodeRedisKeyNotExist
+			} else {
+				m.ErrCode = server.ErrorCodeOK
+				body.Passwd = password
+
+			}
+			m.SetBody(body)
+			server.SendMessage(m.DestID, 0, m)
 		}
-		m := server.CreateMessage(common.MessageIDLogin, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
-		body.Passwd = password
-		m.SetBody(body)
-		server.SendMessage(m.DestID, 0, m)
+		break
 	}
+
 }
-func (s *DBService) processResponse(resp *server.Message) {
+func (s *RedisService) processResponse(resp *server.Message) {
 	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
 
 }
 
 // Stop goruntine
-func (s *DBService) Stop() error {
+func (s *RedisService) Stop() error {
 	return nil
 }
 
 // PushMessage async send message to service
-func (s *DBService) PushMessage(option int32, msg *server.Message) error {
+func (s *RedisService) PushMessage(option int32, msg *server.Message) error {
 	if err := s.MQ().AsyncPush(msg); err != nil {
 		server.Error(err.Error())
 	}
 	return nil
+
 }
 
 // PushBytes async send string or bytes to queue
-func (s *DBService) PushBytes(option int32, buf []byte) error {
+func (s *RedisService) PushBytes(option int32, buf []byte) error {
 	return nil
 }

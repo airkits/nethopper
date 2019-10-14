@@ -32,9 +32,9 @@ import (
 	//"github.com/gonethopper/nethopper/cache/redis"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gonethopper/nethopper/examples/simple_server/services/db"
+	"github.com/gonethopper/nethopper/examples/simple_server/services/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/services/logic"
 	"github.com/gonethopper/nethopper/examples/simple_server/services/redis"
-	"github.com/gonethopper/nethopper/examples/simple_server/services/http"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )

@@ -105,7 +105,6 @@ func (s *LogicService) processResponse(resp *server.Message) {
 	case common.MessageIDLogin:
 		{
 			switch resp.SrcID {
-
 			case server.ServiceIDRedis:
 				{
 					if resp.ErrCode == server.ErrorCodeOK {
@@ -113,7 +112,6 @@ func (s *LogicService) processResponse(resp *server.Message) {
 						resp.DestID = sess.PopSrcID()
 						resp.SrcID = s.ID()
 						server.SendMessage(resp.DestID, 0, resp)
-
 					} else {
 						resp.SrcID = s.ID()
 						resp.DestID = server.ServiceIDDB
@@ -122,7 +120,6 @@ func (s *LogicService) processResponse(resp *server.Message) {
 					}
 					break
 				}
-
 			case server.ServiceIDDB:
 				{
 					sess := server.GetSession(resp.SessionID)

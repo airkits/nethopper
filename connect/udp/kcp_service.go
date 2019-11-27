@@ -72,8 +72,8 @@ func (s *KCPService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *KCPService) PushMessage(option int32, msg *server.Message) error {
+// Call async send message to service
+func (s *KCPService) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/queue"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
@@ -27,8 +26,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, token)
 	sess := server.GetSession(token)
 	if sess != nil {
-		m := server.CreateMessage(server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, "index", []byte{})
-		server.SendMessage(m.DestID, 0, m)
+		//	m := server.CreateMessage(server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, "index", []byte{})
+		//	server.Call(m.DestID, 0, m)
 	}
 	defer close(sess.Die)
 	var i int
@@ -44,15 +43,15 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 		i++
 
-		if v, err := sess.MQ.AsyncPop(); err == nil {
-			fmt.Fprint(w, v.(server.Message).Payload)
-			fmt.Fprint(w, "close bybye")
+		// if v, err := sess.MQ.AsyncPop(); err == nil {
+		// //	fmt.Fprint(w, v.(server.Message).Payload)
+		// 	fmt.Fprint(w, "close bybye")
 
-			return
-		} else if err == queue.ErrQueueIsClosed {
-			fmt.Fprint(w, err.Error())
-			return
-		}
+		// 	return
+		// } else if err == queue.ErrQueueIsClosed {
+		// 	fmt.Fprint(w, err.Error())
+		// 	return
+		// }
 	}
 
 }

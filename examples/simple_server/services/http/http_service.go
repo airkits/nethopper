@@ -120,40 +120,6 @@ func (s *HTTPService) Reload(m map[string]interface{}) error {
 
 // OnRun goruntine run and call OnRun , always use ServiceRun to call this function
 func (s *HTTPService) OnRun(dt time.Duration) {
-	for i := 0; i < 128; i++ {
-		m, err := s.MQ().AsyncPop()
-		if err != nil {
-			break
-		}
-
-		message := m.(*server.Message)
-		msgType := message.MsgType
-		switch msgType {
-		case server.MTRequest:
-			{
-				s.processRequest(message)
-				break
-			}
-		case server.MTResponse:
-			{
-				s.processResponse(message)
-				break
-			}
-		}
-	}
-}
-func (s *HTTPService) processRequest(req *server.Message) {
-	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-
-}
-func (s *HTTPService) processResponse(resp *server.Message) {
-	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
-
-	sess := server.GetSession(resp.SessionID)
-	if sess != nil {
-		sess.Response = resp.Body
-		sess.NotifyDone()
-	}
 }
 
 // Stop goruntine
@@ -161,11 +127,8 @@ func (s *HTTPService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *HTTPService) PushMessage(option int32, msg *server.Message) error {
-	if err := s.MQ().AsyncPush(msg); err != nil {
-		server.Error(err.Error())
-	}
+// Call async send message to service
+func (s *HTTPService) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 

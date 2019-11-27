@@ -32,7 +32,6 @@ import (
 
 	"github.com/gonethopper/nethopper/database/sqlx"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
-	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -85,42 +84,32 @@ func (s *DBService) OnRun(dt time.Duration) {
 		if err != nil {
 			break
 		}
-		message := m.(*server.Message)
+		obj := m.(*server.CallObject)
 
-		msgType := message.MsgType
-		switch msgType {
-		case server.MTRequest:
-			{
-				s.processRequest(message)
-				break
-			}
-		case server.MTResponse:
-			{
-				s.processResponse(message)
-				break
-			}
+		if obj.Cmd == common.CallIDGetUserInfoCmd {
+			go GetUserInfoHander(s, obj)
 		}
 
 	}
 }
 
-func (s *DBService) processRequest(req *server.Message) {
-	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-	cmd := req.Cmd
-	if cmd == "login" {
-		body := (req.Body).(*pb.User)
-		sql := "select password from user.user where uid= ?"
-		row := s.conn.QueryRow(sql, body.Uid)
-		var password string
-		if err := row.Scan(&password); err == nil {
-			server.Info(password)
-		}
-		m := server.CreateMessage(common.MessageIDLogin, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
-		body.Passwd = password
-		m.SetBody(body)
-		server.SendMessage(m.DestID, 0, m)
-	}
-}
+// func (s *DBService) processRequest(req *server.Message) {
+// 	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
+// 	cmd := req.Cmd
+// 	if cmd == "login" {
+// 		body := (req.Body).(*pb.User)
+// 		sql := "select password from user.user where uid= ?"
+// 		row := s.conn.QueryRow(sql, body.Uid)
+// 		var password string
+// 		if err := row.Scan(&password); err == nil {
+// 			server.Info(password)
+// 		}
+// 		m := server.CreateMessage(common.MessageIDLogin, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
+// 		body.Passwd = password
+// 		m.SetBody(body)
+// 		server.Call(m.DestID, 0, m)
+// 	}
+// }
 func (s *DBService) processResponse(resp *server.Message) {
 	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
 
@@ -131,9 +120,9 @@ func (s *DBService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *DBService) PushMessage(option int32, msg *server.Message) error {
-	if err := s.MQ().AsyncPush(msg); err != nil {
+// Call async send message to service
+func (s *DBService) Call(option int32, obj *server.CallObject) error {
+	if err := s.MQ().AsyncPush(obj); err != nil {
 		server.Error(err.Error())
 	}
 	return nil

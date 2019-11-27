@@ -95,7 +95,7 @@ type Server struct {
 	Services sync.Map
 }
 
-// UpdateGoCount update goruntine use count ,+/- is all ok
-func (s *Server) UpdateGoCount(value int32) {
+// ModifyGoCount update goruntine use count ,+/- is all ok
+func (s *Server) ModifyGoCount(value int32) {
 	atomic.AddInt32(&s.GoCount, value)
 }

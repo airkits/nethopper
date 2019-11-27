@@ -68,10 +68,10 @@ func CallUserMethod(instance interface{}, method string, v ...interface{}) []ref
 func GO(v ...interface{}) {
 	f := v[0]
 	WG.Add(1)
-	App.UpdateGoCount(1)
+	App.ModifyGoCount(1)
 	go func() {
 		CallUserFunc(f, v[1:]...)
-		App.UpdateGoCount(-1)
+		App.ModifyGoCount(-1)
 		WG.Done()
 	}()
 }
@@ -79,10 +79,10 @@ func GO(v ...interface{}) {
 // GOWithContext wapper exec goruntine and use context to manager goruntine
 func GOWithContext(v ...interface{}) {
 	f := v[0]
-	App.UpdateGoCount(1)
+	App.ModifyGoCount(1)
 	go func() {
 		CallUserFunc(f, v[1:]...)
-		App.UpdateGoCount(-1)
+		App.ModifyGoCount(-1)
 	}()
 }
 
@@ -99,5 +99,27 @@ func Future(f func() (interface{}, error)) func() (interface{}, error) {
 	return func() (interface{}, error) {
 		<-c
 		return result, err
+	}
+}
+
+// CallObject call struct
+type CallObject struct {
+	Cmd     string
+	Args    []interface{}
+	ChanRet chan *RetObject
+}
+
+// RetObject call return object
+type RetObject struct {
+	Ret interface{}
+	Err error
+}
+
+// NewCallObject create call object
+func NewCallObject(cmd string, ret chan *RetObject, args ...interface{}) *CallObject {
+	return &CallObject{
+		Cmd:     cmd,
+		Args:    args,
+		ChanRet: ret,
 	}
 }

@@ -123,9 +123,9 @@ func (s *LogService) Stop() error {
 	return s.logger.Close()
 }
 
-// PushMessage async push message to queue
-func (s *LogService) PushMessage(option int32, msg *server.Message) error {
-	return fmt.Errorf("TODO LogService PushMessage")
+// Call async push message to queue
+func (s *LogService) Call(option int32, obj *server.CallObject) error {
+	return fmt.Errorf("TODO LogService Call")
 }
 
 // UserData service custom option, can you store you self value

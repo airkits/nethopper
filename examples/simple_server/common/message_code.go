@@ -6,11 +6,8 @@ const (
 )
 
 const (
-	// MessageIDLogin login message
-	MessageIDLogin = 1000
-)
-
-const (
-	// MessageIDLoginCmd login cmd
-	MessageIDLoginCmd = "login"
+	// CallIDLoginCmd login cmd
+	CallIDLoginCmd = "login"
+	// CallIDGetUserInfoCmd get userinfo
+	CallIDGetUserInfoCmd = "getUser"
 )

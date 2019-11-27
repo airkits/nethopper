@@ -72,8 +72,8 @@ func (s *SERVICEService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *SERVICEService) PushMessage(option int32, msg *server.Message) error {
+// Call async send message to service
+func (s *SERVICEService) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 

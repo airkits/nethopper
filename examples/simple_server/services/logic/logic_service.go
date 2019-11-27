@@ -30,8 +30,8 @@ package logic
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/examples/simple_server/common"
 )
 
 // LogicService struct to define service
@@ -70,65 +70,69 @@ func (s *LogicService) OnRun(dt time.Duration) {
 		if err != nil {
 			break
 		}
-		message := m.(*server.Message)
-		msgType := message.MsgType
-		switch msgType {
-		case server.MTRequest:
-			{
-				s.processRequest(message)
-				break
-			}
-		case server.MTResponse:
-			{
-				s.processResponse(message)
-				break
-			}
+		obj := m.(*server.CallObject)
+		if obj.Cmd == common.CallIDLoginCmd {
+			go LoginHandler(obj)
 		}
+		// message := m.(*server.Message)
+		// msgType := message.MsgType
+		// switch msgType {
+		// case server.MTRequest:
+		// 	{
+		// 		s.processRequest(message)
+		// 		break
+		// 	}
+		// case server.MTResponse:
+		// 	{
+		// 		s.processResponse(message)
+		// 		break
+		// 	}
+		// }
 	}
 
 }
 func (s *LogicService) processRequest(req *server.Message) {
 	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-	switch req.MsgID {
-	case common.MessageIDLogin:
-		{
-			m := server.CreateMessage(req.MsgID, s.ID(), server.ServiceIDRedis, server.MTRequest, req.Cmd, req.SessionID)
-			m.SetBody(req.Body)
-			server.SendMessage(m.DestID, 0, m)
-			break
-		}
-	}
+	// switch req.MsgID {
+	// case common.MessageIDLogin:
+	// 	{
+	// 		m := server.CreateMessage(req.MsgID, s.ID(), server.ServiceIDRedis, server.MTRequest, req.Cmd, req.SessionID)
+	// 		m.SetBody(req.Body)
+	// 		server.Call(m.DestID, 0, m)
+	// 		break
+	// 	}
+	// }
 }
 func (s *LogicService) processResponse(resp *server.Message) {
 	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
-	switch resp.MsgID {
-	case common.MessageIDLogin:
-		{
-			switch resp.SrcID {
-			case server.ServiceIDRedis:
-				{
-					if resp.ErrCode == server.ErrorCodeOK {
-						sess := server.GetSession(resp.SessionID)
-						resp.DestID = sess.PopSrcID()
-						resp.SrcID = s.ID()
-						server.SendMessage(resp.DestID, 0, resp)
-					} else {
-						resp.SrcID = s.ID()
-						resp.DestID = server.ServiceIDDB
-						resp.MsgType = server.MTRequest
-						server.SendMessage(resp.DestID, 0, resp)
-					}
-					break
-				}
-			case server.ServiceIDDB:
-				{
-					sess := server.GetSession(resp.SessionID)
-					resp.DestID = sess.PopSrcID()
-					server.SendMessage(resp.DestID, 0, resp)
-				}
-			}
-		}
-	}
+	// switch resp.MsgID {
+	// case common.MessageIDLogin:
+	// 	{
+	// 		switch resp.SrcID {
+	// 		case server.ServiceIDRedis:
+	// 			{
+	// 				if resp.ErrCode == server.ErrorCodeOK {
+	// 					sess := server.GetSession(resp.SessionID)
+	// 					resp.DestID = sess.PopSrcID()
+	// 					resp.SrcID = s.ID()
+	// 					server.Call(resp.DestID, 0, resp)
+	// 				} else {
+	// 					resp.SrcID = s.ID()
+	// 					resp.DestID = server.ServiceIDDB
+	// 					resp.MsgType = server.MTRequest
+	// 					server.Call(resp.DestID, 0, resp)
+	// 				}
+	// 				break
+	// 			}
+	// 		case server.ServiceIDDB:
+	// 			{
+	// 				sess := server.GetSession(resp.SessionID)
+	// 				resp.DestID = sess.PopSrcID()
+	// 				server.Call(resp.DestID, 0, resp)
+	// 			}
+	// 		}
+	// 	}
+	//	}
 
 }
 
@@ -137,9 +141,9 @@ func (s *LogicService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *LogicService) PushMessage(option int32, msg *server.Message) error {
-	if err := s.MQ().AsyncPush(msg); err != nil {
+// Call async send message to service
+func (s *LogicService) Call(option int32, obj *server.CallObject) error {
+	if err := s.MQ().AsyncPush(obj); err != nil {
 		server.Error(err.Error())
 	}
 	return nil

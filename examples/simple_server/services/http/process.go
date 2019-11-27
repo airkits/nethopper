@@ -8,7 +8,6 @@ import (
 
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
-	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -40,24 +39,30 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		server.Info(err)
 		return
 	}
-	body := &pb.User{
-		Uid:    string(int64(v["uid"].(float64))),
-		Passwd: "",
-	}
-	sess := server.GetSession(token)
-	if sess != nil {
-		m := server.CreateMessage(common.MessageIDLogin, server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, common.MessageIDLoginCmd, token)
-		m.SetBody(body)
-		server.SendMessage(m.DestID, 0, m)
-	}
-	defer close(sess.Die)
+	var retChan = make(chan *server.RetObject, 1)
+	var obj = server.NewCallObject(common.CallIDLoginCmd, retChan, string(int64(v["uid"].(float64))))
+	server.Call(server.ServiceIDLogic, 0, obj)
+	result := <-retChan
+	server.Info("message done,get pwd  %s", result.Ret.(string))
+	fmt.Fprint(w, result.Ret.(string))
+	// body := &pb.User{
+	// 	Uid:    string(int64(v["uid"].(float64))),
+	// 	Passwd: "",
+	// }
+	// sess := server.GetSession(token)
+	// if sess != nil {
+	// 	m := server.CreateMessage(common.MessageIDLogin, server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, common.MessageIDLoginCmd, token)
+	// 	m.SetBody(body)
+	// 	server.Call(m.DestID, 0, m)
+	// }
+	// defer close(sess.Die)
 
-	result := <-sess.Done //等待Done的通知，此时call.Reply发生了变化。
+	// result := <-sess.Done //等待Done的通知，此时call.Reply发生了变化。
 
-	respBody := (result.Response).(*pb.User)
-	server.Info("message done,get pwd  %s", respBody.String())
-	fmt.Fprint(w, string(respBody.Passwd))
-
+	// respBody := (result.Response).(*pb.User)
+	// server.Info("message done,get pwd  %s", respBody.String())
+	// fmt.Fprint(w, string(respBody.Passwd))
+	/////////////////////////////////////////////////
 	// var i int
 	// for start := time.Now(); ; {
 

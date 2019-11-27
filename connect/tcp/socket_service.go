@@ -212,19 +212,19 @@ func (s *SocketService) handler(conn net.Conn, readDeadline time.Duration) {
 			server.Warning("read payload failed, ip:%v reason:%v size:%v", sess.IP, err, n)
 			return
 		}
-		message := server.CreateMessage(s.ID(), server.ServiceIDLogic, server.MTRequest, string(cmdBuffer), payload)
-		server.SendMessage(message.DestID, 0, message)
+		// message := server.CreateMessage(s.ID(), server.ServiceIDLogic, server.MTRequest, string(cmdBuffer), payload)
+		// server.Call(message.DestID, 0, message)
 
-		for i := 0; i < 8; i++ {
-			m, err := sess.MQ.AsyncPop()
-			if err == nil {
-				payload2 := m.(*server.Message).Payload
+		// for i := 0; i < 8; i++ {
+		// 	m, err := sess.MQ.AsyncPop()
+		// 	if err == nil {
+		// 		payload2 := m.(*server.Message).Payload
 
-				conn.Write(payload2)
-			} else {
-				break
-			}
-		}
+		// 		conn.Write(payload2)
+		// 	} else {
+		// 		break
+		// 	}
+		// }
 		// deliver the data to the input queue of agent()
 		select {
 		case <-sess.Die:
@@ -239,8 +239,8 @@ func (s *SocketService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *SocketService) PushMessage(option int32, msg *server.Message) error {
+// Call async send message to service
+func (s *SocketService) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 

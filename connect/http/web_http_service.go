@@ -128,8 +128,8 @@ func (s *WebHTTPService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *WebHTTPService) PushMessage(option int32, msg *server.Message) error {
+// Call async send message to service
+func (s *WebHTTPService) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 

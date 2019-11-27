@@ -28,12 +28,9 @@
 package redis
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gonethopper/nethopper/cache/redis"
-	"github.com/gonethopper/nethopper/examples/simple_server/common"
-	"github.com/gonethopper/nethopper/examples/simple_server/pb"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -105,25 +102,25 @@ func (s *RedisService) ProcessMessage(message *server.Message) {
 }
 func (s *RedisService) processRequest(req *server.Message) {
 	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-	switch req.MsgID {
-	case common.MessageIDLogin:
-		{
-			body := (req.Body).(*pb.User)
-			password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", body.Uid))
-			m := server.CreateMessage(req.MsgID, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
-			if err != nil {
-				server.Info(err.Error())
-				m.ErrCode = common.ErrorCodeRedisKeyNotExist
-			} else {
-				m.ErrCode = server.ErrorCodeOK
-				body.Passwd = password
+	// switch req.MsgID {
+	// case common.MessageIDLogin:
+	// 	{
+	// 		body := (req.Body).(*pb.User)
+	// 		password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", body.Uid))
+	// 		m := server.CreateMessage(req.MsgID, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
+	// 		if err != nil {
+	// 			server.Info(err.Error())
+	// 			m.ErrCode = common.ErrorCodeRedisKeyNotExist
+	// 		} else {
+	// 			m.ErrCode = server.ErrorCodeOK
+	// 			body.Passwd = password
 
-			}
-			m.SetBody(body)
-			server.SendMessage(m.DestID, 0, m)
-		}
-		break
-	}
+	// 		}
+	// 		m.SetBody(body)
+	// 		server.Call(m.DestID, 0, m)
+	// 	}
+	// 	break
+	// }
 
 }
 func (s *RedisService) processResponse(resp *server.Message) {
@@ -136,9 +133,9 @@ func (s *RedisService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *RedisService) PushMessage(option int32, msg *server.Message) error {
-	if err := s.MQ().AsyncPush(msg); err != nil {
+// Call async send message to service
+func (s *RedisService) Call(option int32, obj *server.CallObject) error {
+	if err := s.MQ().AsyncPush(obj); err != nil {
 		server.Error(err.Error())
 	}
 	return nil

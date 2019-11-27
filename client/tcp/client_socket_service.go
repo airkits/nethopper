@@ -148,8 +148,8 @@ func (s *ClientSocketService) Stop() error {
 	return nil
 }
 
-// PushMessage async send message to service
-func (s *ClientSocketService) PushMessage(option int32, msg *server.Message) error {
+// Call async send message to service
+func (s *ClientSocketService) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 

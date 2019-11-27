@@ -111,8 +111,8 @@ type Service interface {
 	OnRun(dt time.Duration)
 	// Stop goruntine
 	Stop() error
-	// PushMessage async send message to service
-	PushMessage(option int32, msg *Message) error
+	// Call async send callobject to service
+	Call(option int32, obj *CallObject) error
 	// PushBytes async send string or bytes to queue
 	PushBytes(option int32, buf []byte) error
 }
@@ -304,11 +304,11 @@ func NewService(name string, parent Service, m map[string]interface{}) (Service,
 	return createServiceByID(serviceID, name, parent, m)
 }
 
-// SendMessage send message to services
-func SendMessage(destServiceID int32, option int32, msg *Message) error {
+// Call get info from services
+func Call(destServiceID int32, option int32, obj *CallObject) error {
 	s, err := GetServiceByID(destServiceID)
 	if err != nil {
 		return err
 	}
-	return s.PushMessage(option, msg)
+	return s.Call(option, obj)
 }

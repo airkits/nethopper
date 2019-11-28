@@ -115,6 +115,8 @@ type Service interface {
 	Call(option int32, obj *CallObject) error
 	// PushBytes async send string or bytes to queue
 	PushBytes(option int32, buf []byte) error
+	//GetHandler get call handler
+	GetHandler(id interface{}) interface{}
 }
 
 // ServiceRun wrapper service goruntine and in an orderly way to exit
@@ -144,19 +146,44 @@ func ServiceName(s Service) string {
 
 //BaseContext use context to close all service and using the bubbling method to exit
 type BaseContext struct {
-	ctx      context.Context
-	cancel   context.CancelFunc
-	parent   Service
-	childRef int32
-	q        queue.Queue
-	name     string
-	id       int32
+	ctx       context.Context
+	cancel    context.CancelFunc
+	parent    Service
+	childRef  int32
+	q         queue.Queue
+	name      string
+	id        int32
+	functions map[interface{}]interface{}
+}
+
+// RegisterHandler register function before run
+func (a *BaseContext) RegisterHandler(id interface{}, f interface{}) {
+
+	// switch f.(type) {
+	// case func([]interface{}):
+	// case func([]interface{}) (interface{}, error):
+	// case func([]interface{}) []interface{}:
+	// default:
+	// 	panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.ValueOf(f)))
+	// }
+
+	if _, ok := a.functions[id]; ok {
+		panic(fmt.Sprintf("function id %v: already registered", id))
+	}
+
+	a.functions[id] = f
+}
+
+// GetHandler get call handler
+func (a *BaseContext) GetHandler(id interface{}) interface{} {
+	return a.functions[id]
 }
 
 // MakeContext init base service queue and create context
 func (a *BaseContext) MakeContext(p Service, queueSize int32) {
 	a.parent = p
 	a.q = queue.NewChanQueue(queueSize)
+	a.functions = make(map[interface{}]interface{})
 	if p == nil {
 		a.ctx, a.cancel = context.WithCancel(context.Background())
 	} else {
@@ -305,10 +332,15 @@ func NewService(name string, parent Service, m map[string]interface{}) (Service,
 }
 
 // Call get info from services
-func Call(destServiceID int32, option int32, obj *CallObject) error {
+func Call(destServiceID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
+	var obj = NewCallObject(cmd, args...)
 	s, err := GetServiceByID(destServiceID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return s.Call(option, obj)
+	if err = s.Call(option, obj); err != nil {
+		return nil, err
+	}
+	result := <-obj.ChanRet
+	return result.Ret, result.Err
 }

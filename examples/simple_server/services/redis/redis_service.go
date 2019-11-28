@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/cache/redis"
+	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -79,19 +80,11 @@ func (s *RedisService) OnRun(dt time.Duration) {
 			break
 		}
 
-		message := m.(*server.Message)
-		msgType := message.MsgType
-		switch msgType {
-		case server.MTRequest:
-			{
-				s.processRequest(message)
-				break
-			}
-		case server.MTResponse:
-			{
-				s.processResponse(message)
-				break
-			}
+		obj := m.(*server.CallObject)
+		if obj.Cmd == common.CallIDGetUserInfoCmd {
+			go GetUserInfoHander(s, obj)
+		} else if obj.Cmd == common.CallIDInsertUserInfoCmd {
+			go UpdateUserInfoHandler(s, obj)
 		}
 	}
 }

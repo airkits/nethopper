@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gonethopper/nethopper/codec"
@@ -21,11 +22,36 @@ func RegisterAPI(router *mux.Router) {
 	router.HandleFunc("/hello/:name", Hello)
 }
 
+// func Insert(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Fprint(w, "Welcome!\n")
+// 	token := context.Get(r, "token").(string)
+// 	fmt.Fprint(w, token)
+
+// 	sbody, e := ioutil.ReadAll(r.Body)
+// 	defer r.Body.Close()
+// 	if e != nil {
+// 		w.WriteHeader(500)
+// 		return
+// 	}
+// 	server.Info(string(sbody))
+// 	var v = make(map[string]interface{})
+// 	if err := codec.JSONCodec.Unmarshal(sbody, &v, nil); err != nil {
+// 		server.Info(err)
+// 		return
+// 	}
+
+// 	var obj = server.NewCallObject(common.CallIDInsertUserInfoCmd, string(int64(v["uid"].(float64))), v["password"].(string))
+// 	server.Call(server.ServiceIDLogic, 0, obj)
+// 	result := <-obj.ChanRet
+// 	server.Info("message insert done,get pwd  %s", result.Ret.(string))
+// 	fmt.Fprint(w, result.Ret.(string))
+// }
+
 // Index api index
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Welcome!\n")
 	token := context.Get(r, "token").(string)
-	fmt.Fprint(w, token)
+	fmt.Fprint(w, token+"\n")
 
 	sbody, e := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -39,12 +65,17 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		server.Info(err)
 		return
 	}
-	var retChan = make(chan *server.RetObject, 1)
-	var obj = server.NewCallObject(common.CallIDLoginCmd, retChan, string(int64(v["uid"].(float64))))
-	server.Call(server.ServiceIDLogic, 0, obj)
-	result := <-retChan
-	server.Info("message done,get pwd  %s", result.Ret.(string))
-	fmt.Fprint(w, result.Ret.(string))
+	uid := v["uid"].(float64)
+	pwd := v["passwd"].(string)
+	result, err2 := server.Call(server.ServiceIDLogic, common.CallIDLoginCmd, 0, strconv.FormatFloat(uid, 'f', -1, 64), pwd)
+	if err2 != nil {
+		server.Info("message done,get pwd  %s ,err %s", result.(string), err2.Error())
+		fmt.Fprint(w, "login failed")
+	} else {
+		server.Info("message done,get pwd  %s", result.(string))
+		fmt.Fprint(w, "login success")
+	}
+
 	// body := &pb.User{
 	// 	Uid:    string(int64(v["uid"].(float64))),
 	// 	Passwd: "",

@@ -30,8 +30,8 @@ package logic
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/server"
 )
 
 // LogicService struct to define service
@@ -72,7 +72,7 @@ func (s *LogicService) OnRun(dt time.Duration) {
 		}
 		obj := m.(*server.CallObject)
 		if obj.Cmd == common.CallIDLoginCmd {
-			go LoginHandler(obj)
+			go LoginHandler(s, obj)
 		}
 		// message := m.(*server.Message)
 		// msgType := message.MsgType

@@ -28,6 +28,7 @@
 package server
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -106,7 +107,7 @@ func Future(f func() (interface{}, error)) func() (interface{}, error) {
 type CallObject struct {
 	Cmd     string
 	Args    []interface{}
-	ChanRet chan *RetObject
+	ChanRet chan RetObject
 }
 
 // RetObject call return object
@@ -116,10 +117,35 @@ type RetObject struct {
 }
 
 // NewCallObject create call object
-func NewCallObject(cmd string, ret chan *RetObject, args ...interface{}) *CallObject {
+func NewCallObject(cmd string, args ...interface{}) *CallObject {
 	return &CallObject{
 		Cmd:     cmd,
 		Args:    args,
-		ChanRet: ret,
+		ChanRet: make(chan RetObject, 1),
 	}
+}
+
+// Processor goruntine process pre call
+func Processor(s Service, obj *CallObject) {
+	var err error
+	var ret = RetObject{
+		Ret: nil,
+		Err: nil,
+	}
+	f := s.GetHandler(obj.Cmd)
+	if f == nil {
+		err = fmt.Errorf("function id %v: function not registered", obj.Cmd)
+	} else {
+		args := []interface{}{s, obj}
+		args = append(args, obj.Args...)
+		values := CallUserFunc(f, args...)
+		ret.Ret = values[0].Interface()
+		if values[1].Interface() != nil {
+			err = values[1].Interface().(error)
+			ret.Err = err
+		}
+	}
+
+	obj.ChanRet <- ret
+
 }

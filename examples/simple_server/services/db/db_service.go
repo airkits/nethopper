@@ -60,7 +60,7 @@ func (s *DBService) UserData() int32 {
 //  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
 func (s *DBService) Setup(m map[string]interface{}) (server.Service, error) {
-
+	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
 	conn, err := sqlx.NewSQLConnection(m)
 	if err != nil {
 		return nil, err
@@ -69,6 +69,7 @@ func (s *DBService) Setup(m map[string]interface{}) (server.Service, error) {
 	if err := s.conn.Open(); err != nil {
 		panic(err)
 	}
+
 	return s, nil
 }
 
@@ -86,10 +87,7 @@ func (s *DBService) OnRun(dt time.Duration) {
 		}
 		obj := m.(*server.CallObject)
 
-		if obj.Cmd == common.CallIDGetUserInfoCmd {
-			go GetUserInfoHander(s, obj)
-		}
-
+		go server.Processor(s, obj)
 	}
 }
 

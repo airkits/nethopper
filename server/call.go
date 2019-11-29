@@ -127,7 +127,15 @@ func NewCallObject(cmd string, args ...interface{}) *CallObject {
 
 // Processor goruntine process pre call
 func Processor(s Service, obj *CallObject) {
+
 	var err error
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
 	var ret = RetObject{
 		Ret: nil,
 		Err: nil,

@@ -160,11 +160,9 @@ type BaseContext struct {
 func (a *BaseContext) RegisterHandler(id interface{}, f interface{}) {
 
 	// switch f.(type) {
-	// case func([]interface{}):
-	// case func([]interface{}) (interface{}, error):
-	// case func([]interface{}) []interface{}:
+	// case func(Service, *CallObject, string) (string, error):
 	// default:
-	// 	panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.ValueOf(f)))
+	// 	panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
 	// }
 
 	if _, ok := a.functions[id]; ok {

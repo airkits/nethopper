@@ -6,21 +6,15 @@ import (
 
 // GetUserInfoHander 获取用户信息
 func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) (string, error) {
-	var uid = (obj.Args[0]).(string)
+	//var uid = (obj.Args[0]).(string)
 	//uid := 1
 	sql := "select password from user where uid= ?"
-	row := s.conn.QueryRow(sql, uid)
+	row := s.conn.QueryRow(sql, u)
 	var password string
 	if err := row.Scan(&password); err == nil {
 		server.Info(password)
 	}
 	return password, nil
-	// var ret = server.RetObject{
-	// 	Ret: password,
-	// 	Err: nil,
-	// }
-	// obj.ChanRet <- ret
-
 }
 
 // InsertUserInfoHander 获取用户信息

@@ -5,7 +5,9 @@ import (
 )
 
 // GetUserInfoHander 获取用户信息
-func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) (string, error) {
+//func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) (string, error) {
+func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) {
+
 	//var uid = (obj.Args[0]).(string)
 	//uid := 1
 	sql := "select password from user where uid= ?"
@@ -14,7 +16,7 @@ func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) (string, 
 	if err := row.Scan(&password); err == nil {
 		server.Info(password)
 	}
-	return password, nil
+	//return password, nil
 }
 
 // InsertUserInfoHander 获取用户信息

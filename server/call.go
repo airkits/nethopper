@@ -142,15 +142,27 @@ func Processor(s Service, obj *CallObject) {
 	}
 	f := s.GetHandler(obj.Cmd)
 	if f == nil {
-		err = fmt.Errorf("function id %v: function not registered", obj.Cmd)
+		err = fmt.Errorf("handler id %v: function not registered", obj.Cmd)
 	} else {
 		args := []interface{}{s, obj}
 		args = append(args, obj.Args...)
 		values := CallUserFunc(f, args...)
-		ret.Ret = values[0].Interface()
-		if values[1].Interface() != nil {
-			err = values[1].Interface().(error)
-			ret.Err = err
+		if values == nil {
+			err = fmt.Errorf("unsupport handler")
+		} else {
+			l := len(values)
+			if l == 1 {
+				if values[0].Interface() != nil {
+					err = values[0].Interface().(error)
+					ret.Err = err
+				}
+			} else if l == 2 {
+				ret.Ret = values[0].Interface()
+				if values[1].Interface() != nil {
+					err = values[1].Interface().(error)
+					ret.Err = err
+				}
+			}
 		}
 	}
 

@@ -55,6 +55,7 @@ func (s *LogicService) UserData() int32 {
 //  "queueSize":1000,
 // }
 func (s *LogicService) Setup(m map[string]interface{}) (server.Service, error) {
+	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
 	return s, nil
 }
 
@@ -71,68 +72,10 @@ func (s *LogicService) OnRun(dt time.Duration) {
 			break
 		}
 		obj := m.(*server.CallObject)
-		if obj.Cmd == common.CallIDLoginCmd {
-			go LoginHandler(s, obj)
-		}
-		// message := m.(*server.Message)
-		// msgType := message.MsgType
-		// switch msgType {
-		// case server.MTRequest:
-		// 	{
-		// 		s.processRequest(message)
-		// 		break
-		// 	}
-		// case server.MTResponse:
-		// 	{
-		// 		s.processResponse(message)
-		// 		break
-		// 	}
-		// }
-	}
 
-}
-func (s *LogicService) processRequest(req *server.Message) {
-	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-	// switch req.MsgID {
-	// case common.MessageIDLogin:
-	// 	{
-	// 		m := server.CreateMessage(req.MsgID, s.ID(), server.ServiceIDRedis, server.MTRequest, req.Cmd, req.SessionID)
-	// 		m.SetBody(req.Body)
-	// 		server.Call(m.DestID, 0, m)
-	// 		break
-	// 	}
-	// }
-}
-func (s *LogicService) processResponse(resp *server.Message) {
-	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
-	// switch resp.MsgID {
-	// case common.MessageIDLogin:
-	// 	{
-	// 		switch resp.SrcID {
-	// 		case server.ServiceIDRedis:
-	// 			{
-	// 				if resp.ErrCode == server.ErrorCodeOK {
-	// 					sess := server.GetSession(resp.SessionID)
-	// 					resp.DestID = sess.PopSrcID()
-	// 					resp.SrcID = s.ID()
-	// 					server.Call(resp.DestID, 0, resp)
-	// 				} else {
-	// 					resp.SrcID = s.ID()
-	// 					resp.DestID = server.ServiceIDDB
-	// 					resp.MsgType = server.MTRequest
-	// 					server.Call(resp.DestID, 0, resp)
-	// 				}
-	// 				break
-	// 			}
-	// 		case server.ServiceIDDB:
-	// 			{
-	// 				sess := server.GetSession(resp.SessionID)
-	// 				resp.DestID = sess.PopSrcID()
-	// 				server.Call(resp.DestID, 0, resp)
-	// 			}
-	// 		}
-	// 	}
-	//	}
+		go server.Processor(s, obj)
+
+	}
 
 }
 

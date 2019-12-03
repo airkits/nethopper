@@ -4,28 +4,24 @@ import (
 	"fmt"
 
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 )
 
 // GetUserInfoHander 获取用户信息
-func GetUserInfoHander(s *RedisService, obj *server.CallObject) {
-	var uid = (obj.Args[0]).(string)
+func GetUserInfoHander(s *RedisService, obj *server.CallObject, uid string) (string, error) {
+	defer utils.Trace("GetUserInfoHander")()
 	password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", uid))
-	var ret = server.RetObject{
-		Ret: password,
-		Err: err,
-	}
-	obj.ChanRet <- ret
+	return password, err
 
 }
 
-func UpdateUserInfoHandler(s *RedisService, obj *server.CallObject) {
-	var uid = (obj.Args[0]).(string)
-	var password = (obj.Args[1]).(string)
+// UpdateUserInfoHandler update user info
+func UpdateUserInfoHandler(s *RedisService, obj *server.CallObject, uid string, pwd string) (bool, error) {
+
 	var key = fmt.Sprintf("uid_%d", uid)
-	err := s.rdb.Set(s.Context(), key, password, 0)
-	var ret = server.RetObject{
-		Ret: password,
-		Err: err,
+	err := s.rdb.Set(s.Context(), key, pwd, 0)
+	if err != nil {
+		return false, err
 	}
-	obj.ChanRet <- ret
+	return true, nil
 }

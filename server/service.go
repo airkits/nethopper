@@ -32,6 +32,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -132,9 +133,10 @@ func ServiceRun(s Service) {
 		}
 		start = time.Now()
 		if s.MQ().Length() == 0 {
-			time.Sleep(100 * time.Millisecond)
+			//time.Sleep(100 * time.Millisecond)
+			time.Sleep(time.Millisecond)
 		}
-
+		runtime.Gosched()
 	}
 }
 
@@ -269,6 +271,7 @@ func (a *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 // OnRun service run
 func (a *BaseContext) OnRun(dt time.Duration) {
 	fmt.Printf("service %s do Nothing \n", a.Name())
+
 }
 
 // RegisterService register service name to create function mapping

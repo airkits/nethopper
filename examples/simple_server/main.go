@@ -41,6 +41,7 @@ import (
 
 func main() {
 
+	//runtime.GOMAXPROCS(1)
 	m := map[string]interface{}{
 		"filename":    "logs/server.log",
 		"level":       7,

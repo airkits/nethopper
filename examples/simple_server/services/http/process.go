@@ -10,6 +10,7 @@ import (
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
@@ -49,6 +50,7 @@ func RegisterAPI(router *mux.Router) {
 
 // Index api index
 func Index(w http.ResponseWriter, r *http.Request) {
+	defer utils.Trace("Index")()
 	fmt.Fprint(w, "Welcome!\n")
 	token := context.Get(r, "token").(string)
 	fmt.Fprint(w, token+"\n")
@@ -69,10 +71,10 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	pwd := v["passwd"].(string)
 	result, err2 := server.Call(server.ServiceIDLogic, common.CallIDLoginCmd, 0, strconv.FormatFloat(uid, 'f', -1, 64), pwd)
 	if err2 != nil {
-		server.Info("message done,get pwd  %s ,err %s", result.(string), err2.Error())
+		server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
 		fmt.Fprint(w, "login failed")
 	} else {
-		server.Info("message done,get pwd  %s", result.(string))
+		server.Info("message done,get pwd  %v", result.(string))
 		fmt.Fprint(w, "login success")
 	}
 

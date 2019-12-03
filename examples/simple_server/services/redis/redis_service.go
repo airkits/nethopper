@@ -64,6 +64,8 @@ func (s *RedisService) Setup(m map[string]interface{}) (server.Service, error) {
 	}
 	s.rdb = cache
 
+	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
+	s.RegisterHandler(common.CallIDUpdateUserInfoCmd, UpdateUserInfoHandler)
 	return s, nil
 }
 
@@ -81,44 +83,8 @@ func (s *RedisService) OnRun(dt time.Duration) {
 		}
 
 		obj := m.(*server.CallObject)
-		if obj.Cmd == common.CallIDGetUserInfoCmd {
-			go GetUserInfoHander(s, obj)
-		} else if obj.Cmd == common.CallIDInsertUserInfoCmd {
-			go UpdateUserInfoHandler(s, obj)
-		}
+		go server.Processor(s, obj)
 	}
-}
-
-// ProcessMessage receive message from mq and process message
-func (s *RedisService) ProcessMessage(message *server.Message) {
-
-}
-func (s *RedisService) processRequest(req *server.Message) {
-	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-	// switch req.MsgID {
-	// case common.MessageIDLogin:
-	// 	{
-	// 		body := (req.Body).(*pb.User)
-	// 		password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", body.Uid))
-	// 		m := server.CreateMessage(req.MsgID, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
-	// 		if err != nil {
-	// 			server.Info(err.Error())
-	// 			m.ErrCode = common.ErrorCodeRedisKeyNotExist
-	// 		} else {
-	// 			m.ErrCode = server.ErrorCodeOK
-	// 			body.Passwd = password
-
-	// 		}
-	// 		m.SetBody(body)
-	// 		server.Call(m.DestID, 0, m)
-	// 	}
-	// 	break
-	// }
-
-}
-func (s *RedisService) processResponse(resp *server.Message) {
-	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
-
 }
 
 // Stop goruntine

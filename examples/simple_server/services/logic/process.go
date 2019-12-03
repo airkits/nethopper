@@ -1,10 +1,9 @@
 package logic
 
 import (
-	"errors"
-
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 )
 
 // func CreateUserHander(s *LogicService, obj *server.CallObject) {
@@ -22,21 +21,21 @@ import (
 // 		return
 // 	}
 // }
-func LoginHandler(s *LogicService, obj *server.CallObject) {
-
-	var uid = (obj.Args[0]).(string)
-	var pwd = (obj.Args[1]).(string)
-	result, err := server.Call(server.ServiceIDDB, common.CallIDGetUserInfoCmd, 0, uid)
-
-	var ret = server.RetObject{
-		Ret: result,
-		Err: err,
+func LoginHandler(s *LogicService, obj *server.CallObject, uid string, pwd string) (string, error) {
+	defer utils.Trace("LoginHandler")()
+	password, err := server.Call(server.ServiceIDRedis, common.CallIDGetUserInfoCmd, 0, uid)
+	if err == nil {
+		server.Info("get from redis")
+		return password.(string), err
 	}
-	if result == pwd {
-		ret.Err = nil
-	} else {
-		ret.Err = errors.New("no user")
+	password, err = server.Call(server.ServiceIDDB, common.CallIDGetUserInfoCmd, 0, uid)
+	if err != nil {
+		return "", err
 	}
-
-	obj.ChanRet <- ret
+	updated, err := server.Call(server.ServiceIDRedis, common.CallIDUpdateUserInfoCmd, 0, uid, password)
+	if updated == false {
+		server.Info("update redis failed %s %s", uid, password.(string))
+	}
+	server.Info("get from mysql")
+	return password.(string), err
 }

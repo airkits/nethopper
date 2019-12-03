@@ -284,6 +284,7 @@ func (c *RedisCache) Do(ctx context.Context, commandName string, args ...interfa
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
 	ret, err := conn.Do(commandName, args...)
 	if err != nil && err == redis.ErrNil {
 		return nil, nil

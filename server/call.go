@@ -28,7 +28,6 @@
 package server
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -142,30 +141,27 @@ func Processor(s Service, obj *CallObject) {
 	}
 	f := s.GetHandler(obj.Cmd)
 	if f == nil {
-		err = fmt.Errorf("handler id %v: function not registered", obj.Cmd)
+		err = Error("handler id %v: function not registered", obj.Cmd)
+		panic(err)
 	} else {
 		args := []interface{}{s, obj}
 		args = append(args, obj.Args...)
 		values := CallUserFunc(f, args...)
 		if values == nil {
-			err = fmt.Errorf("unsupport handler")
+			err = Error("unsupport handler,need return (interface{},error) or ([]interface{},error)")
+			panic(err)
 		} else {
 			l := len(values)
-			if l == 1 {
-				if values[0].Interface() != nil {
-					err = values[0].Interface().(error)
-					ret.Err = err
-				}
-			} else if l == 2 {
+			if l == 2 {
 				ret.Ret = values[0].Interface()
 				if values[1].Interface() != nil {
 					err = values[1].Interface().(error)
 					ret.Err = err
 				}
+			} else {
+				panic(err)
 			}
 		}
 	}
-
 	obj.ChanRet <- ret
-
 }

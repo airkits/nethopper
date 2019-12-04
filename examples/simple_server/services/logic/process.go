@@ -3,7 +3,6 @@ package logic
 import (
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
 )
 
 // func CreateUserHander(s *LogicService, obj *server.CallObject) {
@@ -22,7 +21,7 @@ import (
 // 	}
 // }
 func LoginHandler(s *LogicService, obj *server.CallObject, uid string, pwd string) (string, error) {
-	defer utils.Trace("LoginHandler")()
+	defer server.TraceCost("LoginHandler")()
 	password, err := server.Call(server.ServiceIDRedis, common.CallIDGetUserInfoCmd, 0, uid)
 	if err == nil {
 		server.Info("get from redis")

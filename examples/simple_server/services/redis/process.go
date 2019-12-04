@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
 )
 
 // GetUserInfoHander 获取用户信息
 func GetUserInfoHander(s *RedisService, obj *server.CallObject, uid string) (string, error) {
-	defer utils.Trace("GetUserInfoHander")()
+	defer server.TraceCost("GetUserInfoHander")()
 	password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%d", uid))
 	return password, err
 

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -21,12 +20,4 @@ func TimeYMDH() string {
 // return format yearmouthday
 func TimeYMD() string {
 	return time.Now().Format("20060102")
-}
-
-// Trace calc the request cost ms
-func Trace(msg string) func() {
-	start := time.Now()
-	return func() {
-		fmt.Printf("[Trace] %s cast (%s)\n", msg, time.Since(start))
-	}
 }

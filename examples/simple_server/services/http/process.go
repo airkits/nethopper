@@ -10,7 +10,6 @@ import (
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
@@ -50,7 +49,7 @@ func RegisterAPI(router *mux.Router) {
 
 // Index api index
 func Index(w http.ResponseWriter, r *http.Request) {
-	defer utils.Trace("Index")()
+	defer server.TraceCost("Index")()
 	fmt.Fprint(w, "Welcome!\n")
 	token := context.Get(r, "token").(string)
 	fmt.Fprint(w, token+"\n")

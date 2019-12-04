@@ -21,7 +21,6 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
-	"time"
 	"unsafe"
 )
 
@@ -478,16 +477,6 @@ func function(pc uintptr) []byte {
 	}
 	name = bytes.Replace(name, centerDot, dot, -1)
 	return name
-}
-
-//测量一段代码执行时间
-func TraceCode() func() {
-	start := time.Now()
-	return func() {
-		t := time.Now().Sub(start).Nanoseconds()
-		fmt.Printf("运行耗时:%d(纳秒)\n", t)
-	}
-
 }
 
 //打印当前堆栈

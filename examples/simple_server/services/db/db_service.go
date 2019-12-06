@@ -91,28 +91,6 @@ func (s *DBService) OnRun(dt time.Duration) {
 	}
 }
 
-// func (s *DBService) processRequest(req *server.Message) {
-// 	server.Info("%s receive one request message from mq,cmd = %s", s.Name(), req.Cmd)
-// 	cmd := req.Cmd
-// 	if cmd == "login" {
-// 		body := (req.Body).(*pb.User)
-// 		sql := "select password from user.user where uid= ?"
-// 		row := s.conn.QueryRow(sql, body.Uid)
-// 		var password string
-// 		if err := row.Scan(&password); err == nil {
-// 			server.Info(password)
-// 		}
-// 		m := server.CreateMessage(common.MessageIDLogin, s.ID(), req.SrcID, server.MTResponse, req.Cmd, req.SessionID)
-// 		body.Passwd = password
-// 		m.SetBody(body)
-// 		server.Call(m.DestID, 0, m)
-// 	}
-// }
-func (s *DBService) processResponse(resp *server.Message) {
-	server.Info("%s receive one response message from mq,cmd = %s", s.Name(), resp.Cmd)
-
-}
-
 // Stop goruntine
 func (s *DBService) Stop() error {
 	return nil

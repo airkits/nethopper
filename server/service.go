@@ -155,7 +155,7 @@ type BaseContext struct {
 	name       string
 	id         int32
 	functions  map[interface{}]interface{}
-	processers *ProcessorPool
+	processers IProcessorPool
 }
 
 // RegisterHandler register function before run
@@ -213,7 +213,7 @@ func (a *BaseContext) Processor(obj *CallObject) error {
 
 // CreateProcessorPool create processor pool
 func (a *BaseContext) CreateProcessorPool(s Service, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
-	if a.processers, err = NewProcessorPool(s, cap, expired, isNonBlocking); err != nil {
+	if a.processers, err = NewFixedProcessorPool(s, cap, expired); err != nil {
 		return err
 	}
 	return nil
@@ -361,7 +361,7 @@ func NewService(name string, parent Service, m map[string]interface{}) (Service,
 
 // Call get info from services
 func Call(destServiceID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
-	var obj = NewCallObject(cmd, args...)
+	var obj = NewCallObject(cmd, option, args...)
 	s, err := GetServiceByID(destServiceID)
 	if err != nil {
 		return nil, err

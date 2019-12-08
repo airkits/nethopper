@@ -68,7 +68,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 	uid := v["uid"].(float64)
 	pwd := v["passwd"].(string)
-	result, err2 := server.Call(server.ServiceIDLogic, common.CallIDLoginCmd, 0, strconv.FormatFloat(uid, 'f', -1, 64), pwd)
+	result, err2 := server.Call(server.ServiceIDLogic, common.CallIDLoginCmd, int32(uid), strconv.FormatFloat(uid, 'f', -1, 64), pwd)
 	if err2 != nil {
 		server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
 		fmt.Fprint(w, "login failed")

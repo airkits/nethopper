@@ -105,6 +105,7 @@ func Future(f func() (interface{}, error)) func() (interface{}, error) {
 // CallObject call struct
 type CallObject struct {
 	Cmd     string
+	Option  int32
 	Args    []interface{}
 	ChanRet chan RetObject
 }
@@ -116,9 +117,10 @@ type RetObject struct {
 }
 
 // NewCallObject create call object
-func NewCallObject(cmd string, args ...interface{}) *CallObject {
+func NewCallObject(cmd string, opt int32, args ...interface{}) *CallObject {
 	return &CallObject{
 		Cmd:     cmd,
+		Option:  opt,
 		Args:    args,
 		ChanRet: make(chan RetObject, 1),
 	}

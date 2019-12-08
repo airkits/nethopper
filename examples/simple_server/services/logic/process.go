@@ -1,6 +1,8 @@
 package logic
 
 import (
+	"strconv"
+
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
@@ -22,16 +24,18 @@ import (
 // }
 func LoginHandler(s *LogicService, obj *server.CallObject, uid string, pwd string) (string, error) {
 	defer server.TraceCost("LoginHandler")()
-	password, err := server.Call(server.ServiceIDRedis, common.CallIDGetUserInfoCmd, 0, uid)
+	opt, err := strconv.Atoi(uid)
+	server.Info("get opt %d", opt)
+	password, err := server.Call(server.ServiceIDRedis, common.CallIDGetUserInfoCmd, int32(opt), uid)
 	if err == nil {
 		server.Info("get from redis")
 		return password.(string), err
 	}
-	password, err = server.Call(server.ServiceIDDB, common.CallIDGetUserInfoCmd, 0, uid)
+	password, err = server.Call(server.ServiceIDDB, common.CallIDGetUserInfoCmd, int32(opt), uid)
 	if err != nil {
 		return "", err
 	}
-	updated, err := server.Call(server.ServiceIDRedis, common.CallIDUpdateUserInfoCmd, 0, uid, password)
+	updated, err := server.Call(server.ServiceIDRedis, common.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
 	if updated == false {
 		server.Info("update redis failed %s %s", uid, password.(string))
 	}

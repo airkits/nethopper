@@ -71,3 +71,24 @@ func TestGetAbsFilePath(t *testing.T) {
 		t.Error("file path failed 2")
 	}
 }
+
+func TestPowerCalc(t *testing.T) {
+	c, p := utils.PowerCalc(8)
+	if c != 8 || p != 3 {
+		t.Errorf("PowerCalc error %d %d", c, p)
+	}
+
+	c, p = utils.PowerCalc(9)
+	if c != 16 || p != 4 {
+		t.Errorf("PowerCalc error %d %d", c, p)
+	}
+
+	c, p = utils.PowerCalc(0)
+	if c != 0 || p != 0 {
+		t.Errorf("PowerCalc error %d %d", c, p)
+	}
+	c, p = utils.PowerCalc(1)
+	if c != 1 || p != 0 {
+		t.Errorf("PowerCalc error %d %d", c, p)
+	}
+}

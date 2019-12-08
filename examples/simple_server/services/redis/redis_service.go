@@ -66,6 +66,8 @@ func (s *RedisService) Setup(m map[string]interface{}) (server.Service, error) {
 
 	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
 	s.RegisterHandler(common.CallIDUpdateUserInfoCmd, UpdateUserInfoHandler)
+
+	s.CreateProcessorPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
@@ -83,7 +85,10 @@ func (s *RedisService) OnRun(dt time.Duration) {
 		}
 
 		obj := m.(*server.CallObject)
-		go server.Processor(s, obj)
+		if err := s.Processor(obj); err != nil {
+			server.Error("%s error %s", s.Name(), err.Error())
+			break
+		}
 	}
 }
 

@@ -51,7 +51,7 @@ func main() {
 		"dailyEnable": true,
 		"queueSize":   1000,
 		"driver":      "mysql",
-		"dsn":         "root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
+		"dsn":         "root:godankye@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
 	}
 	RegisterService("log", log.LogServiceCreate)
 	RegisterService("mysql", db.DBServiceCreate)

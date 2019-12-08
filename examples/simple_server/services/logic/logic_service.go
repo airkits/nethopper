@@ -56,6 +56,7 @@ func (s *LogicService) UserData() int32 {
 // }
 func (s *LogicService) Setup(m map[string]interface{}) (server.Service, error) {
 	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
+	s.CreateProcessorPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
@@ -73,7 +74,10 @@ func (s *LogicService) OnRun(dt time.Duration) {
 		}
 		obj := m.(*server.CallObject)
 
-		go server.Processor(s, obj)
+		if err := s.Processor(obj); err != nil {
+			server.Error("%s error %s", s.Name(), err.Error())
+			break
+		}
 
 	}
 

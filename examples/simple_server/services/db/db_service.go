@@ -69,7 +69,7 @@ func (s *DBService) Setup(m map[string]interface{}) (server.Service, error) {
 	if err := s.conn.Open(); err != nil {
 		panic(err)
 	}
-
+	s.CreateProcessorPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
@@ -87,7 +87,10 @@ func (s *DBService) OnRun(dt time.Duration) {
 		}
 		obj := m.(*server.CallObject)
 
-		go server.Processor(s, obj)
+		if err := s.Processor(obj); err != nil {
+			server.Error("%s error %s", s.Name(), err.Error())
+			break
+		}
 	}
 }
 

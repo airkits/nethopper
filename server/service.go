@@ -133,7 +133,6 @@ func ServiceRun(s Service) {
 		}
 		start = time.Now()
 		if s.MQ().Length() == 0 {
-			//time.Sleep(100 * time.Millisecond)
 			time.Sleep(time.Millisecond)
 		}
 		runtime.Gosched()
@@ -148,14 +147,15 @@ func ServiceName(s Service) string {
 
 //BaseContext use context to close all service and using the bubbling method to exit
 type BaseContext struct {
-	ctx       context.Context
-	cancel    context.CancelFunc
-	parent    Service
-	childRef  int32
-	q         queue.Queue
-	name      string
-	id        int32
-	functions map[interface{}]interface{}
+	ctx        context.Context
+	cancel     context.CancelFunc
+	parent     Service
+	childRef   int32
+	q          queue.Queue
+	name       string
+	id         int32
+	functions  map[interface{}]interface{}
+	processers *ProcessorPool
 }
 
 // RegisterHandler register function before run
@@ -190,6 +190,33 @@ func (a *BaseContext) MakeContext(p Service, queueSize int32) {
 		a.ctx, a.cancel = context.WithCancel(p.Context())
 		p.ChildAdd()
 	}
+
+}
+
+// Processor process callobject
+func (a *BaseContext) Processor(obj *CallObject) error {
+	Debug("%s start do Processor,cmd = %s", a.Name(), obj.Cmd)
+	var err error
+	if a.processers == nil {
+		err = errors.New("no processor pool")
+	} else {
+		err = a.processers.Submit(obj)
+	}
+	if err != nil {
+		obj.ChanRet <- RetObject{
+			Ret: nil,
+			Err: err,
+		}
+	}
+	return err
+}
+
+// CreateProcessorPool create processor pool
+func (a *BaseContext) CreateProcessorPool(s Service, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
+	if a.processers, err = NewProcessorPool(s, cap, expired, isNonBlocking); err != nil {
+		return err
+	}
+	return nil
 }
 
 // MQ return service queue

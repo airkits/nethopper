@@ -120,11 +120,20 @@ type Module interface {
 	GetHandler(id interface{}) interface{}
 	// Processor process callobject
 	Processor(obj *CallObject) error
+
+	// IdleTimesReset reset idle times
+	IdleTimesReset()
+
+	// IdleTimes get idle times
+	IdleTimes() uint32
+
+	// IdleTimesAdd add idle times
+	IdleTimesAdd()
 }
 
 // RunSimpleFrame wrapper simple run function
-func RunSimpleFrame(s Module) {
-	for i := 0; i < 128; i++ {
+func RunSimpleFrame(s Module, packageSize int) {
+	for i := 0; i < packageSize; i++ {
 		m, err := s.MQ().AsyncPop()
 		if err != nil {
 			break
@@ -150,9 +159,13 @@ func ModuleRun(s Module) {
 		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
 			return
 		}
+
 		start = time.Now()
 		if s.MQ().Length() == 0 {
-			time.Sleep(time.Millisecond)
+			t := time.Duration(s.IdleTimes()) * time.Nanosecond
+			time.Sleep(t)
+			s.IdleTimesAdd()
+
 		}
 		runtime.Gosched()
 	}
@@ -175,6 +188,7 @@ type BaseContext struct {
 	id         int32
 	functions  map[interface{}]interface{}
 	processers IWorkerPool
+	idleTimes  uint32
 }
 
 // RegisterHandler register function before run
@@ -196,6 +210,25 @@ func (a *BaseContext) RegisterHandler(id interface{}, f interface{}) {
 // GetHandler get call handler
 func (a *BaseContext) GetHandler(id interface{}) interface{} {
 	return a.functions[id]
+}
+
+// IdleTimesReset reset idle times
+func (a *BaseContext) IdleTimesReset() {
+	atomic.StoreUint32(&a.idleTimes, 500)
+}
+
+// IdleTimes get idle times
+func (a *BaseContext) IdleTimes() uint32 {
+	return atomic.LoadUint32(&a.idleTimes)
+}
+
+// IdleTimesAdd add idle times
+func (a *BaseContext) IdleTimesAdd() {
+	t := a.IdleTimes()
+	if t >= 20000000 { //2s
+		return
+	}
+	atomic.AddUint32(&a.idleTimes, 100)
 }
 
 // MakeContext init base module queue and create context
@@ -233,6 +266,7 @@ func (a *BaseContext) Processor(obj *CallObject) error {
 
 // Call async send message to module
 func (a *BaseContext) Call(option int32, obj *CallObject) error {
+	a.IdleTimesReset()
 	if err := a.q.AsyncPush(obj); err != nil {
 		Error(err.Error())
 	}

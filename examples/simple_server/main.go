@@ -66,8 +66,6 @@ func main() {
 	//NewNamedModule(ModuleIDTCP, "tcp", nil, m)
 	NewNamedModule(ModuleIDLogic, "logic", nil, m)
 	NewNamedModule(ModuleIDHTTP, "web_http", nil, m)
-
-	//	NewNamedModule(ModuleIDRedis, "redis", nil, m)
 	InitSignal()
 	//GracefulExit()
 }

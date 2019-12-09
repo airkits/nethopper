@@ -78,7 +78,7 @@ func (s *RedisModule) Reload(m map[string]interface{}) error {
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *RedisModule) OnRun(dt time.Duration) {
-	server.RunSimpleFrame(s)
+	server.RunSimpleFrame(s, 128)
 }
 
 // Stop goruntine

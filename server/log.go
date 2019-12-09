@@ -103,11 +103,11 @@ func FormatLog(level int32, v ...interface{}) string {
 //WriteLog send log to queue
 func WriteLog(level int32, v ...interface{}) error {
 	// UserData return logger level
-	if level > GLoggerService.UserData() {
+	if level > GLoggerModule.UserData() {
 		return nil
 	}
 	msg := FormatLog(level, v...)
-	if err := GLoggerService.PushBytes(level, []byte(msg)); err != nil {
+	if err := GLoggerModule.PushBytes(level, []byte(msg)); err != nil {
 		return err
 	}
 	return nil

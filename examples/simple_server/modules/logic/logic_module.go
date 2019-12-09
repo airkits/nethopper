@@ -25,88 +25,65 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package redis
+package logic
 
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/cache/redis"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// RedisService struct to define service
-type RedisService struct {
+// LogicModule struct to define module
+type LogicModule struct {
 	server.BaseContext
-	rdb *redis.RedisCache
 }
 
-// RedisServiceCreate  service create function
-func RedisServiceCreate() (server.Service, error) {
-	return &RedisService{}, nil
+// LogicModuleCreate  module create function
+func LogicModuleCreate() (server.Module, error) {
+	return &LogicModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *RedisService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *LogicModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *RedisService) Setup(m map[string]interface{}) (server.Service, error) {
-
-	cache, err := redis.NewRedisCache(m)
-	if err != nil {
-		return nil, err
-	}
-	s.rdb = cache
-
-	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
-	s.RegisterHandler(common.CallIDUpdateUserInfoCmd, UpdateUserInfoHandler)
-
-	s.CreateProcessorPool(s, 128, 10*time.Second, true)
+func (s *LogicModule) Setup(m map[string]interface{}) (server.Module, error) {
+	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
+	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
 //Reload reload config
-func (s *RedisService) Reload(m map[string]interface{}) error {
+func (s *LogicModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *RedisService) OnRun(dt time.Duration) {
-	for i := 0; i < 128; i++ {
-		m, err := s.MQ().AsyncPop()
-		if err != nil {
-			break
-		}
-
-		obj := m.(*server.CallObject)
-		if err := s.Processor(obj); err != nil {
-			server.Error("%s error %s", s.Name(), err.Error())
-			break
-		}
-	}
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *LogicModule) OnRun(dt time.Duration) {
+	server.RunSimpleFrame(s)
 }
 
 // Stop goruntine
-func (s *RedisService) Stop() error {
+func (s *LogicModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *RedisService) Call(option int32, obj *server.CallObject) error {
-	if err := s.MQ().AsyncPush(obj); err != nil {
-		server.Error(err.Error())
-	}
-	return nil
-
-}
+// Call async send message to module
+// func (s *LogicModule) Call(option int32, obj *server.CallObject) error {
+// 	if err := s.MQ().AsyncPush(obj); err != nil {
+// 		server.Error(err.Error())
+// 	}
+// 	return nil
+// }
 
 // PushBytes async send string or bytes to queue
-func (s *RedisService) PushBytes(option int32, buf []byte) error {
+func (s *LogicModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

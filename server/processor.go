@@ -45,24 +45,24 @@ const (
 )
 
 var (
-	//ErrProcessorPoolClosed Processor pool is release
-	ErrProcessorPoolClosed = errors.New("Processor pool already closed")
-	//ErrProcessorPoolBusy Processor pool is busy
-	ErrProcessorPoolBusy = errors.New("Processor pool is busy,please try again")
+	//ErrWorkerPoolClosed Processor pool is release
+	ErrWorkerPoolClosed = errors.New("Processor pool already closed")
+	//ErrWorkerPoolBusy Processor pool is busy
+	ErrWorkerPoolBusy = errors.New("Processor pool is busy,please try again")
 	//ErrInvalidcapacity set invalid capacity
 	ErrInvalidcapacity = errors.New("invalid capacity")
 	//ErrorTodo todo error
 	ErrorTodo = errors.New("todo,not implementation")
 )
 
-// NewProcessorPool create Processor pool
-func NewProcessorPool(owner Service, cap uint32, expired time.Duration) (*ProcessorPool, error) {
+// NewWorkerPool create Processor pool
+func NewWorkerPool(owner Module, cap uint32, expired time.Duration) (*WorkerPool, error) {
 	if cap == 0 {
 		return nil, ErrInvalidcapacity
 	}
 
 	// create Processor pool
-	p := &ProcessorPool{
+	p := &WorkerPool{
 		capacity:        cap,
 		expiredDuration: expired,
 		workers:         make([]*Processor, 0, cap),
@@ -83,7 +83,7 @@ func NewProcessorPool(owner Service, cap uint32, expired time.Duration) (*Proces
 }
 
 // NewProcessor create new processor
-func NewProcessor(owner IProcessorPool, queueSize uint32) *Processor {
+func NewProcessor(owner IWorkerPool, queueSize uint32) *Processor {
 	return &Processor{
 		owner:   owner,
 		q:       queue.NewChanQueue(int32(queueSize)),
@@ -93,7 +93,7 @@ func NewProcessor(owner IProcessorPool, queueSize uint32) *Processor {
 
 // Processor process job
 type Processor struct {
-	owner IProcessorPool
+	owner IWorkerPool
 	//CallObject chan
 	q queue.Queue
 	//timeout set to tigger timeout event
@@ -101,7 +101,7 @@ type Processor struct {
 }
 
 // Process goruntine process pre call
-func Process(s Service, obj *CallObject) {
+func Process(s Module, obj *CallObject) {
 	var err error
 	defer func() {
 		if r := recover(); r != nil {
@@ -112,7 +112,7 @@ func Process(s Service, obj *CallObject) {
 		Ret: nil,
 		Err: nil,
 	}
-	f := s.(Service).GetHandler(obj.Cmd)
+	f := s.(Module).GetHandler(obj.Cmd)
 	if f == nil {
 		err = Error("handler id %v: function not registered", obj.Cmd)
 		panic(err)
@@ -172,11 +172,11 @@ func (w *Processor) Submit(obj *CallObject) error {
 	return nil
 }
 
-// IProcessorPool process pool interface
-type IProcessorPool interface {
+// IWorkerPool process pool interface
+type IWorkerPool interface {
 
-	// Owner get the service who own the processor pool
-	Owner() Service
+	// Owner get the module who own the processor pool
+	Owner() Module
 
 	//WorkerCountInc current goruntine count +1
 	WorkerCountInc()
@@ -193,13 +193,13 @@ type IProcessorPool interface {
 	//RecycleProcessor return back Processor to pool
 	RecycleProcessor(w *Processor) bool
 
-	// Release ProcessorPool remove all Processors
+	// Release WorkerPool remove all Processors
 	Release()
 }
 
-// ProcessorPool Processor pool limit goruntine max count
+// WorkerPool Processor pool limit goruntine max count
 // -- dynamic processor pool
-type ProcessorPool struct {
+type WorkerPool struct {
 	// capacity max goruntine count
 	capacity uint32
 
@@ -226,18 +226,18 @@ type ProcessorPool struct {
 	name string
 	// workers list
 	workers []*Processor
-	owner   Service
+	owner   Module
 	// fixed pool flag
 	fixed bool
 }
 
 // Name get the processor pool name
-func (p *ProcessorPool) Name() string {
+func (p *WorkerPool) Name() string {
 	return p.name
 }
 
 // RecycleProcessor return back Processor to pool
-func (p *ProcessorPool) RecycleProcessor(w *Processor) bool {
+func (p *WorkerPool) RecycleProcessor(w *Processor) bool {
 	if atomic.LoadUint32(&p.isClosed) == CLOSED {
 		return false
 	}
@@ -250,42 +250,42 @@ func (p *ProcessorPool) RecycleProcessor(w *Processor) bool {
 }
 
 // Count get current running Processors count
-func (p *ProcessorPool) Count() uint32 {
+func (p *WorkerPool) Count() uint32 {
 	return atomic.LoadUint32(&p.workerCount)
 }
 
 //WorkerCountInc current goruntine count +1
-func (p *ProcessorPool) WorkerCountInc() {
+func (p *WorkerPool) WorkerCountInc() {
 	atomic.AddUint32(&p.workerCount, 1)
 }
 
 //WorkerCountDec current goruntine count -1
-func (p *ProcessorPool) WorkerCountDec() {
+func (p *WorkerPool) WorkerCountDec() {
 	atomic.AddUint32(&p.workerCount, ^uint32(-(-1)-1))
 }
 
 // Owner get processor pool owner
-func (p *ProcessorPool) Owner() Service {
+func (p *WorkerPool) Owner() Module {
 	return p.owner
 }
 
 // CachePut return processor back to cache
-func (p *ProcessorPool) CachePut(w *Processor) {
+func (p *WorkerPool) CachePut(w *Processor) {
 	p.cache.Put(w)
 }
 
 // Cap get the capacity
-func (p *ProcessorPool) Cap() uint32 {
+func (p *WorkerPool) Cap() uint32 {
 	return atomic.LoadUint32(&p.capacity)
 }
 
 // GetFree get the free count
-func (p *ProcessorPool) GetFree() uint32 {
+func (p *WorkerPool) GetFree() uint32 {
 	return atomic.LoadUint32(&p.capacity) - atomic.LoadUint32(&p.workerCount)
 }
 
 // Resize change Processor pool capacity
-func (p *ProcessorPool) Resize(cap uint32) error {
+func (p *WorkerPool) Resize(cap uint32) error {
 	if cap == 0 {
 		return ErrInvalidcapacity
 	} else if cap != p.capacity {
@@ -298,8 +298,8 @@ func (p *ProcessorPool) Resize(cap uint32) error {
 	return nil
 }
 
-// Release ProcessorPool remove all Processors
-func (p *ProcessorPool) Release() {
+// Release WorkerPool remove all Processors
+func (p *WorkerPool) Release() {
 	p.once.Do(func() {
 		atomic.StoreUint32(&p.isClosed, 1)
 		p.lock.Lock()
@@ -314,7 +314,7 @@ func (p *ProcessorPool) Release() {
 }
 
 // ExpiredCleaning clean expired Processors
-func (p *ProcessorPool) ExpiredCleaning() {
+func (p *WorkerPool) ExpiredCleaning() {
 	for {
 		if atomic.LoadUint32(&p.isClosed) == CLOSED {
 			break
@@ -338,7 +338,7 @@ func (p *ProcessorPool) ExpiredCleaning() {
 }
 
 // getProcessor get one Processor from pool
-func (p *ProcessorPool) getProcessor() *Processor {
+func (p *WorkerPool) getProcessor() *Processor {
 	var w *Processor
 	p.lock.Lock()
 	// 首先看running是否到达容量限制和是否存在空闲Processor
@@ -364,30 +364,30 @@ func (p *ProcessorPool) getProcessor() *Processor {
 }
 
 // Submit add obj to Processor
-func (p *ProcessorPool) Submit(obj *CallObject) error {
+func (p *WorkerPool) Submit(obj *CallObject) error {
 	if atomic.LoadUint32(&p.isClosed) == CLOSED {
-		return ErrProcessorPoolClosed
+		return ErrWorkerPoolClosed
 	}
 	if w := p.getProcessor(); w != nil {
 		if err := w.Submit(obj); err != nil {
 			return err
 		}
 	} else {
-		return ErrProcessorPoolBusy
+		return ErrWorkerPoolBusy
 	}
 	return nil
 }
 
 ///////////////////
 
-// NewFixedProcessorPool create fixed Processor pool
-func NewFixedProcessorPool(owner Service, cap uint32, expired time.Duration) (IProcessorPool, error) {
+// NewFixedWorkerPool create fixed Processor pool
+func NewFixedWorkerPool(owner Module, cap uint32, expired time.Duration) (IWorkerPool, error) {
 	if cap == 0 {
 		return nil, ErrInvalidcapacity
 	}
 	capacity, power := utils.PowerCalc(int32(cap))
 	// create FixedProcessor pool
-	p := &FixedProcessorPool{
+	p := &FixedWorkerPool{
 		capacity:        uint32(capacity),
 		expiredDuration: expired,
 		workers:         make([]*Processor, capacity, capacity),
@@ -408,8 +408,8 @@ func NewFixedProcessorPool(owner Service, cap uint32, expired time.Duration) (IP
 	return p, nil
 }
 
-// FixedProcessorPool fixed hash processor pool
-type FixedProcessorPool struct {
+// FixedWorkerPool fixed hash processor pool
+type FixedWorkerPool struct {
 	// capacity max goruntine count
 	capacity uint32
 	//power the capacity power
@@ -437,18 +437,18 @@ type FixedProcessorPool struct {
 	name string
 	// workers list
 	workers []*Processor
-	owner   Service
+	owner   Module
 	// fixed pool flag
 	fixed bool
 }
 
 // Name get the processor pool name
-func (p *FixedProcessorPool) Name() string {
+func (p *FixedWorkerPool) Name() string {
 	return p.name
 }
 
 // RecycleProcessor return back Processor to pool
-func (p *FixedProcessorPool) RecycleProcessor(w *Processor) bool {
+func (p *FixedWorkerPool) RecycleProcessor(w *Processor) bool {
 	if atomic.LoadUint32(&p.isClosed) == CLOSED {
 		return false
 	}
@@ -457,42 +457,42 @@ func (p *FixedProcessorPool) RecycleProcessor(w *Processor) bool {
 }
 
 // Count get current running Processors count
-func (p *FixedProcessorPool) Count() uint32 {
+func (p *FixedWorkerPool) Count() uint32 {
 	return atomic.LoadUint32(&p.workerCount)
 }
 
 //WorkerCountInc current goruntine count +1
-func (p *FixedProcessorPool) WorkerCountInc() {
+func (p *FixedWorkerPool) WorkerCountInc() {
 	atomic.AddUint32(&p.workerCount, 1)
 }
 
 //WorkerCountDec current goruntine count -1
-func (p *FixedProcessorPool) WorkerCountDec() {
+func (p *FixedWorkerPool) WorkerCountDec() {
 	atomic.AddUint32(&p.workerCount, ^uint32(-(-1)-1))
 }
 
 // Owner get processor pool owner
-func (p *FixedProcessorPool) Owner() Service {
+func (p *FixedWorkerPool) Owner() Module {
 	return p.owner
 }
 
 // CachePut return processor back to cache
-func (p *FixedProcessorPool) CachePut(w *Processor) {
+func (p *FixedWorkerPool) CachePut(w *Processor) {
 	p.cache.Put(w)
 }
 
 // Cap get the capacity
-func (p *FixedProcessorPool) Cap() uint32 {
+func (p *FixedWorkerPool) Cap() uint32 {
 	return atomic.LoadUint32(&p.capacity)
 }
 
 // GetFree get the free count
-func (p *FixedProcessorPool) GetFree() uint32 {
+func (p *FixedWorkerPool) GetFree() uint32 {
 	return atomic.LoadUint32(&p.capacity) - atomic.LoadUint32(&p.workerCount)
 }
 
 // Resize change Processor pool capacity
-func (p *FixedProcessorPool) Resize(cap uint32) error {
+func (p *FixedWorkerPool) Resize(cap uint32) error {
 	if cap == 0 {
 		return ErrInvalidcapacity
 	} else if cap != p.capacity {
@@ -507,8 +507,8 @@ func (p *FixedProcessorPool) Resize(cap uint32) error {
 	return nil
 }
 
-// Release ProcessorPool remove all Processors
-func (p *FixedProcessorPool) Release() {
+// Release WorkerPool remove all Processors
+func (p *FixedWorkerPool) Release() {
 	p.once.Do(func() {
 		atomic.StoreUint32(&p.isClosed, 1)
 		p.lock.Lock()
@@ -525,7 +525,7 @@ func (p *FixedProcessorPool) Release() {
 }
 
 // ExpiredCleaning clean expired Processors
-func (p *FixedProcessorPool) ExpiredCleaning() {
+func (p *FixedWorkerPool) ExpiredCleaning() {
 	for {
 		if atomic.LoadUint32(&p.isClosed) == CLOSED {
 			break
@@ -548,7 +548,7 @@ func (p *FixedProcessorPool) ExpiredCleaning() {
 }
 
 // getProcessor get one Processor from pool
-func (p *FixedProcessorPool) getProcessor(opt uint32) *Processor {
+func (p *FixedWorkerPool) getProcessor(opt uint32) *Processor {
 	var w *Processor
 	p.lock.Lock()
 	// 首先看running是否到达容量限制和是否存在空闲Processor
@@ -573,16 +573,16 @@ func (p *FixedProcessorPool) getProcessor(opt uint32) *Processor {
 }
 
 // Submit add obj to Processor
-func (p *FixedProcessorPool) Submit(obj *CallObject) error {
+func (p *FixedWorkerPool) Submit(obj *CallObject) error {
 	if atomic.LoadUint32(&p.isClosed) == CLOSED {
-		return ErrProcessorPoolClosed
+		return ErrWorkerPoolClosed
 	}
 	if w := p.getProcessor(uint32(obj.Option)); w != nil {
 		if err := w.Submit(obj); err != nil {
 			return err
 		}
 	} else {
-		return ErrProcessorPoolBusy
+		return ErrWorkerPoolBusy
 	}
 	return nil
 }

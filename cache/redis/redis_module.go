@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package udp
+package redis
 
 import (
 	"time"
@@ -33,51 +33,51 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// KCPService struct to define service
-type KCPService struct {
+// RedisModule struct to define module
+type RedisModule struct {
 	server.BaseContext
 }
 
-// KCPServiceCreate  service create function
-func KCPServiceCreate() (server.Service, error) {
-	return &KCPService{}, nil
+// RedisModuleCreate  module create function
+func RedisModuleCreate() (server.Module, error) {
+	return &RedisModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *KCPService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *RedisModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *KCPService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *RedisModule) Setup(m map[string]interface{}) (server.Module, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *KCPService) Reload(m map[string]interface{}) error {
+func (s *RedisModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *KCPService) OnRun(dt time.Duration) {
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *RedisModule) OnRun(dt time.Duration) {
 
 }
 
 // Stop goruntine
-func (s *KCPService) Stop() error {
+func (s *RedisModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *KCPService) Call(option int32, obj *server.CallObject) error {
-	return nil
-}
+// Call async send message to module
+// func (s *RedisModule) Call(option int32, obj *server.CallObject) error {
+// 	return nil
+// }
 
 // PushBytes async send string or bytes to queue
-func (s *KCPService) PushBytes(option int32, buf []byte) error {
+func (s *RedisModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package database
+package udp
 
 import (
 	"time"
@@ -33,51 +33,51 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// OrmService struct to define service
-type OrmService struct {
+// KCPModule struct to define module
+type KCPModule struct {
 	server.BaseContext
 }
 
-// OrmServiceCreate  service create function
-func OrmServiceCreate() (server.Service, error) {
-	return &OrmService{}, nil
+// KCPModuleCreate  module create function
+func KCPModuleCreate() (server.Module, error) {
+	return &KCPModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *OrmService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *KCPModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *OrmService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *KCPModule) Setup(m map[string]interface{}) (server.Module, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *OrmService) Reload(m map[string]interface{}) error {
+func (s *KCPModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *OrmService) OnRun(dt time.Duration) {
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *KCPModule) OnRun(dt time.Duration) {
 
 }
 
 // Stop goruntine
-func (s *OrmService) Stop() error {
+func (s *KCPModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *OrmService) Call(option int32, obj *server.CallObject) error {
+// Call async send message to module
+func (s *KCPModule) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *OrmService) PushBytes(option int32, buf []byte) error {
+func (s *KCPModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

@@ -33,37 +33,37 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// LogicService struct to define service
-type LogicService struct {
+// LogicModule struct to define module
+type LogicModule struct {
 	server.BaseContext
 }
 
-// LogicServiceCreate  service create function
-func LogicServiceCreate() (server.Service, error) {
-	return &LogicService{}, nil
+// LogicModuleCreate  module create function
+func LogicModuleCreate() (server.Module, error) {
+	return &LogicModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *LogicService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *LogicModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *LogicService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *LogicModule) Setup(m map[string]interface{}) (server.Module, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *LogicService) Reload(m map[string]interface{}) error {
+func (s *LogicModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *LogicService) OnRun(dt time.Duration) {
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *LogicModule) OnRun(dt time.Duration) {
 	// for i := 0; i < 128; i++ {
 	// 	m, err := s.MQ().AsyncPop()
 	// 	if err != nil {
@@ -91,16 +91,16 @@ func (s *LogicService) OnRun(dt time.Duration) {
 }
 
 // Stop goruntine
-func (s *LogicService) Stop() error {
+func (s *LogicModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *LogicService) Call(option int32, obj *server.CallObject) error {
+// Call async send message to module
+func (s *LogicModule) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *LogicService) PushBytes(option int32, buf []byte) error {
+func (s *LogicModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

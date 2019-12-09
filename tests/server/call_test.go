@@ -58,7 +58,7 @@ func (g *Factory) CallStructNameArgs(v ...interface{}) int {
 	return v[0].(int)
 }
 func initServer() error {
-	RegisterService("log", log.LogServiceCreate)
+	RegisterModule("log", log.LogModuleCreate)
 	m := map[string]interface{}{
 		"filename":    "logs/server_call.log",
 		"level":       4,
@@ -68,7 +68,7 @@ func initServer() error {
 		"dailyEnable": true,
 		"queueSize":   1000,
 	}
-	NewNamedService(ServiceIDLog, "log", nil, m)
+	NewNamedModule(ModuleIDLog, "log", nil, m)
 
 	return nil
 }

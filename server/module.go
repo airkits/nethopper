@@ -40,61 +40,61 @@ import (
 )
 
 const (
-	// ServiceNamedIDs service id define, system reserved 1-63
-	ServiceNamedIDs = iota
-	// ServiceIDMain main goruntinue
-	ServiceIDMain
-	// ServiceIDMonitor server monitor service
-	ServiceIDMonitor
-	// ServiceIDLog log service
-	ServiceIDLog
-	// ServiceIDTCP tcp service
-	ServiceIDTCP
-	// ServiceIDKCP kcp service
-	ServiceIDKCP
-	// ServiceIDHTTP http service
-	ServiceIDHTTP
-	// ServiceIDLogic logic service
-	ServiceIDLogic
-	// ServiceIDRedis redis service
-	ServiceIDRedis
-	// ServiceIDTCPClient tcp client service
-	ServiceIDTCPClient
-	// ServiceIDKCPClient kcp client service
-	ServiceIDKCPClient
-	// ServiceIDHTTPClient http client service
-	ServiceIDHTTPClient
-	// ServiceIDDB common db service
-	ServiceIDDB
-	// ServiceIDUserCustom User custom define named services from 64-128
-	ServiceIDUserCustom = 64
-	// ServiceIDNamedMax named services max ID
-	ServiceIDNamedMax = 128
+	// ModuleNamedIDs module id define, system reserved 1-63
+	ModuleNamedIDs = iota
+	// ModuleIDMain main goruntinue
+	ModuleIDMain
+	// ModuleIDMonitor server monitor module
+	ModuleIDMonitor
+	// ModuleIDLog log module
+	ModuleIDLog
+	// ModuleIDTCP tcp module
+	ModuleIDTCP
+	// ModuleIDKCP kcp module
+	ModuleIDKCP
+	// ModuleIDHTTP http module
+	ModuleIDHTTP
+	// ModuleIDLogic logic module
+	ModuleIDLogic
+	// ModuleIDRedis redis module
+	ModuleIDRedis
+	// ModuleIDTCPClient tcp client module
+	ModuleIDTCPClient
+	// ModuleIDKCPClient kcp client module
+	ModuleIDKCPClient
+	// ModuleIDHTTPClient http client module
+	ModuleIDHTTPClient
+	// ModuleIDDB common db module
+	ModuleIDDB
+	// ModuleIDUserCustom User custom define named modules from 64-128
+	ModuleIDUserCustom = 64
+	// ModuleIDNamedMax named modules max ID
+	ModuleIDNamedMax = 128
 )
 
-// Service interface define
-type Service interface {
+// Module interface define
+type Module interface {
 	//BaseContext start
-	// ID service id
+	// ID module id
 	ID() int32
-	//SetID set service ID
+	//SetID set module ID
 	SetID(v int32)
-	// Name service name
+	// Name module name
 	Name() string
-	//SetName set service name
+	//SetName set module name
 	SetName(v string)
 
-	// MakeContext init base service queue and create context
-	MakeContext(p Service, queueSize int32)
-	// Context get service context
+	// MakeContext init base module queue and create context
+	MakeContext(p Module, queueSize int32)
+	// Context get module context
 	Context() context.Context
-	// ChildAdd after child service created and tell parent service, ref count +1
+	// ChildAdd after child module created and tell parent module, ref count +1
 	ChildAdd()
-	// ChildDone child service exit and tell parent service, ref count -1
+	// ChildDone child module exit and tell parent module, ref count -1
 	ChildDone()
-	// Close call context cancel ,self and all child service will receive context.Done()
+	// Close call context cancel ,self and all child module will receive context.Done()
 	Close()
-	// Queue return service queue
+	// Queue return module queue
 	MQ() queue.Queue
 	// CanExit if receive ctx.Done() and child ref = 0 and queue is empty ,then return true
 	CanExit(doneflag bool) (bool, bool)
@@ -102,32 +102,51 @@ type Service interface {
 	TryExit() bool
 	//BaseContext end
 
-	// UserData service custom option, can you store you data and you must keep goruntine safe
+	// UserData module custom option, can you store you data and you must keep goruntine safe
 	UserData() int32
-	// Setup init custom service and pass config map to service
-	Setup(m map[string]interface{}) (Service, error)
+	// Setup init custom module and pass config map to module
+	Setup(m map[string]interface{}) (Module, error)
 	//Reload reload config
 	Reload(m map[string]interface{}) error
-	// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+	// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 	OnRun(dt time.Duration)
 	// Stop goruntine
 	Stop() error
-	// Call async send callobject to service
+	// Call async send callobject to module
 	Call(option int32, obj *CallObject) error
 	// PushBytes async send string or bytes to queue
 	PushBytes(option int32, buf []byte) error
 	//GetHandler get call handler
 	GetHandler(id interface{}) interface{}
+	// Processor process callobject
+	Processor(obj *CallObject) error
 }
 
-// ServiceRun wrapper service goruntine and in an orderly way to exit
-func ServiceRun(s Service) {
+// RunSimpleFrame wrapper simple run function
+func RunSimpleFrame(s Module) {
+	for i := 0; i < 128; i++ {
+		m, err := s.MQ().AsyncPop()
+		if err != nil {
+			break
+		}
+		obj := m.(*CallObject)
+
+		if err := s.Processor(obj); err != nil {
+			Error("%s error %s", s.Name(), err.Error())
+			break
+		}
+	}
+}
+
+// ModuleRun wrapper module goruntine and in an orderly way to exit
+func ModuleRun(s Module) {
 	ctxDone := false
 	exitFlag := false
 	start := time.Now()
-	Info("Service %s start ", s.Name())
+	Info("Module %s start ", s.Name())
 	for {
 		s.OnRun(time.Since(start))
+
 		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
 			return
 		}
@@ -139,30 +158,30 @@ func ServiceRun(s Service) {
 	}
 }
 
-// ServiceName get the service name
-func ServiceName(s Service) string {
+// ModuleName get the module name
+func ModuleName(s Module) string {
 	t := reflect.TypeOf(s)
 	return t.Elem().Name()
 }
 
-//BaseContext use context to close all service and using the bubbling method to exit
+//BaseContext use context to close all module and using the bubbling method to exit
 type BaseContext struct {
 	ctx        context.Context
 	cancel     context.CancelFunc
-	parent     Service
+	parent     Module
 	childRef   int32
 	q          queue.Queue
 	name       string
 	id         int32
 	functions  map[interface{}]interface{}
-	processers IProcessorPool
+	processers IWorkerPool
 }
 
 // RegisterHandler register function before run
 func (a *BaseContext) RegisterHandler(id interface{}, f interface{}) {
 
 	// switch f.(type) {
-	// case func(Service, *CallObject, string) (string, error):
+	// case func(Module, *CallObject, string) (string, error):
 	// default:
 	// 	panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
 	// }
@@ -179,11 +198,12 @@ func (a *BaseContext) GetHandler(id interface{}) interface{} {
 	return a.functions[id]
 }
 
-// MakeContext init base service queue and create context
-func (a *BaseContext) MakeContext(p Service, queueSize int32) {
+// MakeContext init base module queue and create context
+func (a *BaseContext) MakeContext(p Module, queueSize int32) {
 	a.parent = p
 	a.q = queue.NewChanQueue(queueSize)
 	a.functions = make(map[interface{}]interface{})
+
 	if p == nil {
 		a.ctx, a.cancel = context.WithCancel(context.Background())
 	} else {
@@ -211,55 +231,63 @@ func (a *BaseContext) Processor(obj *CallObject) error {
 	return err
 }
 
-// CreateProcessorPool create processor pool
-func (a *BaseContext) CreateProcessorPool(s Service, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
-	if a.processers, err = NewFixedProcessorPool(s, cap, expired); err != nil {
+// Call async send message to module
+func (a *BaseContext) Call(option int32, obj *CallObject) error {
+	if err := a.q.AsyncPush(obj); err != nil {
+		Error(err.Error())
+	}
+	return nil
+}
+
+// CreateWorkerPool create processor pool
+func (a *BaseContext) CreateWorkerPool(s Module, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
+	if a.processers, err = NewFixedWorkerPool(s, cap, expired); err != nil {
 		return err
 	}
 	return nil
 }
 
-// MQ return service queue
+// MQ return module queue
 func (a *BaseContext) MQ() queue.Queue {
 	return a.q
 }
 
-// Context get service context
+// Context get module context
 func (a *BaseContext) Context() context.Context {
 	return a.ctx
 }
 
-// ChildAdd child service created and tell parent service, ref count +1
+// ChildAdd child module created and tell parent module, ref count +1
 func (a *BaseContext) ChildAdd() {
 	atomic.AddInt32(&a.childRef, 1)
 }
 
-// ChildDone child service exit and tell parent service, ref count -1
+// ChildDone child module exit and tell parent module, ref count -1
 func (a *BaseContext) ChildDone() {
 	atomic.AddInt32(&a.childRef, -1)
 }
 
-// Close call context cancel ,self and all child service will receive context.Done()
+// Close call context cancel ,self and all child module will receive context.Done()
 func (a *BaseContext) Close() {
 	a.cancel()
 }
 
-//ID service ID
+//ID module ID
 func (a *BaseContext) ID() int32 {
 	return a.id
 }
 
-//SetID set service id
+//SetID set module id
 func (a *BaseContext) SetID(v int32) {
 	a.id = v
 }
 
-//Name service name
+//Name module name
 func (a *BaseContext) Name() string {
 	return a.name
 }
 
-//SetName set service name
+//SetName set module name
 func (a *BaseContext) SetName(v string) {
 	a.name = v
 }
@@ -295,44 +323,44 @@ func (a *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 	return doneFlag, false
 }
 
-// OnRun service run
+// OnRun module run
 func (a *BaseContext) OnRun(dt time.Duration) {
-	fmt.Printf("service %s do Nothing \n", a.Name())
+	fmt.Printf("module %s do Nothing \n", a.Name())
 
 }
 
-// RegisterService register service name to create function mapping
-func RegisterService(name string, createFunc func() (Service, error)) error {
-	if _, ok := relServices[name]; ok {
-		return fmt.Errorf("Already register Service %s", name)
+// RegisterModule register module name to create function mapping
+func RegisterModule(name string, createFunc func() (Module, error)) error {
+	if _, ok := relModules[name]; ok {
+		return fmt.Errorf("Already register Module %s", name)
 	}
-	relServices[name] = createFunc
+	relModules[name] = createFunc
 	return nil
 }
 
-// CreateService create service by name
-func CreateService(name string) (Service, error) {
-	if f, ok := relServices[name]; ok {
+// CreateModule create module by name
+func CreateModule(name string) (Module, error) {
+	if f, ok := relModules[name]; ok {
 		return f()
 	}
-	return nil, fmt.Errorf("You need register Service %s first", name)
+	return nil, fmt.Errorf("You need register Module %s first", name)
 }
 
-// GetServiceByID get service instance by id
-func GetServiceByID(serviceID int32) (Service, error) {
-	se, ok := App.Services.Load(serviceID)
+// GetModuleByID get module instance by id
+func GetModuleByID(moduleID int32) (Module, error) {
+	se, ok := App.Modules.Load(moduleID)
 	if ok {
-		return se.(Service), nil
+		return se.(Module), nil
 	}
-	return nil, fmt.Errorf("cant get service ID")
+	return nil, fmt.Errorf("cant get module ID")
 }
 
-// NewNamedService create named service
-func NewNamedService(serviceID int32, name string, parent Service, m map[string]interface{}) (Service, error) {
-	return createServiceByID(serviceID, name, parent, m)
+// NewNamedModule create named module
+func NewNamedModule(moduleID int32, name string, parent Module, m map[string]interface{}) (Module, error) {
+	return createModuleByID(moduleID, name, parent, m)
 }
-func createServiceByID(serviceID int32, name string, parent Service, m map[string]interface{}) (Service, error) {
-	se, err := CreateService(name)
+func createModuleByID(moduleID int32, name string, parent Module, m map[string]interface{}) (Module, error) {
+	se, err := CreateModule(name)
 	if err != nil {
 		return nil, err
 	}
@@ -341,28 +369,28 @@ func createServiceByID(serviceID int32, name string, parent Service, m map[strin
 		return nil, errors.New("params queueSize needed")
 	}
 	se.MakeContext(nil, int32(queueSize.(int)))
-	se.SetName(ServiceName(se))
+	se.SetName(ModuleName(se))
 	se.Setup(m)
-	se.SetID(serviceID)
-	App.Services.Store(serviceID, se)
-	if serviceID == ServiceIDLog {
-		GLoggerService = se
+	se.SetID(moduleID)
+	App.Modules.Store(moduleID, se)
+	if moduleID == ModuleIDLog {
+		GLoggerModule = se
 	}
-	GOWithContext(ServiceRun, se)
+	GOWithContext(ModuleRun, se)
 	return se, nil
 }
 
-// NewService create anonymous service
-func NewService(name string, parent Service, m map[string]interface{}) (Service, error) {
-	//Inc AnonymousServiceID count = count +1
-	serviceID := atomic.AddInt32(&AnonymousServiceID, 1)
-	return createServiceByID(serviceID, name, parent, m)
+// NewModule create anonymous module
+func NewModule(name string, parent Module, m map[string]interface{}) (Module, error) {
+	//Inc AnonymousModuleID count = count +1
+	moduleID := atomic.AddInt32(&AnonymousModuleID, 1)
+	return createModuleByID(moduleID, name, parent, m)
 }
 
-// Call get info from services
-func Call(destServiceID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
+// Call get info from modules
+func Call(destModuleID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
 	var obj = NewCallObject(cmd, option, args...)
-	s, err := GetServiceByID(destServiceID)
+	s, err := GetModuleByID(destModuleID)
 	if err != nil {
 		return nil, err
 	}

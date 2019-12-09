@@ -34,8 +34,8 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// ClientSocketService struct to define service
-type ClientSocketService struct {
+// ClientSocketModule struct to define module
+type ClientSocketModule struct {
 	server.BaseContext
 	Address         string
 	Network         string
@@ -45,18 +45,18 @@ type ClientSocketService struct {
 	conn            net.Conn
 }
 
-// ClientSocketServiceCreate  service create function
-func ClientSocketServiceCreate() (server.Service, error) {
+// ClientSocketModuleCreate  module create function
+func ClientSocketModuleCreate() (server.Module, error) {
 
-	return &ClientSocketService{}, nil
+	return &ClientSocketModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *ClientSocketService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *ClientSocketModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //	"readBufferSize":32767,
@@ -66,7 +66,7 @@ func (s *ClientSocketService) UserData() int32 {
 //  "readDeadline":15,
 //  "queueSize":1000,
 // }
-func (s *ClientSocketService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *ClientSocketModule) Setup(m map[string]interface{}) (server.Module, error) {
 
 	if err := s.readConfig(m); err != nil {
 		panic(err)
@@ -90,7 +90,7 @@ func (s *ClientSocketService) Setup(m map[string]interface{}) (server.Service, e
 // address default :8888
 // network default "tcp4"  use "tcp4/tcp6"
 // readDeadline default 15
-func (s *ClientSocketService) readConfig(m map[string]interface{}) error {
+func (s *ClientSocketModule) readConfig(m map[string]interface{}) error {
 	readBufferSize, err := server.ParseValue(m, "readBufferSize", 32767)
 	if err != nil {
 		return err
@@ -124,13 +124,13 @@ func (s *ClientSocketService) readConfig(m map[string]interface{}) error {
 }
 
 //Reload reload config
-func (s *ClientSocketService) Reload(m map[string]interface{}) error {
+func (s *ClientSocketModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 // loop accepting
-func (s *ClientSocketService) OnRun(dt time.Duration) {
+func (s *ClientSocketModule) OnRun(dt time.Duration) {
 
 	ticker := time.NewTicker(time.Second * 5)
 
@@ -144,16 +144,16 @@ func (s *ClientSocketService) OnRun(dt time.Duration) {
 }
 
 // Stop goruntine
-func (s *ClientSocketService) Stop() error {
+func (s *ClientSocketModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *ClientSocketService) Call(option int32, obj *server.CallObject) error {
+// Call async send message to module
+func (s *ClientSocketModule) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *ClientSocketService) PushBytes(option int32, buf []byte) error {
+func (s *ClientSocketModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

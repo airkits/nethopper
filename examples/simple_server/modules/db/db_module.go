@@ -25,78 +25,78 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package logic
+package db
 
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/database/sqlx"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// LogicService struct to define service
-type LogicService struct {
+// DBModule struct to define module
+type DBModule struct {
 	server.BaseContext
+	conn *sqlx.SQLConnection
 }
 
-// LogicServiceCreate  service create function
-func LogicServiceCreate() (server.Service, error) {
-	return &LogicService{}, nil
+// DBModuleCreate  module create function
+func DBModuleCreate() (server.Module, error) {
+
+	return &DBModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *LogicService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *DBModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
+//  "driver:"mysql",
+//  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
-func (s *LogicService) Setup(m map[string]interface{}) (server.Service, error) {
-	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
-	s.CreateProcessorPool(s, 128, 10*time.Second, true)
+func (s *DBModule) Setup(m map[string]interface{}) (server.Module, error) {
+	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
+	conn, err := sqlx.NewSQLConnection(m)
+	if err != nil {
+		return nil, err
+	}
+	s.conn = conn
+	if err := s.conn.Open(); err != nil {
+		panic(err)
+	}
+	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
 //Reload reload config
-func (s *LogicService) Reload(m map[string]interface{}) error {
+func (s *DBModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *LogicService) OnRun(dt time.Duration) {
-	for i := 0; i < 128; i++ {
-		m, err := s.MQ().AsyncPop()
-		if err != nil {
-			break
-		}
-		obj := m.(*server.CallObject)
-
-		if err := s.Processor(obj); err != nil {
-			server.Error("%s error %s", s.Name(), err.Error())
-			break
-		}
-
-	}
-
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *DBModule) OnRun(dt time.Duration) {
+	server.RunSimpleFrame(s)
 }
 
 // Stop goruntine
-func (s *LogicService) Stop() error {
+func (s *DBModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *LogicService) Call(option int32, obj *server.CallObject) error {
-	if err := s.MQ().AsyncPush(obj); err != nil {
-		server.Error(err.Error())
-	}
-	return nil
-}
+// Call async send message to module
+// func (s *DBModule) Call(option int32, obj *server.CallObject) error {
+// 	if err := s.MQ().AsyncPush(obj); err != nil {
+// 		server.Error(err.Error())
+// 	}
+// 	return nil
+// }
 
 // PushBytes async send string or bytes to queue
-func (s *LogicService) PushBytes(option int32, buf []byte) error {
+func (s *DBModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

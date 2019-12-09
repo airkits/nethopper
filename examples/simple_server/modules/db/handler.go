@@ -5,8 +5,8 @@ import (
 )
 
 // GetUserInfoHander 获取用户信息
-//func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) (string, error) {
-func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) (string, error) {
+//func GetUserInfoHander(s *DBModule, obj *server.CallObject, u string) (string, error) {
+func GetUserInfoHander(s *DBModule, obj *server.CallObject, u string) (string, error) {
 
 	//var uid = (obj.Args[0]).(string)
 	//uid := 1
@@ -23,7 +23,7 @@ func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) (string, 
 }
 
 // InsertUserInfoHander 获取用户信息
-// func InsertUserInfoHander(s *DBService, obj *server.CallObject) {
+// func InsertUserInfoHander(s *DBModule, obj *server.CallObject) {
 // 	var uid = (obj.Args[0]).(string)
 // 	var password = (obj.Args[1]).(string)
 // 	sql := "insert into user.user(uid,password) value(?,?)"
@@ -46,7 +46,7 @@ func GetUserInfoHander(s *DBService, obj *server.CallObject, u string) (string, 
 // }
 
 // UpdateUserInfoHander 获取用户信息
-// func UpdateUserInfoHander(s *DBService, obj *server.CallObject) {
+// func UpdateUserInfoHander(s *DBModule, obj *server.CallObject) {
 // 	var uid = (obj.Args[0]).(string)
 // 	var password = (obj.Args[1]).(string)
 // 	sql := "update user.user set password=? where uid=?"

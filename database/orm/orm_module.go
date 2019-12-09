@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package redis
+package database
 
 import (
 	"time"
@@ -33,51 +33,51 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// RedisService struct to define service
-type RedisService struct {
+// OrmModule struct to define module
+type OrmModule struct {
 	server.BaseContext
 }
 
-// RedisServiceCreate  service create function
-func RedisServiceCreate() (server.Service, error) {
-	return &RedisService{}, nil
+// OrmModuleCreate  module create function
+func OrmModuleCreate() (server.Module, error) {
+	return &OrmModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *RedisService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *OrmModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *RedisService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *OrmModule) Setup(m map[string]interface{}) (server.Module, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *RedisService) Reload(m map[string]interface{}) error {
+func (s *OrmModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *RedisService) OnRun(dt time.Duration) {
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *OrmModule) OnRun(dt time.Duration) {
 
 }
 
 // Stop goruntine
-func (s *RedisService) Stop() error {
+func (s *OrmModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *RedisService) Call(option int32, obj *server.CallObject) error {
+// Call async send message to module
+func (s *OrmModule) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *RedisService) PushBytes(option int32, buf []byte) error {
+func (s *OrmModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

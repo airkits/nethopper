@@ -1,4 +1,4 @@
 # nethopper
-micro-service framework
+micro-module framework
 
 

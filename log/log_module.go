@@ -29,14 +29,13 @@ package log
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	"github.com/gonethopper/nethopper/server"
 )
 
-// LogService struct implements the interface Service
-type LogService struct {
+// LogModule struct implements the interface Module
+type LogModule struct {
 	server.BaseContext
 	logger  server.Log
 	console server.Log
@@ -46,9 +45,9 @@ type LogService struct {
 	msgSize int32
 }
 
-// LogServiceCreate log service create function
-func LogServiceCreate() (server.Service, error) {
-	return &LogService{}, nil
+// LogModuleCreate log module create function
+func LogModuleCreate() (server.Module, error) {
+	return &LogModule{}, nil
 }
 
 // Setup init and setup config
@@ -62,7 +61,7 @@ func LogServiceCreate() (server.Service, error) {
 // 	"dailyEnable": true,
 //  "queueSize":1000,
 // }
-func (s *LogService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *LogModule) Setup(m map[string]interface{}) (server.Module, error) {
 
 	logger, err := NewFileLogger(m)
 	if err != nil {
@@ -78,7 +77,7 @@ func (s *LogService) Setup(m map[string]interface{}) (server.Service, error) {
 }
 
 // Reload reload config from map
-func (s *LogService) Reload(m map[string]interface{}) error {
+func (s *LogModule) Reload(m map[string]interface{}) error {
 	level, err := server.ParseValue(m, "level", 7)
 	if err != nil {
 		return err
@@ -87,8 +86,8 @@ func (s *LogService) Reload(m map[string]interface{}) error {
 
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *LogService) OnRun(dt time.Duration) {
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *LogModule) OnRun(dt time.Duration) {
 	s.msgSize = 0
 	s.count = 0
 	for i := 0; i < 128; i++ {
@@ -118,23 +117,23 @@ func (s *LogService) OnRun(dt time.Duration) {
 }
 
 // Stop goruntine
-func (s *LogService) Stop() error {
+func (s *LogModule) Stop() error {
 	s.MQ().Close()
 	return s.logger.Close()
 }
 
 // Call async push message to queue
-func (s *LogService) Call(option int32, obj *server.CallObject) error {
-	return fmt.Errorf("TODO LogService Call")
-}
+// func (s *LogModule) Call(option int32, obj *server.CallObject) error {
+// 	return fmt.Errorf("TODO LogModule Call")
+// }
 
-// UserData service custom option, can you store you self value
-func (s *LogService) UserData() int32 {
+// UserData module custom option, can you store you self value
+func (s *LogModule) UserData() int32 {
 	return s.logger.GetLevel()
 }
 
 // PushBytes async push string or bytes to queue, with option
-func (s *LogService) PushBytes(option int32, buf []byte) error {
+func (s *LogModule) PushBytes(option int32, buf []byte) error {
 	if err := s.MQ().Push(buf); err != nil {
 		return err
 	}

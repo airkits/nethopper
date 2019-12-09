@@ -44,11 +44,11 @@ func main() {
 		"dailyEnable": true,
 		"queueSize":   1000,
 	}
-	RegisterService("log", log.LogServiceCreate)
-	RegisterService("tcp_client", tcp.ClientSocketServiceCreate)
+	RegisterModule("log", log.LogModuleCreate)
+	RegisterModule("tcp_client", tcp.ClientSocketModuleCreate)
 
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	NewNamedService(ServiceIDTCPClient, "tcp_client", nil, m)
+	NewNamedModule(ModuleIDLog, "log", nil, m)
+	NewNamedModule(ModuleIDTCPClient, "tcp_client", nil, m)
 
 	InitSignal()
 	//GracefulExit()

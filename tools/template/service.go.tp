@@ -33,51 +33,51 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// SERVICEService struct to define service
-type SERVICEService struct {
+// SERVICEModule struct to define module
+type SERVICEModule struct {
 	server.BaseContext
 }
 
-// SERVICEServiceCreate  service create function
-func SERVICEServiceCreate() (server.Service, error) {
-	return &SERVICEService{}, nil
+// SERVICEModuleCreate  module create function
+func SERVICEModuleCreate() (server.Module, error) {
+	return &SERVICEModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *SERVICEService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *SERVICEModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *SERVICEService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *SERVICEModule) Setup(m map[string]interface{}) (server.Module, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *SERVICEService) Reload(m map[string]interface{}) error {
+func (s *SERVICEModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *SERVICEService) OnRun(dt time.Duration) {
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *SERVICEModule) OnRun(dt time.Duration) {
 
 }
 
 // Stop goruntine
-func (s *SERVICEService) Stop() error {
+func (s *SERVICEModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *SERVICEService) Call(option int32, obj *server.CallObject) error {
+// Call async send message to module
+func (s *SERVICEModule) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *SERVICEService) PushBytes(option int32, buf []byte) error {
+func (s *SERVICEModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

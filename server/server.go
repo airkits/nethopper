@@ -45,21 +45,21 @@ var GSessionPool *SessionPool
 
 // log variable start
 
-// GLoggerService global log service
-var GLoggerService Service
+// GLoggerModule global log module
+var GLoggerModule Module
 
 // WG global goruntine wait group
 var WG sync.WaitGroup
 
-// service variable start
+// module variable start
 
-// AnonymousServiceID Anonymous Service Counter
-var AnonymousServiceID int32 = ServiceIDNamedMax
+// AnonymousModuleID Anonymous Module Counter
+var AnonymousModuleID int32 = ModuleIDNamedMax
 
-// relServices relate name to create service function
-var relServices = make(map[string]func() (Service, error))
+// relModules relate name to create module function
+var relModules = make(map[string]func() (Module, error))
 
-// service variable end
+// module variable end
 
 // App server instance
 var App *Server
@@ -78,10 +78,10 @@ func init() {
 // GracefulExit server exit by call root context close
 func GracefulExit() {
 	WG.Wait()
-	GLoggerService.Close()
+	GLoggerModule.Close()
 	// wait root context done
 	for {
-		if _, exitFlag := GLoggerService.CanExit(true); exitFlag {
+		if _, exitFlag := GLoggerModule.CanExit(true); exitFlag {
 			return
 		}
 		time.Sleep(1 * time.Second)
@@ -92,7 +92,7 @@ func GracefulExit() {
 type Server struct {
 	// GoCount total goruntine count
 	GoCount  int32
-	Services sync.Map
+	Modules sync.Map
 }
 
 // ModifyGoCount update goruntine use count ,+/- is all ok

@@ -31,10 +31,10 @@ import (
 
 	//"github.com/gonethopper/nethopper/cache/redis"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gonethopper/nethopper/examples/simple_server/services/db"
-	"github.com/gonethopper/nethopper/examples/simple_server/services/http"
-	"github.com/gonethopper/nethopper/examples/simple_server/services/logic"
-	"github.com/gonethopper/nethopper/examples/simple_server/services/redis"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -51,23 +51,23 @@ func main() {
 		"dailyEnable": true,
 		"queueSize":   1000,
 		"driver":      "mysql",
-		"dsn":         "root:godankye@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
+		"dsn":         "root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
 	}
-	RegisterService("log", log.LogServiceCreate)
-	RegisterService("mysql", db.DBServiceCreate)
-	//	RegisterService("tcp", tcp.SocketServiceCreate)
-	RegisterService("logic", logic.LogicServiceCreate)
-	RegisterService("web_http", http.HTTPServiceCreate)
-	RegisterService("redis", redis.RedisServiceCreate)
-	//	RegisterService("redis", redis.RedisServiceCreate)
-	NewNamedService(ServiceIDLog, "log", nil, m)
-	NewNamedService(ServiceIDDB, "mysql", nil, m)
-	NewNamedService(ServiceIDRedis, "redis", nil, m)
-	//NewNamedService(ServiceIDTCP, "tcp", nil, m)
-	NewNamedService(ServiceIDLogic, "logic", nil, m)
-	NewNamedService(ServiceIDHTTP, "web_http", nil, m)
+	RegisterModule("log", log.LogModuleCreate)
+	RegisterModule("mysql", db.DBModuleCreate)
+	//	RegisterModule("tcp", tcp.SocketModuleCreate)
+	RegisterModule("logic", logic.LogicModuleCreate)
+	RegisterModule("web_http", http.HTTPModuleCreate)
+	RegisterModule("redis", redis.RedisModuleCreate)
+	//	RegisterModule("redis", redis.RedisModuleCreate)
+	NewNamedModule(ModuleIDLog, "log", nil, m)
+	NewNamedModule(ModuleIDDB, "mysql", nil, m)
+	NewNamedModule(ModuleIDRedis, "redis", nil, m)
+	//NewNamedModule(ModuleIDTCP, "tcp", nil, m)
+	NewNamedModule(ModuleIDLogic, "logic", nil, m)
+	NewNamedModule(ModuleIDHTTP, "web_http", nil, m)
 
-	//	NewNamedService(ServiceIDRedis, "redis", nil, m)
+	//	NewNamedModule(ModuleIDRedis, "redis", nil, m)
 	InitSignal()
 	//GracefulExit()
 }

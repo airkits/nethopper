@@ -37,9 +37,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// WebHTTPServiceCreate  service create function
-func WebHTTPServiceCreate() (server.Service, error) {
-	return &WebHTTPService{}, nil
+// WebHTTPModuleCreate  module create function
+func WebHTTPModuleCreate() (server.Module, error) {
+	return &WebHTTPModule{}, nil
 }
 
 // SessionHTTPMiddleware define http middleware to create session id
@@ -52,7 +52,7 @@ func SessionHTTPMiddleware(next http.Handler) http.Handler {
 			arr := strings.Split(req.RemoteAddr, ":")
 			host := arr[0]
 			port := arr[1]
-			sess := server.CreateSession(server.ServiceIDHTTP, host, port)
+			sess := server.CreateSession(server.ModuleIDHTTP, host, port)
 			server.Info("new connection from:%v port:%v sessionid:%s", host, port, sess.SessionID)
 			context.Set(req, "token", sess.SessionID)
 		}
@@ -61,24 +61,24 @@ func SessionHTTPMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// WebHTTPService struct to define service
-type WebHTTPService struct {
+// WebHTTPModule struct to define module
+type WebHTTPModule struct {
 	server.BaseContext
 	Address string
 	router  *mux.Router
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *WebHTTPService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *WebHTTPModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *WebHTTPService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *WebHTTPModule) Setup(m map[string]interface{}) (server.Module, error) {
 	if err := s.readConfig(m); err != nil {
 		panic(err)
 	}
@@ -93,7 +93,7 @@ func (s *WebHTTPService) Setup(m map[string]interface{}) (server.Service, error)
 
 	return s, nil
 }
-func (s *WebHTTPService) web() {
+func (s *WebHTTPModule) web() {
 	if err := http.ListenAndServe(s.Address, s.router); err != nil {
 		panic(err)
 	}
@@ -102,7 +102,7 @@ func (s *WebHTTPService) web() {
 
 // config map
 // address default :80
-func (s *WebHTTPService) readConfig(m map[string]interface{}) error {
+func (s *WebHTTPModule) readConfig(m map[string]interface{}) error {
 
 	address, err := server.ParseValue(m, "address", ":11080")
 	if err != nil {
@@ -114,26 +114,26 @@ func (s *WebHTTPService) readConfig(m map[string]interface{}) error {
 }
 
 //Reload reload config
-func (s *WebHTTPService) Reload(m map[string]interface{}) error {
+func (s *WebHTTPModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *WebHTTPService) OnRun(dt time.Duration) {
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *WebHTTPModule) OnRun(dt time.Duration) {
 
 }
 
 // Stop goruntine
-func (s *WebHTTPService) Stop() error {
+func (s *WebHTTPModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *WebHTTPService) Call(option int32, obj *server.CallObject) error {
+// Call async send message to module
+func (s *WebHTTPModule) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *WebHTTPService) PushBytes(option int32, buf []byte) error {
+func (s *WebHTTPModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

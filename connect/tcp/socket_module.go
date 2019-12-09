@@ -36,8 +36,8 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// SocketService struct to define service
-type SocketService struct {
+// SocketModule struct to define module
+type SocketModule struct {
 	server.BaseContext
 	Address         string
 	Network         string
@@ -47,18 +47,18 @@ type SocketService struct {
 	tcpListener     *net.TCPListener
 }
 
-// SocketServiceCreate  service create function
-func SocketServiceCreate() (server.Service, error) {
+// SocketModuleCreate  module create function
+func SocketModuleCreate() (server.Module, error) {
 
-	return &SocketService{}, nil
+	return &SocketModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *SocketService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *SocketModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //	"readBufferSize":32767,
@@ -68,7 +68,7 @@ func (s *SocketService) UserData() int32 {
 //  "readDeadline":15,
 //  "queueSize":1000,
 // }
-func (s *SocketService) Setup(m map[string]interface{}) (server.Service, error) {
+func (s *SocketModule) Setup(m map[string]interface{}) (server.Module, error) {
 
 	if err := s.readConfig(m); err != nil {
 		panic(err)
@@ -95,7 +95,7 @@ func (s *SocketService) Setup(m map[string]interface{}) (server.Service, error) 
 // address default :8888
 // network default "tcp4"  use "tcp4/tcp6"
 // readDeadline default 15
-func (s *SocketService) readConfig(m map[string]interface{}) error {
+func (s *SocketModule) readConfig(m map[string]interface{}) error {
 	readBufferSize, err := server.ParseValue(m, "readBufferSize", 32767)
 	if err != nil {
 		return err
@@ -129,13 +129,13 @@ func (s *SocketService) readConfig(m map[string]interface{}) error {
 }
 
 //Reload reload config
-func (s *SocketService) Reload(m map[string]interface{}) error {
+func (s *SocketModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 // loop accepting
-func (s *SocketService) OnRun(dt time.Duration) {
+func (s *SocketModule) OnRun(dt time.Duration) {
 
 	conn, err := s.accept()
 	if err != nil {
@@ -146,7 +146,7 @@ func (s *SocketService) OnRun(dt time.Duration) {
 }
 
 // accept the next incoming call and returns the new connection.
-func (s *SocketService) accept() (net.Conn, error) {
+func (s *SocketModule) accept() (net.Conn, error) {
 	conn, err := s.tcpListener.AcceptTCP()
 	if err != nil {
 		server.Warning("accept failed: %s", err.Error())
@@ -159,7 +159,7 @@ func (s *SocketService) accept() (net.Conn, error) {
 	return conn, nil
 }
 
-func (s *SocketService) handler(conn net.Conn, readDeadline time.Duration) {
+func (s *SocketModule) handler(conn net.Conn, readDeadline time.Duration) {
 	defer conn.Close()
 	// for reading the 2-Byte header
 	header := make([]byte, 2)
@@ -212,7 +212,7 @@ func (s *SocketService) handler(conn net.Conn, readDeadline time.Duration) {
 			server.Warning("read payload failed, ip:%v reason:%v size:%v", sess.IP, err, n)
 			return
 		}
-		// message := server.CreateMessage(s.ID(), server.ServiceIDLogic, server.MTRequest, string(cmdBuffer), payload)
+		// message := server.CreateMessage(s.ID(), server.ModuleIDLogic, server.MTRequest, string(cmdBuffer), payload)
 		// server.Call(message.DestID, 0, message)
 
 		// for i := 0; i < 8; i++ {
@@ -235,16 +235,16 @@ func (s *SocketService) handler(conn net.Conn, readDeadline time.Duration) {
 }
 
 // Stop goruntine
-func (s *SocketService) Stop() error {
+func (s *SocketModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *SocketService) Call(option int32, obj *server.CallObject) error {
+// Call async send message to module
+func (s *SocketModule) Call(option int32, obj *server.CallObject) error {
 	return nil
 }
 
 // PushBytes async send string or bytes to queue
-func (s *SocketService) PushBytes(option int32, buf []byte) error {
+func (s *SocketModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

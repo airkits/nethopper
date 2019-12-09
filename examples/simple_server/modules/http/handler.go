@@ -41,7 +41,7 @@ func RegisterAPI(router *mux.Router) {
 // 	}
 
 // 	var obj = server.NewCallObject(common.CallIDInsertUserInfoCmd, string(int64(v["uid"].(float64))), v["password"].(string))
-// 	server.Call(server.ServiceIDLogic, 0, obj)
+// 	server.Call(server.ModuleIDLogic, 0, obj)
 // 	result := <-obj.ChanRet
 // 	server.Info("message insert done,get pwd  %s", result.Ret.(string))
 // 	fmt.Fprint(w, result.Ret.(string))
@@ -68,7 +68,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 	uid := v["uid"].(float64)
 	pwd := v["passwd"].(string)
-	result, err2 := server.Call(server.ServiceIDLogic, common.CallIDLoginCmd, int32(uid), strconv.FormatFloat(uid, 'f', -1, 64), pwd)
+	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(uid), strconv.FormatFloat(uid, 'f', -1, 64), pwd)
 	if err2 != nil {
 		server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
 		fmt.Fprint(w, "login failed")
@@ -83,7 +83,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	// }
 	// sess := server.GetSession(token)
 	// if sess != nil {
-	// 	m := server.CreateMessage(common.MessageIDLogin, server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, common.MessageIDLoginCmd, token)
+	// 	m := server.CreateMessage(common.MessageIDLogin, server.ModuleIDHTTP, server.ModuleIDLogic, server.MTRequest, common.MessageIDLoginCmd, token)
 	// 	m.SetBody(body)
 	// 	server.Call(m.DestID, 0, m)
 	// }

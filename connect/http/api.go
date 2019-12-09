@@ -26,7 +26,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, token)
 	sess := server.GetSession(token)
 	if sess != nil {
-		//	m := server.CreateMessage(server.ServiceIDHTTP, server.ServiceIDLogic, server.MTRequest, "index", []byte{})
+		//	m := server.CreateMessage(server.ModuleIDHTTP, server.ModuleIDLogic, server.MTRequest, "index", []byte{})
 		//	server.Call(m.DestID, 0, m)
 	}
 	defer close(sess.Die)

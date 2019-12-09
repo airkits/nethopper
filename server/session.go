@@ -94,7 +94,7 @@ func RemoveSession(sess *Session) {
 type Session struct {
 	IP        net.IP
 	Port      string
-	SrcID     int32 //service id
+	SrcID     int32 //module id
 	MQ        queue.Queue
 	SessionID string
 	Done      chan *Session

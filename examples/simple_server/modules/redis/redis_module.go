@@ -25,89 +25,77 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package db
+package redis
 
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/database/sqlx"
+	"github.com/gonethopper/nethopper/cache/redis"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// DBService struct to define service
-type DBService struct {
+// RedisModule struct to define module
+type RedisModule struct {
 	server.BaseContext
-	conn *sqlx.SQLConnection
+	rdb *redis.RedisCache
 }
 
-// DBServiceCreate  service create function
-func DBServiceCreate() (server.Service, error) {
-
-	return &DBService{}, nil
+// RedisModuleCreate  module create function
+func RedisModuleCreate() (server.Module, error) {
+	return &RedisModule{}, nil
 }
 
-// UserData service custom option, can you store you data and you must keep goruntine safe
-func (s *DBService) UserData() int32 {
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *RedisModule) UserData() int32 {
 	return 0
 }
 
-// Setup init custom service and pass config map to service
+// Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
-//  "driver:"mysql",
-//  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
-func (s *DBService) Setup(m map[string]interface{}) (server.Service, error) {
-	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
-	conn, err := sqlx.NewSQLConnection(m)
+func (s *RedisModule) Setup(m map[string]interface{}) (server.Module, error) {
+
+	cache, err := redis.NewRedisCache(m)
 	if err != nil {
 		return nil, err
 	}
-	s.conn = conn
-	if err := s.conn.Open(); err != nil {
-		panic(err)
-	}
-	s.CreateProcessorPool(s, 128, 10*time.Second, true)
+	s.rdb = cache
+
+	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
+	s.RegisterHandler(common.CallIDUpdateUserInfoCmd, UpdateUserInfoHandler)
+
+	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
 //Reload reload config
-func (s *DBService) Reload(m map[string]interface{}) error {
+func (s *RedisModule) Reload(m map[string]interface{}) error {
 	return nil
 }
 
-// OnRun goruntine run and call OnRun , always use ServiceRun to call this function
-func (s *DBService) OnRun(dt time.Duration) {
-	for i := 0; i < 128; i++ {
-		m, err := s.MQ().AsyncPop()
-		if err != nil {
-			break
-		}
-		obj := m.(*server.CallObject)
-
-		if err := s.Processor(obj); err != nil {
-			server.Error("%s error %s", s.Name(), err.Error())
-			break
-		}
-	}
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *RedisModule) OnRun(dt time.Duration) {
+	server.RunSimpleFrame(s)
 }
 
 // Stop goruntine
-func (s *DBService) Stop() error {
+func (s *RedisModule) Stop() error {
 	return nil
 }
 
-// Call async send message to service
-func (s *DBService) Call(option int32, obj *server.CallObject) error {
-	if err := s.MQ().AsyncPush(obj); err != nil {
-		server.Error(err.Error())
-	}
-	return nil
-}
+// // Call async send message to module
+// func (s *RedisModule) Call(option int32, obj *server.CallObject) error {
+// 	if err := s.MQ().AsyncPush(obj); err != nil {
+// 		server.Error(err.Error())
+// 	}
+// 	return nil
+
+// }
 
 // PushBytes async send string or bytes to queue
-func (s *DBService) PushBytes(option int32, buf []byte) error {
+func (s *RedisModule) PushBytes(option int32, buf []byte) error {
 	return nil
 }

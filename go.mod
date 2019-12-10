@@ -3,18 +3,17 @@ module github.com/gonethopper/nethopper
 go 1.12
 
 require (
-	github.com/coreos/etcd v3.3.18+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang/protobuf v1.3.1
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gonethopper/queue v0.0.0-20190620101229-0ece0ae0c580
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.7.3
+	github.com/gorilla/websocket v1.4.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/klauspost/cpuid v1.2.1 // indirect
 	github.com/klauspost/reedsolomon v1.9.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/magicsea/ganet v0.0.0-20180425082344-2e8b357526bd
 	github.com/pkg/errors v0.8.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 // indirect

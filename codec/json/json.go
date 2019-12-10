@@ -34,12 +34,12 @@ import (
 // JSONCodec use gob encode/decode
 
 // Marshal encode message
-func Marshal(v interface{}, template []byte) ([]byte, error) {
+func Marshal(v interface{}, template interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }
 
 // Unmarshal decode message
-func Unmarshal(buf []byte, v interface{}, template []byte) error {
+func Unmarshal(buf []byte, v interface{}, template interface{}) error {
 	return json.Unmarshal(buf, v)
 }
 

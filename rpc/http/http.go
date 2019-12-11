@@ -1,3 +1,30 @@
+// MIT License
+
+// Copyright (c) 2019 gonethopper
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+// * @Author: ankye
+// * @Date: 2019-12-11 10:13:21
+// * @Last Modified by:   ankye
+// * @Last Modified time: 2019-12-11 10:13:21
+
 package http
 
 import (
@@ -18,14 +45,14 @@ const (
 	POST = "POST"
 	// GET method
 	GET = "GET"
-	//eHTTPRequestTypeText text format
-	eHTTPRequestTypeText = 0x01
-	//eHTTPRequestTypeJSON json format
-	eHTTPRequestTypeJSON = 0x02
-	//eHTTPRequestTypePB protobuf3 byte buffer format
-	eHTTPRequestTypePB = 0x03
-	//eHTTPRequestTypeByte byte buffer format
-	eHTTPRequestTypeByte = 0x04
+	//RequestTypeText text format
+	RequestTypeText = 0x01
+	//RequestTypeJSON json format
+	RequestTypeJSON = 0x02
+	//RequestTypePB protobuf3 byte buffer format
+	RequestTypePB = 0x03
+	//RequestTypeByte byte buffer format
+	RequestTypeByte = 0x04
 	//ContentTypeText request type text
 	ContentTypeText = "application/x-www-form-urlencoded"
 	//ContentTypeJSON request type json
@@ -42,13 +69,11 @@ const (
 	ResponseTypePB = 0x04
 	//ResponseTypeByte response type buffer
 	ResponseTypeByte = 0x05
-)
 
-const (
 	//ConnTimeoutMS conn timeout
-	ConnTimeoutMS = 1000
+	ConnTimeoutMS = 5000
 	//ServeTimeoutMS request timeout
-	ServeTimeoutMS = 3000
+	ServeTimeoutMS = 10000
 )
 
 // TextParamsValue get params formats
@@ -62,14 +87,35 @@ func TextParamsValue(param map[string]interface{}) []byte {
 
 // Request do http request with data
 func Request(url string, method string, requestType int, header interface{}, data interface{}, responseType int, results interface{}, connTimeoutMs int, serveTimeoutMs int) error {
-
+	var bindIP string
 	client := &http.Client{
 		Transport: &http.Transport{
 			Dial: func(netw, addr string) (net.Conn, error) {
-				c, err := net.DialTimeout(netw, addr, time.Duration(connTimeoutMs)*time.Millisecond)
+				lAddr, err := net.ResolveTCPAddr(netw, bindIP+":0")
 				if err != nil {
 					return nil, err
 				}
+				// //被请求的地址
+				// rAddr, err := net.ResolveTCPAddr(netw, addr)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				// c, err := net.DialTCP(netw, lAddr, rAddr)
+				// if err != nil {
+				// 	return nil, err
+				// }
+
+				d := net.Dialer{Timeout: time.Duration(connTimeoutMs) * time.Millisecond, LocalAddr: lAddr}
+				c, err := d.Dial("tcp", addr)
+				if err != nil {
+					return nil, err
+				}
+
+				// c, err := net.DialTimeout(netw, addr, time.Duration(connTimeoutMs)*time.Microsecond)
+				// if err != nil {
+				// 	return nil, err
+				// }
+
 				c.SetDeadline(time.Now().Add(time.Duration(serveTimeoutMs) * time.Millisecond))
 				return c, nil
 			},
@@ -77,26 +123,27 @@ func Request(url string, method string, requestType int, header interface{}, dat
 	}
 	var body *bytes.Reader
 	var err error
+	var req *http.Request
 	if data != nil {
 		params := data.(map[string]interface{})
 		var bytesData []byte
 		switch requestType {
-		case eHTTPRequestTypeJSON:
+		case RequestTypeJSON:
 			{
 				bytesData, err = codec.JSONCodec.Marshal(params, nil)
 				break
 			}
-		case eHTTPRequestTypeText:
+		case RequestTypeText:
 			{
 				bytesData = TextParamsValue(params)
 				break
 			}
-		case eHTTPRequestTypeByte:
+		case RequestTypeByte:
 			{
 				bytesData, err = codec.BinaryCodec.Marshal(params, nil)
 				break
 			}
-		case eHTTPRequestTypePB:
+		case RequestTypePB:
 			{
 				bytesData, err = codec.PBCodec.Marshal(params, nil)
 				break
@@ -106,12 +153,24 @@ func Request(url string, method string, requestType int, header interface{}, dat
 			return err
 		}
 		body = bytes.NewReader(bytesData)
+		req, err = http.NewRequest(method, url, body)
+	} else {
+		req, err = http.NewRequest(method, url, nil)
 	}
 
-	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return err
 	}
+	// parnet := ctx
+	// if parnet == nil {
+	// 	parnet = context.TODO()
+	// }
+	// currentCtx, cancel := context.WithCancel(parnet)
+	// time.AfterFunc(time.Duration(serveTimeoutMs)*time.Millisecond, func() {
+	// 	cancel()
+	// })
+	// req = req.WithContext(currentCtx)
+
 	if header != nil {
 		h := header.(map[string]interface{})
 		for key, val := range h {
@@ -120,14 +179,14 @@ func Request(url string, method string, requestType int, header interface{}, dat
 	}
 	contentType := ContentTypeText
 	switch requestType {
-	case eHTTPRequestTypeJSON:
+	case RequestTypeJSON:
 		contentType = ContentTypeJSON
 		break
-	case eHTTPRequestTypeText:
+	case RequestTypeText:
 		contentType = ContentTypeText
 		break
-	case eHTTPRequestTypePB:
-	case eHTTPRequestTypeByte:
+	case RequestTypePB:
+	case RequestTypeByte:
 		contentType = ContentTypeByte
 		break
 	}
@@ -158,7 +217,7 @@ func Request(url string, method string, requestType int, header interface{}, dat
 		}
 	case ResponseTypeText:
 		{
-			results = string(respBody)
+			*(results.(*string)) = string(respBody)
 			break
 		}
 	case ResponseTypeByte:

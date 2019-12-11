@@ -33,7 +33,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gonethopper/nethopper/utils"
 	"github.com/gonethopper/queue"
 )
 
@@ -385,7 +384,7 @@ func NewFixedWorkerPool(owner Module, cap uint32, expired time.Duration) (IWorke
 	if cap == 0 {
 		return nil, ErrInvalidcapacity
 	}
-	capacity, power := utils.PowerCalc(int32(cap))
+	capacity, power := PowerCalc(int32(cap))
 	// create FixedProcessor pool
 	p := &FixedWorkerPool{
 		capacity:        uint32(capacity),

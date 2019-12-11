@@ -21,37 +21,25 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-12-11 10:15:30
+// * @Date: 2019-12-11 10:13:10
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-12-11 10:15:30
+// * @Last Modified time: 2019-12-11 10:13:10
 
-package server
+package rpc_test
 
 import (
-	"runtime"
-	"time"
+	"testing"
+
+	"github.com/gonethopper/nethopper/rpc/http"
 )
 
-// TraceCost calc the api cost time
-// usage: defer TraceCose("func")()
-func TraceCost(msg string) func() {
-	start := time.Now()
-	return func() {
-		Debug("[TraceCost] %s cost (%s)\n", msg, time.Since(start))
+func TestHTTPRequest(t *testing.T) {
+	var content string
+	if err := http.Request("http://baidu.com", http.GET, http.RequestTypeText, nil, nil, http.ResponseTypeText, &content, http.ConnTimeoutMS, http.ServeTimeoutMS); err != nil {
+		t.Error(err)
+		return
 	}
-}
-
-//PrintStack print current stack
-func PrintStack(all bool) {
-	buf := make([]byte, 4096)
-	n := runtime.Stack(buf, all)
-
-	Fatal("[FATAL] catch a panic,stack is: %s", string(buf[:n]))
-}
-
-// GetStack get current stack
-func GetStack(all bool) string {
-	buf := make([]byte, 4096)
-	n := runtime.Stack(buf, all)
-	return string(buf[:n])
+	if len(content) <= 0 {
+		t.Error("get content failed")
+	}
 }

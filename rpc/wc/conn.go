@@ -3,7 +3,7 @@ package ws
 import (
 	"net"
 
-	"github.com/gonethopper/nethopper/utils"
+	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/queue"
 	"github.com/gorilla/websocket"
 )
@@ -23,7 +23,7 @@ func newWSConn(conn *websocket.Conn, queueSize int32) *WSConnection {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				utils.PrintStack(false)
+				server.PrintStack(false)
 			}
 		}()
 		for {

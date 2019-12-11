@@ -29,8 +29,6 @@ package server
 
 import "sync"
 
-import "github.com/gonethopper/nethopper/utils"
-
 const (
 	// MinSizePower min buffer get from pool, means buf size = 1<<7
 	MinSizePower = 7
@@ -76,7 +74,7 @@ func (p *BytesPool) CalcIndex(size int32) int32 {
 	if size <= MinBufferSize {
 		return 0
 	}
-	_, power := utils.PowerCalc(size)
+	_, power := PowerCalc(size)
 	return int32(power) - MinSizePower
 }
 

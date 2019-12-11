@@ -21,37 +21,30 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-12-11 10:15:30
+// * @Date: 2019-12-11 13:39:15
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-12-11 10:15:30
+// * @Last Modified time: 2019-12-11 13:39:15
 
 package server
 
-import (
-	"runtime"
-	"time"
-)
+// PowerCalc return size & power
+func PowerCalc(size int32) (int32, uint8) {
 
-// TraceCost calc the api cost time
-// usage: defer TraceCose("func")()
-func TraceCost(msg string) func() {
-	start := time.Now()
-	return func() {
-		Debug("[TraceCost] %s cost (%s)\n", msg, time.Since(start))
+	if size <= 0 {
+		return 0, 0
 	}
-}
-
-//PrintStack print current stack
-func PrintStack(all bool) {
-	buf := make([]byte, 4096)
-	n := runtime.Stack(buf, all)
-
-	Fatal("[FATAL] catch a panic,stack is: %s", string(buf[:n]))
-}
-
-// GetStack get current stack
-func GetStack(all bool) string {
-	buf := make([]byte, 4096)
-	n := runtime.Stack(buf, all)
-	return string(buf[:n])
+	power := uint8(0)
+	value := size
+	for {
+		if value <= 1 {
+			break
+		}
+		value >>= 1
+		power++
+	}
+	if size&(size-1) == 0 { //is power of 2
+		return 1 << power, power
+	}
+	power++
+	return 1 << power, power
 }

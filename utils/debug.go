@@ -17,7 +17,6 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"github.com/gonethopper/nethopper/server"
 	"log"
 	"reflect"
 	"runtime"
@@ -478,20 +477,6 @@ func function(pc uintptr) []byte {
 	}
 	name = bytes.Replace(name, centerDot, dot, -1)
 	return name
-}
-
-//打印当前堆栈
-func PrintStack(all bool) {
-	buf := make([]byte, 4096)
-	n := runtime.Stack(buf, all)
-
-	server.Fatal("[FATAL] catch a panic,stack is: %s", string(buf[:n]))
-}
-
-func GetStack(all bool) string {
-	buf := make([]byte, 4096)
-	n := runtime.Stack(buf, all)
-	return string(buf[:n])
 }
 
 // 获取常用runtime统计信息

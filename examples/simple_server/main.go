@@ -35,6 +35,7 @@ import (
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/websocket"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -59,6 +60,7 @@ func main() {
 	RegisterModule("logic", logic.LogicModuleCreate)
 	RegisterModule("web_http", http.HTTPModuleCreate)
 	RegisterModule("redis", redis.RedisModuleCreate)
+	RegisterModule("websocket", websocket.WebsocketModuleCreate)
 	//	RegisterModule("redis", redis.RedisModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDDB, "mysql", nil, m)
@@ -66,6 +68,8 @@ func main() {
 	//NewNamedModule(ModuleIDTCP, "tcp", nil, m)
 	NewNamedModule(ModuleIDLogic, "logic", nil, m)
 	NewNamedModule(ModuleIDHTTP, "web_http", nil, m)
+	NewNamedModule(ModuleIDWebSocket, "websocket", nil, m)
+
 	InitSignal()
 	//GracefulExit()
 }

@@ -30,21 +30,22 @@ package logic
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// LogicModule struct to define module
-type LogicModule struct {
+// Module struct to define module
+type Module struct {
 	server.BaseContext
 }
 
-// LogicModuleCreate  module create function
-func LogicModuleCreate() (server.Module, error) {
-	return &LogicModule{}, nil
+// ModuleCreate  module create function
+func ModuleCreate() (server.Module, error) {
+	return &Module{}, nil
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
-func (s *LogicModule) UserData() int32 {
+func (s *Module) UserData() int32 {
 	return 0
 }
 
@@ -53,54 +54,36 @@ func (s *LogicModule) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *LogicModule) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
+	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
 //Reload reload config
-func (s *LogicModule) Reload(m map[string]interface{}) error {
+func (s *Module) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
-func (s *LogicModule) OnRun(dt time.Duration) {
-	// for i := 0; i < 128; i++ {
-	// 	m, err := s.MQ().AsyncPop()
-	// 	if err != nil {
-	// 		break
-	// 	}
-	// 	// message := m.(*server.Message)
-	// 	// msgType := message.MsgType
-	// 	// switch msgType {
-	// 	// case server.MTRequest:
-	// 	// 	{
-	// 	// 		server.Info("receive message %s", message.Cmd)
-	// 	// 		message.SrcID = s.ID()
-	// 	// 		server.Call(message.DestID, 0, message)
-	// 	// 		break
-	// 	// 	}
-	// 	// case server.MTResponse:
-	// 	// 	{
-	// 	// 		message.SrcID = s.ID()
-	// 	// 		server.Call(message.DestID, 0, message)
-	// 	// 		break
-	// 	// 	}
-	// 	// }
-	// }
-
+func (s *Module) OnRun(dt time.Duration) {
+	server.RunSimpleFrame(s, 128)
 }
 
 // Stop goruntine
-func (s *LogicModule) Stop() error {
+func (s *Module) Stop() error {
 	return nil
 }
 
 // Call async send message to module
-func (s *LogicModule) Call(option int32, obj *server.CallObject) error {
-	return nil
-}
+// func (s *Module) Call(option int32, obj *server.CallObject) error {
+// 	if err := s.MQ().AsyncPush(obj); err != nil {
+// 		server.Error(err.Error())
+// 	}
+// 	return nil
+// }
 
 // PushBytes async send string or bytes to queue
-func (s *LogicModule) PushBytes(option int32, buf []byte) error {
+func (s *Module) PushBytes(option int32, buf []byte) error {
 	return nil
 }

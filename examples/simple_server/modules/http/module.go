@@ -37,9 +37,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// HTTPModuleCreate  module create function
-func HTTPModuleCreate() (server.Module, error) {
-	return &HTTPModule{}, nil
+// ModuleCreate  module create function
+func ModuleCreate() (server.Module, error) {
+	return &Module{}, nil
 }
 
 // SessionHTTPMiddleware define http middleware to create session id
@@ -61,15 +61,15 @@ func SessionHTTPMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// HTTPModule struct to define module
-type HTTPModule struct {
+// Module struct to define module
+type Module struct {
 	server.BaseContext
 	Address string
 	router  *mux.Router
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
-func (s *HTTPModule) UserData() int32 {
+func (s *Module) UserData() int32 {
 	return 0
 }
 
@@ -78,7 +78,7 @@ func (s *HTTPModule) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *HTTPModule) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	if err := s.readConfig(m); err != nil {
 		panic(err)
 	}
@@ -93,7 +93,7 @@ func (s *HTTPModule) Setup(m map[string]interface{}) (server.Module, error) {
 
 	return s, nil
 }
-func (s *HTTPModule) web() {
+func (s *Module) web() {
 	if err := http.ListenAndServe(s.Address, s.router); err != nil {
 		panic(err)
 	}
@@ -102,7 +102,7 @@ func (s *HTTPModule) web() {
 
 // config map
 // address default :80
-func (s *HTTPModule) readConfig(m map[string]interface{}) error {
+func (s *Module) readConfig(m map[string]interface{}) error {
 
 	address, err := server.ParseValue(m, "address", ":11080")
 	if err != nil {
@@ -114,25 +114,25 @@ func (s *HTTPModule) readConfig(m map[string]interface{}) error {
 }
 
 //Reload reload config
-func (s *HTTPModule) Reload(m map[string]interface{}) error {
+func (s *Module) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
-func (s *HTTPModule) OnRun(dt time.Duration) {
+func (s *Module) OnRun(dt time.Duration) {
 }
 
 // Stop goruntine
-func (s *HTTPModule) Stop() error {
+func (s *Module) Stop() error {
 	return nil
 }
 
 // // Call async send message to module
-// func (s *HTTPModule) Call(option int32, obj *server.CallObject) error {
+// func (s *Module) Call(option int32, obj *server.CallObject) error {
 // 	return nil
 // }
 
 // PushBytes async send string or bytes to queue
-func (s *HTTPModule) PushBytes(option int32, buf []byte) error {
+func (s *Module) PushBytes(option int32, buf []byte) error {
 	return nil
 }

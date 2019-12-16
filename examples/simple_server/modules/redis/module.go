@@ -25,30 +25,29 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package db
+package redis
 
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/database/sqlx"
+	"github.com/gonethopper/nethopper/cache/redis"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// DBModule struct to define module
-type DBModule struct {
+// Module struct to define module
+type Module struct {
 	server.BaseContext
-	conn *sqlx.SQLConnection
+	rdb *redis.RedisCache
 }
 
-// DBModuleCreate  module create function
-func DBModuleCreate() (server.Module, error) {
-
-	return &DBModule{}, nil
+// ModuleCreate  module create function
+func ModuleCreate() (server.Module, error) {
+	return &Module{}, nil
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
-func (s *DBModule) UserData() int32 {
+func (s *Module) UserData() int32 {
 	return 0
 }
 
@@ -56,47 +55,47 @@ func (s *DBModule) UserData() int32 {
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
-//  "driver:"mysql",
-//  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
-func (s *DBModule) Setup(m map[string]interface{}) (server.Module, error) {
-	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
-	conn, err := sqlx.NewSQLConnection(m)
+func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+
+	cache, err := redis.NewRedisCache(m)
 	if err != nil {
 		return nil, err
 	}
-	s.conn = conn
-	if err := s.conn.Open(); err != nil {
-		panic(err)
-	}
+	s.rdb = cache
+
+	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
+	s.RegisterHandler(common.CallIDUpdateUserInfoCmd, UpdateUserInfoHandler)
+
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
 //Reload reload config
-func (s *DBModule) Reload(m map[string]interface{}) error {
+func (s *Module) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
-func (s *DBModule) OnRun(dt time.Duration) {
+func (s *Module) OnRun(dt time.Duration) {
 	server.RunSimpleFrame(s, 128)
 }
 
 // Stop goruntine
-func (s *DBModule) Stop() error {
+func (s *Module) Stop() error {
 	return nil
 }
 
-// Call async send message to module
-// func (s *DBModule) Call(option int32, obj *server.CallObject) error {
+// // Call async send message to module
+// func (s *Module) Call(option int32, obj *server.CallObject) error {
 // 	if err := s.MQ().AsyncPush(obj); err != nil {
 // 		server.Error(err.Error())
 // 	}
 // 	return nil
+
 // }
 
 // PushBytes async send string or bytes to queue
-func (s *DBModule) PushBytes(option int32, buf []byte) error {
+func (s *Module) PushBytes(option int32, buf []byte) error {
 	return nil
 }

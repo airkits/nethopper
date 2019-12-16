@@ -7,7 +7,7 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// func CreateUserHander(s *LogicModule, obj *server.CallObject) {
+// func CreateUserHander(s *Module, obj *server.CallObject) {
 // 	var uid = (obj.Args[0]).(string)
 
 // 	var redisObj = server.NewCallObject(common.CallIDGetUserInfoCmd, uid)
@@ -22,7 +22,7 @@ import (
 // 		return
 // 	}
 // }
-func LoginHandler(s *LogicModule, obj *server.CallObject, uid string, pwd string) (string, error) {
+func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 	defer server.TraceCost("LoginHandler")()
 	opt, err := strconv.Atoi(uid)
 	server.Info("get opt %d", opt)

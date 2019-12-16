@@ -1,10 +1,12 @@
-package ws
+package websocket
 
 import (
-	"github.com/gonethopper/nethopper/server"
-	"github.com/gorilla/websocket"
 	"sync"
 	"time"
+
+	"github.com/gonethopper/nethopper/server"
+	"github.com/gorilla/websocket"
+	"github.com/prometheus/common/log"
 )
 
 type WSClient struct {
@@ -16,7 +18,7 @@ type WSClient struct {
 	MaxMsgLen        uint32
 	HandshakeTimeout time.Duration
 	AutoReconnect    bool
-	NewAgent         func(*WSConnection) interface{}
+	NewAgent         func(*WSConn) Agent
 	dialer           websocket.Dialer
 	conns            WebsocketConnSet
 	wg               sync.WaitGroup
@@ -56,10 +58,10 @@ func (client *WSClient) init() {
 		server.Warning("invalid HandshakeTimeout, reset to %v", client.HandshakeTimeout)
 	}
 	if client.NewAgent == nil {
-		server.Fatal("NewAgent must not be nil")
+		log.Fatal("NewAgent must not be nil")
 	}
 	if client.conns != nil {
-		server.Fatal("client is running")
+		log.Fatal("client is running")
 	}
 
 	client.conns = make(WebsocketConnSet)
@@ -76,7 +78,7 @@ func (client *WSClient) dial() *websocket.Conn {
 			return conn
 		}
 
-		server.Error("connect to %v error: %v", client.Addr, err)
+		server.Warning("connect to %v error: %v", client.Addr, err)
 		time.Sleep(client.ConnectInterval)
 		continue
 	}
@@ -101,7 +103,7 @@ reconnect:
 	client.conns[conn] = struct{}{}
 	client.Unlock()
 
-	wsConn := newWSConn(conn, client.MaxMsgLen)
+	wsConn := newWSConn(conn, client.PendingWriteNum, client.MaxMsgLen)
 	agent := client.NewAgent(wsConn)
 	agent.Run()
 

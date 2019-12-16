@@ -33,6 +33,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -154,7 +155,7 @@ func ModuleRun(s Module) {
 	ctxDone := false
 	exitFlag := false
 	start := time.Now()
-	Info("Module %s start ", s.Name())
+	Info("Start Module [%s]", s.Name())
 	for {
 		s.OnRun(time.Since(start))
 
@@ -176,7 +177,14 @@ func ModuleRun(s Module) {
 // ModuleName get the module name
 func ModuleName(s Module) string {
 	t := reflect.TypeOf(s)
-	return t.Elem().Name()
+	path := t.Elem().PkgPath()
+	pos := strings.LastIndex(path, "/")
+	if pos >= 0 {
+		prefix := []byte(path)[pos+1 : len(path)]
+		rs := string(prefix)
+		return rs
+	}
+	return "unknown module"
 }
 
 //BaseContext use context to close all module and using the bubbling method to exit

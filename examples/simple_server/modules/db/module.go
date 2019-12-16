@@ -25,27 +25,30 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package logic
+package db
 
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/database/sqlx"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// LogicModule struct to define module
-type LogicModule struct {
+// Module struct to define module
+type Module struct {
 	server.BaseContext
+	conn *sqlx.SQLConnection
 }
 
-// LogicModuleCreate  module create function
-func LogicModuleCreate() (server.Module, error) {
-	return &LogicModule{}, nil
+// ModuleCreate  module create function
+func ModuleCreate() (server.Module, error) {
+
+	return &Module{}, nil
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
-func (s *LogicModule) UserData() int32 {
+func (s *Module) UserData() int32 {
 	return 0
 }
 
@@ -53,30 +56,40 @@ func (s *LogicModule) UserData() int32 {
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
+//  "driver:"mysql",
+//  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
-func (s *LogicModule) Setup(m map[string]interface{}) (server.Module, error) {
-	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
+func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
+	conn, err := sqlx.NewSQLConnection(m)
+	if err != nil {
+		return nil, err
+	}
+	s.conn = conn
+	if err := s.conn.Open(); err != nil {
+		panic(err)
+	}
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
 //Reload reload config
-func (s *LogicModule) Reload(m map[string]interface{}) error {
+func (s *Module) Reload(m map[string]interface{}) error {
 	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
-func (s *LogicModule) OnRun(dt time.Duration) {
+func (s *Module) OnRun(dt time.Duration) {
 	server.RunSimpleFrame(s, 128)
 }
 
 // Stop goruntine
-func (s *LogicModule) Stop() error {
+func (s *Module) Stop() error {
 	return nil
 }
 
 // Call async send message to module
-// func (s *LogicModule) Call(option int32, obj *server.CallObject) error {
+// func (s *Module) Call(option int32, obj *server.CallObject) error {
 // 	if err := s.MQ().AsyncPush(obj); err != nil {
 // 		server.Error(err.Error())
 // 	}
@@ -84,6 +97,6 @@ func (s *LogicModule) Stop() error {
 // }
 
 // PushBytes async send string or bytes to queue
-func (s *LogicModule) PushBytes(option int32, buf []byte) error {
+func (s *Module) PushBytes(option int32, buf []byte) error {
 	return nil
 }

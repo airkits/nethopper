@@ -55,12 +55,12 @@ func main() {
 		"dsn":         "root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
 	}
 	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("mysql", db.DBModuleCreate)
+	RegisterModule("mysql", db.ModuleCreate)
 	//	RegisterModule("tcp", tcp.SocketModuleCreate)
-	RegisterModule("logic", logic.LogicModuleCreate)
-	RegisterModule("web_http", http.HTTPModuleCreate)
-	RegisterModule("redis", redis.RedisModuleCreate)
-	RegisterModule("websocket", websocket.WebsocketModuleCreate)
+	RegisterModule("logic", logic.ModuleCreate)
+	RegisterModule("web_http", http.ModuleCreate)
+	RegisterModule("redis", redis.ModuleCreate)
+	RegisterModule("websocket", websocket.ModuleCreate)
 	//	RegisterModule("redis", redis.RedisModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDDB, "mysql", nil, m)

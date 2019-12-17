@@ -28,7 +28,7 @@
 package main
 
 import (
-	"github.com/gonethopper/nethopper/client/tcp"
+	"github.com/gonethopper/nethopper/examples/simple_client/modules/websocket"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -45,10 +45,9 @@ func main() {
 		"queueSize":   1000,
 	}
 	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("tcp_client", tcp.ClientSocketModuleCreate)
-
+	RegisterModule("ws_client", websocket.ModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
-	NewNamedModule(ModuleIDTCPClient, "tcp_client", nil, m)
+	NewNamedModule(ModuleIDWebSocketClient, "ws_client", nil, m)
 
 	InitSignal()
 	//GracefulExit()

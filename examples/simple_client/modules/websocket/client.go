@@ -11,7 +11,7 @@ import (
 
 type WSClient struct {
 	sync.Mutex
-	Addr             string
+	Address          string
 	ConnNum          int
 	ConnectInterval  time.Duration
 	PendingWriteNum  int
@@ -73,12 +73,12 @@ func (client *WSClient) init() {
 
 func (client *WSClient) dial() *websocket.Conn {
 	for {
-		conn, _, err := client.dialer.Dial(client.Addr, nil)
+		conn, _, err := client.dialer.Dial(client.Address, nil)
 		if err == nil || client.closeFlag {
 			return conn
 		}
 
-		server.Warning("connect to %v error: %v", client.Addr, err)
+		server.Warning("connect to %v error: %v", client.Address, err)
 		time.Sleep(client.ConnectInterval)
 		continue
 	}

@@ -55,6 +55,8 @@ const (
 	ModuleIDKCP
 	// ModuleIDWebSocket http module
 	ModuleIDWebSocket
+	// ModuleIDWebSocketClient ws client
+	ModuleIDWebSocketClient
 	// ModuleIDHTTP http module
 	ModuleIDHTTP
 	// ModuleIDLogic logic module

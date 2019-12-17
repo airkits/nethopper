@@ -28,10 +28,12 @@ func (a *agent) Run() {
 		out := make(map[string]interface{})
 		if err := codec.JSONCodec.Unmarshal(data, &out, nil); err == nil {
 			server.Info("receive message %v", out)
+			out["seq"] = out["seq"].(float64) + 1
 		} else {
 			server.Error(err)
 		}
 
+		a.WriteMsg(out)
 		// if a.gate.Processor != nil {
 		// 	msg, err := a.gate.Processor.Unmarshal(data)
 		// 	if err != nil {

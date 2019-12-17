@@ -19,22 +19,28 @@ type agent struct {
 }
 
 func (a *agent) Run() {
+	req := map[string]interface{}{
+		"cmd":    "login",
+		"uid":    1,
+		"passwd": "game",
+		"seq":    1,
+	}
 	for {
-		req := map[string]interface{}{
-			"cmd":    "login",
-			"uid":    1,
-			"passwd": "game",
-		}
-		if reqBody, err := codec.JSONCodec.Marshal(req, nil); err == nil {
-			a.WriteMsg(reqBody)
-			server.Info("send message %v", req)
-		}
+
+		a.WriteMsg(req)
+		server.Info("send message %v", req)
+
 		data, err := a.conn.ReadMsg()
 		if err != nil {
 			server.Debug("read message: %v", err)
 			break
 		}
+		out := make(map[string]interface{})
+		if err := codec.JSONCodec.Unmarshal(data, &out, nil); err == nil {
+			req["seq"] = out["seq"].(float64) + 1
+		}
 		server.Info(string(data))
+
 		// if a.gate.Processor != nil {
 		// 	msg, err := a.gate.Processor.Unmarshal(data)
 		// 	if err != nil {

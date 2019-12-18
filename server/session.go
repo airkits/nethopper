@@ -31,7 +31,7 @@ import (
 	"net"
 	"sync"
 	proto "github.com/golang/protobuf/proto"
-	"github.com/gonethopper/queue"
+	"github.com/gonethopper/nethopper/base/queue"
 	uuid "github.com/satori/go.uuid"
 )
 

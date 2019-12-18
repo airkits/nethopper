@@ -50,7 +50,7 @@ type SQLConnection struct {
 
 // Setup init cache with config
 func (s *SQLConnection) Setup(m map[string]interface{}) (*SQLConnection, error) {
-	if err := s.readConfig(m); err != nil {
+	if err := s.ReadConfig(m); err != nil {
 		return nil, err
 	}
 	return s, nil
@@ -59,7 +59,7 @@ func (s *SQLConnection) Setup(m map[string]interface{}) (*SQLConnection, error) 
 // config map
 // driver default mysql
 // dsn default "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
-func (s *SQLConnection) readConfig(m map[string]interface{}) error {
+func (s *SQLConnection) ReadConfig(m map[string]interface{}) error {
 
 	driver, err := server.ParseValue(m, "driver", "mysql")
 	if err != nil {

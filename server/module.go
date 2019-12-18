@@ -37,7 +37,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gonethopper/queue"
+	"github.com/gonethopper/nethopper/base/queue"
 )
 
 const (
@@ -369,11 +369,43 @@ func (a *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 	return doneFlag, false
 }
 
-// OnRun module run
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (a *BaseContext) OnRun(dt time.Duration) {
 	fmt.Printf("module %s do Nothing \n", a.Name())
 
 }
+
+// to override start
+
+//PushBytes push buffer
+func (a *BaseContext) PushBytes(option int32, buf []byte) error {
+	return nil
+}
+
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (a *BaseContext) UserData() int32 {
+	return 0
+}
+
+// ReadConfig config map
+// m := map[string]interface{}{
+// }
+func (a *BaseContext) ReadConfig(m map[string]interface{}) error {
+	return nil
+}
+
+//Reload reload config
+func (a *BaseContext) Reload(m map[string]interface{}) error {
+	return nil
+}
+
+// Stop goruntine
+func (a *BaseContext) Stop() error {
+
+	return nil
+}
+
+//to override end
 
 // RegisterModule register module name to create function mapping
 func RegisterModule(name string, createFunc func() (Module, error)) error {

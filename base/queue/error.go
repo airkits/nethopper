@@ -21,30 +21,22 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-12-18 10:46:52
+// * @Date: 2019-12-18 10:47:17
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-12-18 10:46:52
+// * @Last Modified time: 2019-12-18 10:47:17
 
-package utils
+package queue
 
-import (
-	"time"
-)
+import "errors"
 
-// TimeYMDHIS get current time
-// return format yearmouthday hour:minute:second
-func TimeYMDHIS() string {
-	return time.Now().Format("20060102 15:04:05")
-}
+//ErrQueueFull queue is full
+var ErrQueueFull = errors.New("Queue is full")
 
-// TimeYMDH get current time
-// return format yearmouthday-hour
-func TimeYMDH() string {
-	return time.Now().Format("20060102-15")
-}
+//ErrQueueEmpty queue is empty
+var ErrQueueEmpty = errors.New("Queue is empty")
 
-// TimeYMD get current time
-// return format yearmouthday
-func TimeYMD() string {
-	return time.Now().Format("20060102")
-}
+//ErrQueueIsClosed queue is closed
+var ErrQueueIsClosed = errors.New("Queue is Closed")
+
+//ErrQueueTimeout queue push or pop timeout
+var ErrQueueTimeout = errors.New("Timeout waiting on queue")

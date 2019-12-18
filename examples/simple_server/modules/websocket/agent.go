@@ -1,100 +1,36 @@
 package websocket
 
 import (
-	"net"
-	"reflect"
-
 	"github.com/gonethopper/nethopper/codec"
+	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/server"
 )
 
-type Agent interface {
-	Run()
-	OnClose()
+func NewAgent(conn network.Conn, userData interface{}, codec codec.Codec) network.IAgent {
+	a := new(Agent)
+	a.Init(conn, userData, codec)
+	return a
 }
 
-type agent struct {
-	conn     *WSConn
-	userData interface{}
+type Agent struct {
+	network.Agent
 }
 
-func (a *agent) Run() {
+func (a *Agent) Run() {
 	for {
-		data, err := a.conn.ReadMsg()
+		data, err := a.ReadMessage()
 		if err != nil {
 			server.Debug("read message: %v", err)
 			break
 		}
 		out := make(map[string]interface{})
-		if err := codec.JSONCodec.Unmarshal(data, &out, nil); err == nil {
+		if err := a.Codec().Unmarshal(data, &out, nil); err == nil {
 			server.Info("receive message %v", out)
 			out["seq"] = out["seq"].(float64) + 1
 		} else {
 			server.Error(err)
 		}
+		a.WriteMessage(out)
 
-		a.WriteMsg(out)
-		// if a.gate.Processor != nil {
-		// 	msg, err := a.gate.Processor.Unmarshal(data)
-		// 	if err != nil {
-		// 		server.Debug("unmarshal message error: %v", err)
-		// 		break
-		// 	}
-		// 	//msgType := reflect.TypeOf(msg)
-		// 	a.gate.AgentChanRPC.Go(CommandAgentMsg, msg, a)
-		// 	//err = a.gate.Processor.Route(msg, a)
-		// 	//if err != nil {
-		// 	//	log.Debug("route message error: %v", err)
-		// 	//	break
-		// 	//}
-		// }
 	}
-}
-
-func (a *agent) OnClose() {
-	// if a.gate.AgentChanRPC != nil {
-	// 	err := a.gate.AgentChanRPC.Call0(CommandAgentClose, a)
-	// 	if err != nil {
-	// 		server.Error("chanrpc error: %v", err)
-	// 	}
-	// }
-}
-
-func (a *agent) WriteMsg(msg interface{}) {
-	data, err := codec.JSONCodec.Marshal(msg, nil)
-	// if a.gate.Processor != nil {
-	// 	data, err := a.gate.Processor.Marshal(msg)
-	if err != nil {
-		server.Error("marshal message %v error: %v", reflect.TypeOf(msg), err)
-		return
-	}
-	err = a.conn.WriteMsg(data)
-	if err != nil {
-		server.Error("write message %v error: %v", reflect.TypeOf(msg), err)
-	}
-	// }
-}
-
-func (a *agent) LocalAddr() net.Addr {
-	return a.conn.LocalAddr()
-}
-
-func (a *agent) RemoteAddr() net.Addr {
-	return a.conn.RemoteAddr()
-}
-
-func (a *agent) Close() {
-	a.conn.Close()
-}
-
-func (a *agent) Destroy() {
-	a.conn.Destroy()
-}
-
-func (a *agent) UserData() interface{} {
-	return a.userData
-}
-
-func (a *agent) SetUserData(data interface{}) {
-	a.userData = data
 }

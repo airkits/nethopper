@@ -21,30 +21,25 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-12-18 10:46:52
+// * @Date: 2019-12-11 10:13:10
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-12-18 10:46:52
+// * @Last Modified time: 2019-12-11 10:13:10
 
-package utils
+package rpc_test
 
 import (
-	"time"
+	"testing"
+
+	"github.com/gonethopper/nethopper/network/http"
 )
 
-// TimeYMDHIS get current time
-// return format yearmouthday hour:minute:second
-func TimeYMDHIS() string {
-	return time.Now().Format("20060102 15:04:05")
-}
-
-// TimeYMDH get current time
-// return format yearmouthday-hour
-func TimeYMDH() string {
-	return time.Now().Format("20060102-15")
-}
-
-// TimeYMD get current time
-// return format yearmouthday
-func TimeYMD() string {
-	return time.Now().Format("20060102")
+func TestHTTPRequest(t *testing.T) {
+	var content string
+	if err := http.Request("http://baidu.com", http.GET, http.RequestTypeText, nil, nil, http.ResponseTypeText, &content, http.ConnTimeoutMS, http.ServeTimeoutMS); err != nil {
+		t.Error(err)
+		return
+	}
+	if len(content) <= 0 {
+		t.Error("get content failed")
+	}
 }

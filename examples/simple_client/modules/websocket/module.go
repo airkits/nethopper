@@ -30,6 +30,9 @@ package websocket
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/codec"
+	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/ws"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -44,10 +47,7 @@ func ModuleCreate() (server.Module, error) {
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	Address  string
-	CertFile string
-	KeyFile  string
-	wsClient *WSClient
+	wsClient *ws.Client
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
@@ -61,44 +61,20 @@ func (s *Module) UserData() int32 {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
-	if err := s.readConfig(m); err != nil {
+	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
-
-	if s.Address != "" {
-		s.wsClient = new(WSClient)
-		s.wsClient.Address = s.Address
-		s.wsClient.NewAgent = func(conn *WSConn) Agent {
-			a := &agent{conn: conn, userData: s}
-
-			return a
-		}
-	}
-	s.wsClient.Start()
+	s.wsClient = ws.NewClient(m, func(conn network.Conn) network.IAgent {
+		a := NewAgent(conn, nil, codec.JSONCodec)
+		return a
+	})
+	s.wsClient.Run()
 	return s, nil
 }
 
-// config map
+// ReadConfig config map
 // address default :80
-func (s *Module) readConfig(m map[string]interface{}) error {
-
-	address, err := server.ParseValue(m, "address", "ws://127.0.0.1:12080")
-	if err != nil {
-		return err
-	}
-	s.Address = address.(string)
-
-	certFile, err := server.ParseValue(m, "certFile", "")
-	if err != nil {
-		return err
-	}
-	s.CertFile = certFile.(string)
-
-	keyFile, err := server.ParseValue(m, "keyFile", "")
-	if err != nil {
-		return err
-	}
-	s.KeyFile = keyFile.(string)
+func (s *Module) ReadConfig(m map[string]interface{}) error {
 	return nil
 }
 

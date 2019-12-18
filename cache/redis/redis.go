@@ -91,7 +91,7 @@ type RedisCache struct {
 
 // Setup init cache with config
 func (c *RedisCache) Setup(m map[string]interface{}) (*RedisCache, error) {
-	if err := c.readConfig(m); err != nil {
+	if err := c.ReadConfig(m); err != nil {
 		return nil, err
 	}
 	c.pool = NewRedisPool(c.Address, c.Password, c.db, c.maxIdle, c.maxActive, c.idleTimeout)
@@ -105,7 +105,7 @@ func (c *RedisCache) Setup(m map[string]interface{}) (*RedisCache, error) {
 // idleTimeout default 300
 // address default 127.0.0.1:6379
 // password default ""
-func (c *RedisCache) readConfig(m map[string]interface{}) error {
+func (c *RedisCache) ReadConfig(m map[string]interface{}) error {
 	maxIdle, err := server.ParseValue(m, "maxIdle", 8)
 	if err != nil {
 		return err

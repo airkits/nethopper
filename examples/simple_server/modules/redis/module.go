@@ -47,9 +47,9 @@ func ModuleCreate() (server.Module, error) {
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
-func (s *Module) UserData() int32 {
-	return 0
-}
+// func (s *Module) UserData() int32 {
+// 	return 0
+// }
 
 // Setup init custom module and pass config map to module
 // config
@@ -72,9 +72,9 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 }
 
 //Reload reload config
-func (s *Module) Reload(m map[string]interface{}) error {
-	return nil
-}
+// func (s *Module) Reload(m map[string]interface{}) error {
+// 	return nil
+// }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
@@ -96,6 +96,6 @@ func (s *Module) Stop() error {
 // }
 
 // PushBytes async send string or bytes to queue
-func (s *Module) PushBytes(option int32, buf []byte) error {
-	return nil
-}
+// func (s *Module) PushBytes(option int32, buf []byte) error {
+// 	return nil
+// }

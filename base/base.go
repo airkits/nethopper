@@ -21,25 +21,8 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-12-11 10:13:10
+// * @Date: 2019-12-18 10:50:34
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-12-11 10:13:10
+// * @Last Modified time: 2019-12-18 10:50:34
 
-package rpc_test
-
-import (
-	"testing"
-
-	"github.com/gonethopper/nethopper/rpc/http"
-)
-
-func TestHTTPRequest(t *testing.T) {
-	var content string
-	if err := http.Request("http://baidu.com", http.GET, http.RequestTypeText, nil, nil, http.ResponseTypeText, &content, http.ConnTimeoutMS, http.ServeTimeoutMS); err != nil {
-		t.Error(err)
-		return
-	}
-	if len(content) <= 0 {
-		t.Error("get content failed")
-	}
-}
+package base

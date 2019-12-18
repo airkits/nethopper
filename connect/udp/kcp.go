@@ -24,7 +24,7 @@ type KCPConnect struct {
 
 // Setup init Connect with config
 func (c *KCPConnect) Setup(m map[string]interface{}) (*KCPConnect, error) {
-	if err := c.readConfig(m); err != nil {
+	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	return c, nil
@@ -41,7 +41,7 @@ func (c *KCPConnect) Setup(m map[string]interface{}) (*KCPConnect, error) {
 // interval default 20, Usage: "ikcp_nodelay()",
 // resend default 1, Usage: "ikcp_nodelay()",
 // nc default 1,Usage: "ikcp_nodelay()"
-func (c *KCPConnect) readConfig(m map[string]interface{}) error {
+func (c *KCPConnect) ReadConfig(m map[string]interface{}) error {
 	address, err := server.ParseValue(m, "address", ":8888")
 	if err != nil {
 		return err

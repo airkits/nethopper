@@ -79,7 +79,7 @@ func (s *WebHTTPModule) UserData() int32 {
 //  "queueSize":1000,
 // }
 func (s *WebHTTPModule) Setup(m map[string]interface{}) (server.Module, error) {
-	if err := s.readConfig(m); err != nil {
+	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
 
@@ -102,7 +102,7 @@ func (s *WebHTTPModule) web() {
 
 // config map
 // address default :80
-func (s *WebHTTPModule) readConfig(m map[string]interface{}) error {
+func (s *WebHTTPModule) ReadConfig(m map[string]interface{}) error {
 
 	address, err := server.ParseValue(m, "address", ":11080")
 	if err != nil {

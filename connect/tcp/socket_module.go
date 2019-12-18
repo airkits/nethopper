@@ -70,7 +70,7 @@ func (s *SocketModule) UserData() int32 {
 // }
 func (s *SocketModule) Setup(m map[string]interface{}) (server.Module, error) {
 
-	if err := s.readConfig(m); err != nil {
+	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	// Listen and bind local ip
@@ -95,7 +95,7 @@ func (s *SocketModule) Setup(m map[string]interface{}) (server.Module, error) {
 // address default :8888
 // network default "tcp4"  use "tcp4/tcp6"
 // readDeadline default 15
-func (s *SocketModule) readConfig(m map[string]interface{}) error {
+func (s *SocketModule) ReadConfig(m map[string]interface{}) error {
 	readBufferSize, err := server.ParseValue(m, "readBufferSize", 32767)
 	if err != nil {
 		return err

@@ -99,46 +99,34 @@ func (c *RedisCache) Setup(m map[string]interface{}) (*RedisCache, error) {
 	return c, nil
 }
 
-// config map
+// ReadConfig config map
 // maxIdle default 8
 // maxActive default 10
 // idleTimeout default 300
 // address default 127.0.0.1:6379
 // password default ""
 func (c *RedisCache) ReadConfig(m map[string]interface{}) error {
-	maxIdle, err := server.ParseValue(m, "maxIdle", 8)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "maxIdle", 8, &c.maxIdle); err != nil {
 		return err
 	}
-	c.maxIdle = maxIdle.(int)
 
-	maxActive, err := server.ParseValue(m, "maxActive", 10)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "maxActive", 10, &c.maxActive); err != nil {
 		return err
 	}
-	c.maxActive = maxActive.(int)
 
-	idleTimeout, err := server.ParseValue(m, "idleTimeout", 300)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "idleTimeout", 300, &c.idleTimeout); err != nil {
 		return err
 	}
-	c.idleTimeout = idleTimeout.(int)
 
-	address, err := server.ParseValue(m, "address", "127.0.0.1:6379")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "address", "127.0.0.1:6379", &c.Address); err != nil {
 		return err
 	}
-	c.Address = address.(string)
-	password, err := server.ParseValue(m, "password", "")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "password", "", &c.Password); err != nil {
 		return err
 	}
-	c.Password = password.(string)
-	db, err := server.ParseValue(m, "db", 0)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "db", 0, &c.db); err != nil {
 		return err
 	}
-	c.db = db.(int)
 
 	return nil
 }

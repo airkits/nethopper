@@ -84,42 +84,28 @@ func (s *ClientSocketModule) Setup(m map[string]interface{}) (server.Module, err
 	return s, nil
 }
 
-// config map
+// ReadConfig config map
 // readBufferSize default 32767
 // writeBufferSize default 32767
 // address default :8888
 // network default "tcp4"  use "tcp4/tcp6"
 // readDeadline default 15
 func (s *ClientSocketModule) ReadConfig(m map[string]interface{}) error {
-	readBufferSize, err := server.ParseValue(m, "readBufferSize", 32767)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "readBufferSize", 32767, &s.ReadBufferSize); err != nil {
 		return err
 	}
-	s.ReadBufferSize = readBufferSize.(int)
-
-	writeBufferSize, err := server.ParseValue(m, "writeBufferSize", 32767)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "writeBufferSize", 32767, &s.WriteBufferSize); err != nil {
 		return err
 	}
-	s.WriteBufferSize = writeBufferSize.(int)
-
-	address, err := server.ParseValue(m, "address", ":8888")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "address", ":8888", &s.Address); err != nil {
 		return err
 	}
-	s.Address = address.(string)
-	network, err := server.ParseValue(m, "network", "tcp4")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "network", "tcp4", &s.Network); err != nil {
 		return err
 	}
-	s.Network = network.(string)
-
-	readDeadline, err := server.ParseValue(m, "readDeadline", 15)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "readDeadline", 15*time.Second, &s.ReadDeadline); err != nil {
 		return err
 	}
-	s.ReadDeadline = time.Duration(readDeadline.(int)) * time.Second
-
 	return nil
 }
 

@@ -32,14 +32,20 @@ import (
 	"reflect"
 )
 
-// ParseValue read config from map,if not exist return default value,support string,int,bool
-func ParseValue(m map[string]interface{}, key string, opt interface{}) (interface{}, error) {
+// ParseConfigValue read config from map,if not exist return default value,support string,int,bool
+func ParseConfigValue(m map[string]interface{}, key string, opt interface{}, result interface{}) error {
+	rv := reflect.ValueOf(result)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return fmt.Errorf("Invalid type %s", reflect.TypeOf(result))
+	}
+
 	value, ok := m[key]
 	if !ok {
-		return opt, nil
+		value = opt
 	}
 	if reflect.TypeOf(value) != reflect.TypeOf(opt) {
-		return nil, fmt.Errorf("config %s type failed", key)
+		return fmt.Errorf("config %s type failed", key)
 	}
-	return value, nil
+	rv.Elem().Set(reflect.ValueOf(value).Convert(rv.Elem().Type()))
+	return nil
 }

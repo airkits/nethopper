@@ -103,13 +103,9 @@ func (s *Module) web() {
 // ReadConfig config map
 // address default :80
 func (s *Module) ReadConfig(m map[string]interface{}) error {
-
-	address, err := server.ParseValue(m, "address", ":11080")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "address", ":11080", &s.Address); err != nil {
 		return err
 	}
-	s.Address = address.(string)
-
 	return nil
 }
 

@@ -129,44 +129,36 @@ func (l *FileLog) SetLevel(level int32) error {
 // dailyEnabled default true
 func (l *FileLog) ParseConfig(m map[string]interface{}) error {
 
-	filename, err := server.ParseValue(m, "filename", "server.log")
-	if err != nil {
+	var filename string
+	if err := server.ParseConfigValue(m, "filename", "server.log", &filename); err != nil {
+
 		return err
 	}
-	filename = utils.GetAbsFilePath(filename.(string))
-	dir := utils.GetAbsDirectory(filename.(string))
+	filename = utils.GetAbsFilePath(filename)
+	dir := utils.GetAbsDirectory(filename)
 
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
 	}
-	l.suffix = filepath.Ext(filename.(string))
-	l.prefix = strings.TrimSuffix(filename.(string), l.suffix)
-	level, err := server.ParseValue(m, "level", 7)
-	if err != nil {
+	l.suffix = filepath.Ext(filename)
+	l.prefix = strings.TrimSuffix(filename, l.suffix)
+	if err := server.ParseConfigValue(m, "level", 7, &l.level); err != nil {
 		return err
 	}
-	l.level = int32(level.(int))
 
-	maxSize, err := server.ParseValue(m, "maxSize", 1024)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "maxSize", 1024, &l.maxSize); err != nil {
 		return err
 	}
-	l.maxSize = int32(maxSize.(int) * 1024 * 1024)
-	maxLines, err := server.ParseValue(m, "maxLines", 100000)
-	if err != nil {
+	l.maxSize = l.maxSize * 1024 * 1024
+	if err := server.ParseConfigValue(m, "maxLines", 100000, &l.maxLines); err != nil {
 		return err
 	}
-	l.maxLines = int32(maxLines.(int))
-	hourEnabled, err := server.ParseValue(m, "hourEnabled", false)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "hourEnabled", false, &l.hourEnabled); err != nil {
 		return err
 	}
-	l.hourEnabled = hourEnabled.(bool)
-	dailyEnabled, err := server.ParseValue(m, "dailyEnabled", true)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "dailyEnabled", true, &l.dailyEnabled); err != nil {
 		return err
 	}
-	l.dailyEnabled = dailyEnabled.(bool)
 
 	return nil
 }

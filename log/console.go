@@ -59,11 +59,12 @@ type ConsoleLog struct {
 // config key map
 // level default 7
 func (c *ConsoleLog) ParseConfig(m map[string]interface{}) error {
-	level, err := server.ParseValue(m, "level", 7)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "level", 7, &c.level); err != nil {
 		return err
 	}
-	c.level = int32(level.(int))
+	// if err := server.ParseConfigValue(m, "level", 7, &c.level); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

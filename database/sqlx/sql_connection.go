@@ -56,21 +56,18 @@ func (s *SQLConnection) Setup(m map[string]interface{}) (*SQLConnection, error) 
 	return s, nil
 }
 
-// config map
+// ReadConfig config map
 // driver default mysql
 // dsn default "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 func (s *SQLConnection) ReadConfig(m map[string]interface{}) error {
 
-	driver, err := server.ParseValue(m, "driver", "mysql")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "driver", "mysql", &s.Driver); err != nil {
 		return err
 	}
-	s.Driver = driver.(string)
-	dsn, err := server.ParseValue(m, "dsn", "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai")
-	if err != nil {
+
+	if err := server.ParseConfigValue(m, "dsn", "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai", &s.DSN); err != nil {
 		return err
 	}
-	s.DSN = dsn.(string)
 
 	return nil
 }

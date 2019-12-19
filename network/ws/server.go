@@ -89,47 +89,27 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // }
 func (s *Server) ReadConfig(m map[string]interface{}) error {
 
-	address, err := server.ParseValue(m, "address", ":12080")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "address", ":12080", &s.Address); err != nil {
 		return err
 	}
-	s.Address = address.(string)
-
-	maxConnNum, err := server.ParseValue(m, "maxConnNum", 1024)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
 		return err
 	}
-	s.MaxConnNum = maxConnNum.(int)
-
-	rwQueueSize, err := server.ParseValue(m, "socketQueueSize", 100)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &s.RWQueueSize); err != nil {
 		return err
 	}
-	s.RWQueueSize = rwQueueSize.(int)
-
-	maxMessageSize, err := server.ParseValue(m, "maxMessageSize", 4096)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &s.MaxMessageSize); err != nil {
 		return err
 	}
-	s.MaxMessageSize = uint32(maxMessageSize.(int))
-
-	timeout, err := server.ParseValue(m, "httpTimeout", 10)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "httpTimeout", 10, &s.HTTPTimeout); err != nil {
 		return err
 	}
-	s.HTTPTimeout = uint32(timeout.(int))
-
-	certFile, err := server.ParseValue(m, "certFile", "")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "certFile", "", &s.CertFile); err != nil {
 		return err
 	}
-	s.CertFile = certFile.(string)
-
-	keyFile, err := server.ParseValue(m, "keyFile", "")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "keyFile", "", &s.KeyFile); err != nil {
 		return err
 	}
-	s.KeyFile = keyFile.(string)
 	return nil
 }
 

@@ -14,6 +14,7 @@ import (
 // NewClient create websocket client
 func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Client {
 	c := new(Client)
+	c.headers = make(http.Header)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
@@ -61,48 +62,32 @@ func (c *Client) Run() {
 // }
 func (c *Client) ReadConfig(m map[string]interface{}) error {
 
-	address, err := server.ParseValue(m, "address", "ws://127.0.0.1:12080")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "address", "ws://127.0.0.1:12080", &c.Address); err != nil {
 		return err
 	}
-	c.Address = address.(string)
 
-	connNum, err := server.ParseValue(m, "connNum", 1)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "connNum", 1, &c.ConnNum); err != nil {
 		return err
 	}
-	c.ConnNum = connNum.(int)
 
-	rwQueueSize, err := server.ParseValue(m, "socketQueueSize", 100)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &c.RWQueueSize); err != nil {
 		return err
 	}
-	c.RWQueueSize = rwQueueSize.(int)
+	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &c.MaxMessageSize); err != nil {
+		return err
+	}
+	if err := server.ParseConfigValue(m, "connectInterval", 3, &c.ConnectInterval); err != nil {
+		return err
+	}
+	c.ConnectInterval = c.ConnectInterval * time.Second
+	if err := server.ParseConfigValue(m, "handshakeTimeout", 10, &c.HandshakeTimeout); err != nil {
+		return err
+	}
+	c.HandshakeTimeout = c.HandshakeTimeout * time.Second
 
-	maxMessageSize, err := server.ParseValue(m, "maxMessageSize", 4096)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "token", "12345678", &c.Token); err != nil {
 		return err
 	}
-	c.MaxMessageSize = uint32(maxMessageSize.(int))
-
-	connectInterval, err := server.ParseValue(m, "connectInterval", 3)
-	if err != nil {
-		return err
-	}
-	c.ConnectInterval = time.Duration(connectInterval.(int)) * time.Second
-
-	timeout, err := server.ParseValue(m, "handshakeTimeout", 10)
-	if err != nil {
-		return err
-	}
-	c.HandshakeTimeout = time.Duration(timeout.(int)) * time.Second
-
-	token, err := server.ParseValue(m, "token", "12345678")
-	if err != nil {
-		return err
-	}
-	c.Token = token.(string)
-	c.headers = make(http.Header)
 	c.headers.Set("token", c.Token)
 
 	return nil

@@ -42,66 +42,54 @@ func (c *KCPConnect) Setup(m map[string]interface{}) (*KCPConnect, error) {
 // resend default 1, Usage: "ikcp_nodelay()",
 // nc default 1,Usage: "ikcp_nodelay()"
 func (c *KCPConnect) ReadConfig(m map[string]interface{}) error {
-	address, err := server.ParseValue(m, "address", ":8888")
-	if err != nil {
+	if err := server.ParseConfigValue(m, "address", ":8888", &c.Address); err != nil {
 		return err
 	}
-	c.Address = address.(string)
 
-	bufferSize, err := server.ParseValue(m, "bufferSize", 4194304)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "bufferSize", 4194304, &c.BufferSize); err != nil {
 		return err
 	}
-	c.BufferSize = bufferSize.(int)
 
 	// sndwnd default 32, Usage: "per connection UDP send window",
-	sndwnd, err := server.ParseValue(m, "sndwnd", 32)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "sndwnd", 32, &c.Sndwnd); err != nil {
 		return err
 	}
-	c.Sndwnd = sndwnd.(int)
+
 	// rcvwnd defualt 32, Usage: "per connection UDP recv window",
-	rcvwnd, err := server.ParseValue(m, "rcvwnd", 32)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "rcvwnd", 32, &c.Rcvwnd); err != nil {
 		return err
 	}
-	c.Rcvwnd = rcvwnd.(int)
+
 	// mtu default 1280, Usage: "MTU of UDP packets, without IP(20) + UDP(8)",
-	mtu, err := server.ParseValue(m, "mtu", 1280)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "mtu", 1280, &c.Mtu); err != nil {
 		return err
 	}
-	c.Mtu = mtu.(int)
+
 	// dscp default 46, Usage: "set DSCP(6bit)",
-	dscp, err := server.ParseValue(m, "dscp", 46)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "dscp", 46, &c.Dscp); err != nil {
 		return err
 	}
-	c.Dscp = dscp.(int)
+
 	// nodelay default 1,Usage: "ikcp_nodelay()",
-	nodelay, err := server.ParseValue(m, "nodelay", 1)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "nodelay", 1, &c.Nodelay); err != nil {
 		return err
 	}
-	c.Nodelay = nodelay.(int)
+
 	// interval default 20, Usage: "ikcp_nodelay()",
-	interval, err := server.ParseValue(m, "interval", 20)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "interval", 20, &c.Interval); err != nil {
 		return err
 	}
-	c.Interval = interval.(int)
+
 	// resend default 1, Usage: "ikcp_nodelay()",
-	resend, err := server.ParseValue(m, "resend", 1)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "resend", 1, &c.Resend); err != nil {
 		return err
 	}
-	c.Resend = resend.(int)
+
 	// nc default 1,Usage: "ikcp_nodelay()"
-	nc, err := server.ParseValue(m, "nc", 1)
-	if err != nil {
+	if err := server.ParseConfigValue(m, "nc", 1, &c.Nc); err != nil {
 		return err
 	}
-	c.Nc = nc.(int)
+
 	return nil
 }
 

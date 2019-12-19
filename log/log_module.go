@@ -78,11 +78,11 @@ func (s *LogModule) Setup(m map[string]interface{}) (server.Module, error) {
 
 // Reload reload config from map
 func (s *LogModule) Reload(m map[string]interface{}) error {
-	level, err := server.ParseValue(m, "level", 7)
-	if err != nil {
+	var level int32
+	if err := server.ParseConfigValue(m, "level", 7, &level); err != nil {
 		return err
 	}
-	return s.logger.SetLevel(int32(level.(int)))
+	return s.logger.SetLevel(level)
 
 }
 

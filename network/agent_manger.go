@@ -21,29 +21,60 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-12-20 19:39:19
+// * @Date: 2019-12-20 19:39:03
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-12-20 19:39:19
+// * @Last Modified time: 2019-12-20 19:39:03
 
 package network
 
-import "net"
+import (
+	"reflect"
+	"sync"
 
-// Conn define network conn interface
-type Conn interface {
-	//ReadMessage read message from conn
-	ReadMessage() ([]byte, error)
-	//WriteMessage write message to conn
-	WriteMessage(args ...[]byte) error
-	//LocalAddr get local addr
-	LocalAddr() net.Addr
-	//RemoteAddr get remote addr
-	RemoteAddr() net.Addr
-	//Close conn
-	Close()
-	//Destory conn
-	Destroy()
+	"github.com/gonethopper/nethopper/base/set"
+)
+
+//AgentManager manager agent
+type AgentManager struct {
+	agents     *set.HashSet
+	authAgents map[string]Agent
 }
 
-//AgentCreateFunc create agent func
-type AgentCreateFunc func(Conn) IAgent
+var instance *AgentManager
+var once sync.Once
+
+//GetInstance agent manager instance
+func GetInstance() *AgentManager {
+	once.Do(func() {
+		instance = &AgentManager{
+			agents:     set.NewHashSet(),
+			authAgents: make(map[string]Agent),
+		}
+	})
+	return instance
+}
+
+//AddAgent add agent to manager
+func (am *AgentManager) AddAgent(a Agent) {
+	if a.IsAuth() {
+		_, ok := am.authAgents[a.Token()]
+		if !ok {
+			am.authAgents[a.Token()] = a
+		}
+	} else {
+		am.agents.Add(a)
+	}
+}
+
+//RemoveAgent remove agent from manager
+func (am *AgentManager) RemoveAgent(a Agent) {
+	a.OnClose()
+	if a.IsAuth() {
+		storeAgent, ok := am.authAgents[a.Token()]
+		if ok && reflect.DeepEqual(a, storeAgent) {
+			delete(am.authAgents, a.Token())
+		}
+	} else {
+		am.agents.Remove(a)
+	}
+}

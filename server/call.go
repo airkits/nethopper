@@ -85,7 +85,8 @@ func GOWithContext(v ...interface{}) {
 		App.ModifyGoCount(-1)
 	}()
 }
-// Future async call function 
+
+// Future async call function
 func Future(f func() (interface{}, error)) func() (interface{}, error) {
 	var result interface{}
 	var err error

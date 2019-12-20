@@ -25,7 +25,6 @@ import (
 func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 	defer server.TraceCost("LoginHandler")()
 	opt, err := strconv.Atoi(uid)
-	server.Info("get opt %d", opt)
 	password, err := server.Call(server.ModuleIDRedis, common.CallIDGetUserInfoCmd, int32(opt), uid)
 	if err == nil {
 		server.Info("get from redis")

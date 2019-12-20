@@ -25,10 +25,11 @@ func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Ser
 // Server websocket server define
 type Server struct {
 	Config
-	NewAgent   network.AgentCreateFunc
-	ln         net.Listener
-	upgrader   websocket.Upgrader
-	conns      ConnSet
+	NewAgent network.AgentCreateFunc
+	ln       net.Listener
+	upgrader websocket.Upgrader
+	conns    ConnSet
+
 	mutexConns sync.Mutex
 	wg         sync.WaitGroup
 	httpServer *http.Server
@@ -121,7 +122,6 @@ func (s *Server) ListenAndServe() {
 	}
 
 	s.conns = make(ConnSet)
-
 	ln, err := net.Listen("tcp", s.Address)
 	if err != nil {
 		server.Fatal("%v", err)

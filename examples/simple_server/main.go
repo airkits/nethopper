@@ -38,8 +38,23 @@ import (
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/websocket"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
+	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
 )
 
+// @title Nethopper Simple Server
+// @version 1.0
+// @description This is a sample server Petstore server.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:11080
+// @BasePath
 func main() {
 
 	//runtime.GOMAXPROCS(1)

@@ -113,28 +113,34 @@ func (a *Agent) SetCodec(c codec.Codec) {
 }
 
 //Run agent start run
+//usage
+//func (a *Agent) Run (
+//  for {
+// 	data, err := a.ReadMessage()
+// 	if err != nil {
+// 		server.Debug("read message: %v", err)
+// 		break
+// 	}
+// 	out := make(map[string]interface{})
+// 	if err := a.Codec().Unmarshal(data, &out, nil); err == nil {
+// 		server.Info("receive message %v", out)
+// 		out["seq"] = out["seq"].(float64) + 1
+// 	} else {
+// 		server.Error(err)
+// 	}
+// 	a.WriteMessage(out)
+// }
+// }
 func (a *Agent) Run() {
-	// for {
-	// 	data, err := a.ReadMessage()
-	// 	if err != nil {
-	// 		server.Debug("read message: %v", err)
-	// 		break
-	// 	}
-	// 	out := make(map[string]interface{})
-	// 	if err := a.Codec().Unmarshal(data, &out, nil); err == nil {
-	// 		server.Info("receive message %v", out)
-	// 		out["seq"] = out["seq"].(float64) + 1
-	// 	} else {
-	// 		server.Error(err)
-	// 	}
-	// 	a.WriteMessage(out)
-	// }
+
 }
 
+// OnClose agent close
 func (a *Agent) OnClose() {
 
 }
 
+//WriteMessage to connection
 func (a *Agent) WriteMessage(msg interface{}) {
 	data, err := a.Codec().Marshal(msg, nil)
 	if err != nil {
@@ -154,26 +160,32 @@ func (a *Agent) ReadMessage() ([]byte, error) {
 	return b, err
 }
 
+//LocalAddr get local addr
 func (a *Agent) LocalAddr() net.Addr {
 	return a.conn.LocalAddr()
 }
 
+//RemoteAddr get remote addr
 func (a *Agent) RemoteAddr() net.Addr {
 	return a.conn.RemoteAddr()
 }
 
+//Close agent close
 func (a *Agent) Close() {
 	a.conn.Close()
 }
 
+//Destroy agent destory
 func (a *Agent) Destroy() {
 	a.conn.Destroy()
 }
 
+//UserData get userdata
 func (a *Agent) UserData() interface{} {
 	return a.userData
 }
 
+//SetUserData set userdata
 func (a *Agent) SetUserData(data interface{}) {
 	a.userData = data
 }

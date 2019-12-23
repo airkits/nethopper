@@ -37,7 +37,7 @@ import (
 //AgentManager manager agent
 type AgentManager struct {
 	agents     *set.HashSet
-	authAgents map[string]Agent
+	authAgents map[string]IAgent
 }
 
 var instance *AgentManager
@@ -48,14 +48,14 @@ func GetInstance() *AgentManager {
 	once.Do(func() {
 		instance = &AgentManager{
 			agents:     set.NewHashSet(),
-			authAgents: make(map[string]Agent),
+			authAgents: make(map[string]IAgent),
 		}
 	})
 	return instance
 }
 
 //AddAgent add agent to manager
-func (am *AgentManager) AddAgent(a Agent) {
+func (am *AgentManager) AddAgent(a IAgent) {
 	if a.IsAuth() {
 		_, ok := am.authAgents[a.Token()]
 		if !ok {
@@ -66,8 +66,14 @@ func (am *AgentManager) AddAgent(a Agent) {
 	}
 }
 
+//GetAuthAgent get auth agent,if exist return agent and true,else return false
+func (am *AgentManager) GetAuthAgent(token string) (IAgent, bool) {
+	agent, ok := am.authAgents[token]
+	return agent, ok
+}
+
 //RemoveAgent remove agent from manager
-func (am *AgentManager) RemoveAgent(a Agent) {
+func (am *AgentManager) RemoveAgent(a IAgent) {
 	a.OnClose()
 	if a.IsAuth() {
 		storeAgent, ok := am.authAgents[a.Token()]

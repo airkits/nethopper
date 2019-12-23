@@ -32,9 +32,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/context"
-	"github.com/gorilla/mux"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // ModuleCreate  module create function
@@ -65,7 +67,8 @@ func SessionHTTPMiddleware(next http.Handler) http.Handler {
 type Module struct {
 	server.BaseContext
 	Address string
-	router  *mux.Router
+	//router  *mux.Router
+	gs *gin.Engine
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
@@ -83,20 +86,33 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 		panic(err)
 	}
 
-	router := mux.NewRouter()
-	s.router = router
-	RegisterAPI(router)
-	server.Info("http listening on:  %s", s.Address)
-	router.Use(SessionHTTPMiddleware)
+	s.gs = gin.New()
+
+	//s.gs = gin.Default()
+	// group: v1
+	v1 := s.gs.Group("/v1")
+	{
+		NewAPIV1(v1)
+	}
+	url := ginSwagger.URL("http://localhost" + s.Address + "/swagger/doc.json") // The url pointing to API definition
+	s.gs.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+
+	// router := mux.NewRouter()
+	// s.router = router
+	// RegisterAPI(router)
+	// server.Info("http listening on:  %s", s.Address)
+	// router.Use(SessionHTTPMiddleware)
 
 	server.GO(s.web)
 
 	return s, nil
 }
 func (s *Module) web() {
-	if err := http.ListenAndServe(s.Address, s.router); err != nil {
-		panic(err)
-	}
+	// if err := http.ListenAndServe(s.Address, s.router); err != nil {
+	// 	panic(err)
+	// }
+
+	s.gs.Run(s.Address)
 
 }
 

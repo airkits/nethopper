@@ -64,10 +64,20 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	s.conns[conn] = struct{}{}
 	s.mutexConns.Unlock()
+	var token = r.Header.Get("token")
+	var agent network.IAgent
+	var ok bool
 
+	if len(token) > 0 {
+		agent, ok = network.GetInstance().GetAuthAgent(token)
+		if ok { //exist agent,kick out old connection
+			network.GetInstance().RemoveAgent(agent)
+		}
+	}
 	wsConn := NewConn(conn, s.RWQueueSize, s.MaxMessageSize)
-	agent := s.NewAgent(wsConn)
+	agent = s.NewAgent(wsConn)
 	agent.SetToken(r.Header.Get("token"))
+	network.GetInstance().AddAgent(agent)
 	agent.Run()
 
 	// cleanup

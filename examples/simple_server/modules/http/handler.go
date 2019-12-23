@@ -69,13 +69,20 @@ func NewHTTPSession(c *gin.Context) *HTTPSession {
 	return sess
 }
 
+type Response struct {
+	Code int
+	Msg  string
+	Data interface{}
+}
+
 //ResponseError 返回错误信息
 func ResponseError(session *HTTPSession, code int, msg error) {
 	if session.Context != nil {
 
-		session.Context.JSON(http.StatusOK, gin.H{
-			"code":    code,
-			"message": msg.Error(),
+		session.Context.JSON(http.StatusOK, &Response{
+			Code: code,
+			Msg:  msg.Error(),
+			Data: nil,
 		})
 		logs.Error("request [%s] response error. client address:[%s] errCode:[%d] msg:[%s]", session.Context.Request.URL.Path, session.Context.ClientIP(), code, msg)
 	}
@@ -86,10 +93,10 @@ func ResponseError(session *HTTPSession, code int, msg error) {
 func ResponseSuccess(session *HTTPSession, data interface{}) {
 
 	if session.Context != nil {
-		session.Context.JSON(http.StatusOK, gin.H{
-			"code":    0,
-			"message": "success",
-			"data":    data,
+		session.Context.JSON(http.StatusOK, &Response{
+			Code: 0,
+			Msg:  "ok",
+			Data: data,
 		})
 		logs.Error("request [%s] response success. client address:[%s] ", session.Context.Request.URL.Path, session.Context.ClientIP())
 
@@ -103,17 +110,8 @@ func ResponseSuccess(session *HTTPSession, data interface{}) {
 // @version 1.0
 // @Accept  json
 // @Produce  json
-// - name: uid
-//   in: body
-//   description: 用户id
-//   type: int
-//   required: true
-// - name: passwd
-//   in: body
-//   description: 用户密码
-//   type: string
-//   required: true
-// @Success 200 object gin.H 成功后返回值
+// @Param   account body  http.LoginReq    true        "LoginReq"
+// @Success 200 object Response 成功后返回值
 // @Router /v1/ [post]
 func Index(c *gin.Context) {
 	defer server.TraceCost("Index")()

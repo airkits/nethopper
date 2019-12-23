@@ -29,11 +29,23 @@
                     "http web 模块"
                 ],
                 "summary": "登录",
+                "parameters": [
+                    {
+                        "description": "LoginReq",
+                        "name": "account",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/http.LoginReq"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/gin.H"
+                            "$ref": "#/definitions/http.Response"
                         }
                     }
                 }
@@ -41,9 +53,30 @@
         }
     },
     "definitions": {
-        "gin.H": {
+        "http.LoginReq": {
             "type": "object",
-            "additionalProperties": true
+            "properties": {
+                "passwd": {
+                    "type": "string"
+                },
+                "uid": {
+                    "type": "integer"
+                }
+            }
+        },
+        "http.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "object"
+                },
+                "msg": {
+                    "type": "string"
+                }
+            }
         }
     }
 }

@@ -1,6 +1,19 @@
 definitions:
-  gin.H:
-    additionalProperties: true
+  http.LoginReq:
+    properties:
+      passwd:
+        type: string
+      uid:
+        type: integer
+    type: object
+  http.Response:
+    properties:
+      code:
+        type: integer
+      data:
+        type: object
+      msg:
+        type: string
     type: object
 host: localhost:11080
 info:
@@ -20,13 +33,21 @@ paths:
     post:
       consumes:
       - application/json
+      parameters:
+      - description: LoginReq
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/http.LoginReq'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/gin.H'
+            $ref: '#/definitions/http.Response'
       summary: 登录
       tags:
       - http web 模块

@@ -1,0 +1,436 @@
+package example
+
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/swaggo/swag/example/celler/httputil"
+	"github.com/swaggo/swag/example/celler/model"
+)
+
+// ShowAccount godoc
+// @Summary Show a account
+// @Description get string by ID
+// @Tags accounts
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Account ID"
+// @Success 200 {object} model.Account
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /accounts/{id} [get]
+func (c *Controller) ShowAccount(ctx *gin.Context) {
+	id := ctx.Param("id")
+	aid, err := strconv.Atoi(id)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	account, err := model.AccountOne(aid)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusNotFound, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, account)
+}
+
+// ListAccounts godoc
+// @Summary List accounts
+// @Description get accounts
+// @Tags accounts
+// @Accept  json
+// @Produce  json
+// @Param q query string false "name search by q" Format(email)
+// @Success 200 {array} model.Account
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /accounts [get]
+func (c *Controller) ListAccounts(ctx *gin.Context) {
+	q := ctx.Request.URL.Query().Get("q")
+	accounts, err := model.AccountsAll(q)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusNotFound, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, accounts)
+}
+
+// AddAccount godoc
+// @Summary Add a account
+// @Description add by json account
+// @Tags accounts
+// @Accept  json
+// @Produce  json
+// @Param account body model.AddAccount true "Add account"
+// @Success 200 {object} model.Account
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /accounts [post]
+func (c *Controller) AddAccount(ctx *gin.Context) {
+	var addAccount model.AddAccount
+	if err := ctx.ShouldBindJSON(&addAccount); err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	if err := addAccount.Validation(); err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	account := model.Account{
+		Name: addAccount.Name,
+	}
+	lastID, err := account.Insert()
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	account.ID = lastID
+	ctx.JSON(http.StatusOK, account)
+}
+
+// UpdateAccount godoc
+// @Summary Update a account
+// @Description Update by json account
+// @Tags accounts
+// @Accept  json
+// @Produce  json
+// @Param  id path int true "Account ID"
+// @Param  account body model.UpdateAccount true "Update account"
+// @Success 200 {object} model.Account
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /accounts/{id} [patch]
+func (c *Controller) UpdateAccount(ctx *gin.Context) {
+	id := ctx.Param("id")
+	aid, err := strconv.Atoi(id)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	var updateAccount model.UpdateAccount
+	if err := ctx.ShouldBindJSON(&updateAccount); err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	account := model.Account{
+		ID:   aid,
+		Name: updateAccount.Name,
+	}
+	err = account.Update()
+	if err != nil {
+		httputil.NewError(ctx, http.StatusNotFound, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, account)
+}
+
+// DeleteAccount godoc
+// @Summary Update a account
+// @Description Delete by account ID
+// @Tags accounts
+// @Accept  json
+// @Produce  json
+// @Param  id path int true "Account ID" Format(int64)
+// @Success 204 {object} model.Account
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /accounts/{id} [delete]
+func (c *Controller) DeleteAccount(ctx *gin.Context) {
+	id := ctx.Param("id")
+	aid, err := strconv.Atoi(id)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	err = model.Delete(aid)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusNotFound, err)
+		return
+	}
+	ctx.JSON(http.StatusNoContent, gin.H{})
+}
+
+// UploadAccountImage godoc
+// @Summary Upload account image
+// @Description Upload file
+// @Tags accounts
+// @Accept  multipart/form-data
+// @Produce  json
+// @Param  id path int true "Account ID"
+// @Param file formData file true "account image"
+// @Success 200 {object} controller.Message
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /accounts/{id}/images [post]
+func (c *Controller) UploadAccountImage(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, Message{Message: fmt.Sprintf("upload complete userID=%d filename=%s", id, file.Filename)})
+}
+
+
+
+package controller
+
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/swaggo/swag/example/celler/httputil"
+)
+
+// PingExample godoc
+// @Summary ping example
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} string "pong"
+// @Failure 400 {string} string "ok"
+// @Failure 404 {string} string "ok"
+// @Failure 500 {string} string "ok"
+// @Router /examples/ping [get]
+func (c *Controller) PingExample(ctx *gin.Context) {
+	ctx.String(http.StatusOK, "pong")
+	return
+}
+
+// CalcExample godoc
+// @Summary calc example
+// @Description plus
+// @Tags example
+// @Accept json
+// @Produce json
+// @Param val1 query int true "used for calc"
+// @Param val2 query int true "used for calc"
+// @Success 200 {integer} integer "answer"
+// @Failure 400 {string} string "ok"
+// @Failure 404 {string} string "ok"
+// @Failure 500 {string} string "ok"
+// @Router /examples/calc [get]
+func (c *Controller) CalcExample(ctx *gin.Context) {
+	val1, err := strconv.Atoi(ctx.Query("val1"))
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	val2, err := strconv.Atoi(ctx.Query("val2"))
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	ans := val1 + val2
+	ctx.String(http.StatusOK, "%d", ans)
+}
+
+// PathParamsExample godoc
+// @Summary path params example
+// @Description path params
+// @Tags example
+// @Accept json
+// @Produce json
+// @Param group_id path int true "Group ID"
+// @Param account_id path int true "Account ID"
+// @Success 200 {string} string "answer"
+// @Failure 400 {string} string "ok"
+// @Failure 404 {string} string "ok"
+// @Failure 500 {string} string "ok"
+// @Router /examples/groups/{group_id}/accounts/{account_id} [get]
+func (c *Controller) PathParamsExample(ctx *gin.Context) {
+	groupID, err := strconv.Atoi(ctx.Param("group_id"))
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	accountID, err := strconv.Atoi(ctx.Param("account_id"))
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	ctx.String(http.StatusOK, "group_id=%d account_id=%d", groupID, accountID)
+}
+
+// HeaderExample godoc
+// @Summary custome header example
+// @Description custome header
+// @Tags example
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authentication header"
+// @Success 200 {string} string "answer"
+// @Failure 400 {string} string "ok"
+// @Failure 404 {string} string "ok"
+// @Failure 500 {string} string "ok"
+// @Router /examples/header [get]
+func (c *Controller) HeaderExample(ctx *gin.Context) {
+	ctx.String(http.StatusOK, ctx.GetHeader("Authorization"))
+}
+
+// SecuritiesExample godoc
+// @Summary custome header example
+// @Description custome header
+// @Tags example
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Authentication header"
+// @Success 200 {string} string "answer"
+// @Failure 400 {string} string "ok"
+// @Failure 404 {string} string "ok"
+// @Failure 500 {string} string "ok"
+// @Security ApiKeyAuth
+// @Security OAuth2Implicit[admin, write]
+// @Router /examples/securities [get]
+func (c *Controller) SecuritiesExample(ctx *gin.Context) {
+}
+
+// AttributeExample godoc
+// @Summary attribute example
+// @Description attribute
+// @Tags example
+// @Accept json
+// @Produce json
+// @Param enumstring query string false "string enums" Enums(A, B, C)
+// @Param enumint query int false "int enums" Enums(1, 2, 3)
+// @Param enumnumber query number false "int enums" Enums(1.1, 1.2, 1.3)
+// @Param string query string false "string valid" minlength(5) maxlength(10)
+// @Param int query int false "int valid" mininum(1) maxinum(10)
+// @Param default query string false "string default" default(A)
+// @Success 200 {string} string "answer"
+// @Failure 400 {string} string "ok"
+// @Failure 404 {string} string "ok"
+// @Failure 500 {string} string "ok"
+// @Router /examples/attribute [get]
+func (c *Controller) AttributeExample(ctx *gin.Context) {
+	ctx.String(http.StatusOK, fmt.Sprintf("enumstring=%s enumint=%s enumnumber=%s string=%s int=%s default=%s",
+		ctx.Query("enumstring"),
+		ctx.Query("enumint"),
+		ctx.Query("enumnumber"),
+		ctx.Query("string"),
+		ctx.Query("int"),
+		ctx.Query("default"),
+	))
+}
+
+
+
+package controller
+
+import (
+	"errors"
+	"fmt"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/swaggo/swag/example/celler/httputil"
+	"github.com/swaggo/swag/example/celler/model"
+)
+
+// Auth godoc
+// @Summary Auth admin
+// @Description get admin info
+// @Tags accounts,admin
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} model.Admin
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Security ApiKeyAuth
+// @Router /admin/auth [post]
+func (c *Controller) Auth(ctx *gin.Context) {
+	authHeader := ctx.GetHeader("Authorization")
+	if len(authHeader) == 0 {
+		httputil.NewError(ctx, http.StatusBadRequest, errors.New("please set Header Authorization"))
+		return
+	}
+	if authHeader != "admin" {
+		httputil.NewError(ctx, http.StatusUnauthorized, fmt.Errorf("this user isn't authorized to operation key=%s expected=admin", authHeader))
+		return
+	}
+	admin := model.Admin{
+		ID:   1,
+		Name: "admin",
+	}
+	ctx.JSON(http.StatusOK, admin)
+}
+
+
+
+package controller
+
+import (
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/swaggo/swag/example/celler/httputil"
+	"github.com/swaggo/swag/example/celler/model"
+)
+
+// ShowBottle godoc
+// @Summary Show a bottle
+// @Description get string by ID
+// @ID get-string-by-int
+// @Tags bottles
+// @Accept  json
+// @Produce  json
+// @Param  id path int true "Bottle ID"
+// @Success 200 {object} model.Bottle
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /bottles/{id} [get]
+func (c *Controller) ShowBottle(ctx *gin.Context) {
+	id := ctx.Param("id")
+	bid, err := strconv.Atoi(id)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, err)
+		return
+	}
+	bottle, err := model.BottleOne(bid)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusNotFound, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, bottle)
+}
+
+// ListBottles godoc
+// @Summary List bottles
+// @Description get bottles
+// @Tags bottles
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} model.Bottle
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /bottles [get]
+func (c *Controller) ListBottles(ctx *gin.Context) {
+	bottles, err := model.BottlesAll()
+	if err != nil {
+		httputil.NewError(ctx, http.StatusNotFound, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, bottles)
+}
+

@@ -34,7 +34,7 @@ require (
 	github.com/tjfoc/gmsm v1.0.1 // indirect
 	github.com/xtaci/kcp-go v5.4.2+incompatible
 	github.com/xtaci/lossyconn v0.0.0-20190602105132-8df528c0c9ae // indirect
-	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
+	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
 	golang.org/x/sys v0.0.0-20191220220014-0732a990476f // indirect
 	golang.org/x/tools v0.0.0-20191220234730-f13409bbebaf // indirect
 	gopkg.in/go-playground/validator.v9 v9.30.2 // indirect

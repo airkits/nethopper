@@ -22,6 +22,17 @@ import (
 // 		return
 // 	}
 // }
+
+// LoginHandler user to login
+// @Summary LoginHandler
+// @Tags LogicModule
+// @version 1.0
+// @Accept  plain
+// @Produce plain
+// @Param uid query string true "UserID"
+// @Param pwd query string true "Password"
+// @Success 200 {string} string 成功后返回值
+// @Router /call/LoginHandler [put]
 func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 	defer server.TraceCost("LoginHandler")()
 	opt, err := strconv.Atoi(uid)

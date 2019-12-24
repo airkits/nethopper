@@ -31,6 +31,7 @@ import (
 
 	//"github.com/gonethopper/nethopper/cache/redis"
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
@@ -38,11 +39,10 @@ import (
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/websocket"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
-	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
 )
 
 // @title Nethopper Simple Server
-// @version 1.0
+// @version 1.0.2
 // @description This is a sample server Petstore server.
 // @termsOfService http://swagger.io/terms/
 

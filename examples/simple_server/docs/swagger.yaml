@@ -27,8 +27,33 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: Nethopper Simple Server
-  version: "1.0"
+  version: 1.0.2
 paths:
+  /call/LoginHandler:
+    put:
+      consumes:
+      - text/plain
+      parameters:
+      - description: UserID
+        in: query
+        name: uid
+        required: true
+        type: string
+      - description: Password
+        in: query
+        name: pwd
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: LoginHandler
+      tags:
+      - LogicModule
   /v1/:
     post:
       consumes:
@@ -40,7 +65,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/http.LoginReq'
-          type: object
       produces:
       - application/json
       responses:

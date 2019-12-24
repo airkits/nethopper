@@ -1,4 +1,5 @@
 swag init 
+go build
 
 # go get -u github.com/swaggo/swag/cmd/swag
 # go get -u github.com/swaggo/gin-swagger

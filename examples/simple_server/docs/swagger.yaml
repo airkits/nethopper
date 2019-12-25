@@ -65,6 +65,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/http.LoginReq'
+          type: object
       produces:
       - application/json
       responses:
@@ -75,14 +76,14 @@ paths:
       summary: 登录
       tags:
       - http web 模块
-  /v1/call/:mid/:cmd/:opt:
+  /v1/call/:
     post:
       consumes:
       - multipart/form-data
       parameters:
-      - description: mid
+      - description: module
         in: query
-        name: mid
+        name: module
         required: true
         type: integer
       - description: cmd

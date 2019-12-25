@@ -143,20 +143,20 @@ func Index(c *gin.Context) {
 // @version 1.0
 // @Accept  multipart/form-data
 // @Produce  json
-// @Param  mid query int true "mid"
+// @Param  module query int true "module"
 // @Param cmd query string true "cmd"
 // @Param opt query int true "opt"
 // @Param   data   formData string    true        "data"
 // @Success 200 object Response 成功后返回值
-// @Router /v1/call/:mid/:cmd/:opt [post]
+// @Router /v1/call/:module/:cmd/:opt [post]
 func Call(c *gin.Context) {
 	defer server.TraceCost("Call")()
 	session := NewHTTPSession(c)
 	var data string
 	var ok bool
 	var err error
-	mid, ok := c.GetQuery("mid")
-	midInt, err := strconv.Atoi(mid)
+	module, ok := c.GetQuery("module")
+	moduleInt, err := strconv.Atoi(module)
 	cmd, ok := c.GetQuery("cmd")
 	option, ok := c.GetQuery("opt")
 	optionInt, err := strconv.Atoi(option)
@@ -176,12 +176,12 @@ func Call(c *gin.Context) {
 		args = append(args, col)
 	}
 
-	result, err2 := server.Call(int32(midInt), cmd, int32(optionInt), args...)
+	result, err2 := server.Call(int32(moduleInt), cmd, int32(optionInt), args...)
 	if err2 != nil {
-		server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
+		//server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)
 	} else {
-		server.Info("message done,get pwd  %v", result.(string))
+		//server.Info("message done,get pwd  %v", result.(string))
 
 		ResponseSuccess(session, result)
 	}

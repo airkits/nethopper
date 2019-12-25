@@ -75,4 +75,39 @@ paths:
       summary: 登录
       tags:
       - http web 模块
+  /v1/call/:mid/:cmd/:opt:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: mid
+        in: query
+        name: mid
+        required: true
+        type: integer
+      - description: cmd
+        in: query
+        name: cmd
+        required: true
+        type: string
+      - description: opt
+        in: query
+        name: opt
+        required: true
+        type: integer
+      - description: data
+        in: formData
+        name: data
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.Response'
+      summary: 登录
+      tags:
+      - http web 模块
 swagger: "2.0"

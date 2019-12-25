@@ -87,6 +87,58 @@
                     }
                 }
             }
+        },
+        "/v1/call/:mid/:cmd/:opt": {
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "http web 模块"
+                ],
+                "summary": "登录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "mid",
+                        "name": "mid",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "cmd",
+                        "name": "cmd",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "opt",
+                        "name": "opt",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "data",
+                        "name": "data",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

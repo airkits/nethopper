@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gonethopper/libs/logs"
 	"github.com/gonethopper/libs/utils"
+	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/server"
 )
@@ -41,6 +43,7 @@ func NewAPIV1(router *gin.RouterGroup) {
 func RegisterCmdAPI(group *gin.RouterGroup) {
 
 	group.POST("/", Index)
+	group.POST("/call/:mid/:cmd/:opt", Call)
 }
 
 //LoginReq request body
@@ -134,41 +137,52 @@ func Index(c *gin.Context) {
 
 }
 
-// Index api index
-// func Index(w http.ResponseWriter, r *http.Request) {
-// 	defer server.TraceCost("Index")()
-// 	fmt.Fprint(w, "Welcome!\n")
-// 	token := context.Get(r, "token").(string)
-// 	fmt.Fprint(w, token+"\n")
+// Call api call tool
+// @Summary 登录
+// @Tags http web 模块
+// @version 1.0
+// @Accept  multipart/form-data
+// @Produce  json
+// @Param  mid query int true "mid"
+// @Param cmd query string true "cmd"
+// @Param opt query int true "opt"
+// @Param   data   formData string    true        "data"
+// @Success 200 object Response 成功后返回值
+// @Router /v1/call/:mid/:cmd/:opt [post]
+func Call(c *gin.Context) {
+	defer server.TraceCost("Call")()
+	session := NewHTTPSession(c)
+	var data string
+	var ok bool
+	var err error
+	mid, ok := c.GetQuery("mid")
+	midInt, err := strconv.Atoi(mid)
+	cmd, ok := c.GetQuery("cmd")
+	option, ok := c.GetQuery("opt")
+	optionInt, err := strconv.Atoi(option)
+	if err != nil || !ok {
+		ResponseError(session, 500, errors.New("err data"))
+		return
+	}
+	args := make([]interface{}, 0)
 
-// 	sbody, e := ioutil.ReadAll(r.Body)
-// 	defer r.Body.Close()
-// 	if e != nil {
-// 		w.WriteHeader(500)
-// 		return
-// 	}
-// 	server.Info(string(sbody))
-// 	var v = make(map[string]interface{})
-// 	if err := codec.JSONCodec.Unmarshal(sbody, &v, nil); err != nil {
-// 		server.Info(err)
-// 		return
-// 	}
-// 	uid := v["uid"].(float64)
-// 	pwd := v["passwd"].(string)
-// 	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(uid), strconv.FormatFloat(uid, 'f', -1, 64), pwd)
-// 	if err2 != nil {
-// 		server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
-// 		fmt.Fprint(w, "login failed")
-// 	} else {
-// 		server.Info("message done,get pwd  %v", result.(string))
-// 		fmt.Fprint(w, "login success")
-// 	}
+	data = c.PostForm("data")
+	var model map[string]interface{}
+	if err := codec.JSONCodec.Unmarshal([]byte(data), &model, nil); err != nil {
+		ResponseError(session, CSErrorCodeClientError, err)
+		return
+	}
+	for _, col := range model {
+		args = append(args, col)
+	}
 
-// }
+	result, err2 := server.Call(int32(midInt), cmd, int32(optionInt), args...)
+	if err2 != nil {
+		server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
+		ResponseError(session, CSErrorCodeClientError, err2)
+	} else {
+		server.Info("message done,get pwd  %v", result.(string))
 
-// // Hello api hello
-// func Hello(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	w.WriteHeader(http.StatusOK)
-// 	fmt.Fprintf(w, "Category: %v\n", vars["category"])
-// }
+		ResponseSuccess(session, result)
+	}
+}

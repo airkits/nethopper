@@ -3,6 +3,7 @@ package websocket
 import (
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/server"
 )
 
 //NewAgentAdapter create agent adapter
@@ -19,14 +20,22 @@ type AgentAdapter struct {
 
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload []byte) {
-	var m map[string]interface{}
-	if err := a.Codec().Unmarshal(payload, &m, nil); err != nil {
+	m := new(LoginCmd)
+	if err := a.Codec().Unmarshal(payload, m, nil); err != nil {
 		return
 	}
-
+	m.Seq++
+	// if payload, err := a.Codec().Marshal(m, nil); err == nil {
+	// 	a.WriteMessage(payload)
+	// }
+	server.Info("recevie message %v", m)
 }
 
 //ProcessNotify process notify to client
 func (a *AgentAdapter) ProcessNotify(obj interface{}) {
 
+	if payload, err := a.Codec().Marshal(obj, nil); err == nil {
+		a.WriteMessage(payload)
+		server.Info("send notify to agent %v", obj)
+	}
 }

@@ -65,6 +65,8 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	}
 	s.wsClient = ws.NewClient(m, func(conn network.Conn) network.IAgent {
 		a := network.NewAgent(nil, NewAgentAdapter(conn))
+		a.SetToken("user")
+		network.GetInstance().AddAgent(a)
 		return a
 	})
 	s.wsClient.Run()
@@ -84,6 +86,16 @@ func (s *Module) Reload(m map[string]interface{}) error {
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
+	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
+		m := &LoginCmd{
+			UID:    1,
+			Passwd: "game",
+			Seq:    1,
+			Data:   nil,
+		}
+		agent.GetAdapter().ProcessNotify(m)
+	}
+	time.Sleep(5 * time.Second)
 }
 
 // Stop goruntine

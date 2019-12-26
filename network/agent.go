@@ -48,6 +48,8 @@ type IAgent interface {
 	Token() string
 	SetToken(string)
 	IsAuth() bool
+
+	GetAdapter() IAgentAdapter
 }
 
 //NewAgent create new agent
@@ -65,6 +67,11 @@ type Agent struct {
 //Token get token
 func (a *Agent) Token() string {
 	return a.token
+}
+
+//GetAdapter get agent adapter
+func (a *Agent) GetAdapter() IAgentAdapter {
+	return a.adapter
 }
 
 //IsAuth if set token return true else return false

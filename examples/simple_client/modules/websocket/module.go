@@ -30,7 +30,6 @@ package websocket
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/ws"
 	"github.com/gonethopper/nethopper/server"
@@ -65,7 +64,7 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 		panic(err)
 	}
 	s.wsClient = ws.NewClient(m, func(conn network.Conn) network.IAgent {
-		a := NewAgent(conn, nil, codec.JSONCodec)
+		a := network.NewAgent(nil, NewAgentAdapter(conn))
 		return a
 	})
 	s.wsClient.Run()

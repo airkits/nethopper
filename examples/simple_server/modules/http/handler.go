@@ -182,7 +182,6 @@ func Call(c *gin.Context) {
 		ResponseError(session, CSErrorCodeClientError, err2)
 	} else {
 		//server.Info("message done,get pwd  %v", result.(string))
-
 		ResponseSuccess(session, result)
 	}
 }

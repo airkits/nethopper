@@ -29,9 +29,7 @@ package network
 
 import (
 	"net"
-	"reflect"
 
-	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -39,42 +37,29 @@ import (
 type IAgent interface {
 	Run()
 	OnClose()
-	WriteMessage(msg interface{})
-	ReadMessage() ([]byte, error)
+
 	LocalAddr() net.Addr
 	RemoteAddr() net.Addr
 	Close()
 	Destroy()
 	UserData() interface{}
 	SetUserData(data interface{})
-	Conn() Conn
-	SetConn(conn Conn)
-	Codec() codec.Codec
-	SetCodec(c codec.Codec)
-	Init(Conn, interface{}, codec.Codec)
+
 	Token() string
 	SetToken(string)
 	IsAuth() bool
 }
 
 //NewAgent create new agent
-func NewAgent(conn Conn, userData interface{}, codec codec.Codec) IAgent {
-	return &Agent{conn: conn, userData: userData, codec: codec}
+func NewAgent(userData interface{}, adapter IAgentAdapter) IAgent {
+	return &Agent{userData: userData, adapter: adapter}
 }
 
 //Agent base agent struct
 type Agent struct {
-	conn     Conn
 	userData interface{}
-	codec    codec.Codec
+	adapter  IAgentAdapter
 	token    string
-}
-
-//Init agent
-func (a *Agent) Init(conn Conn, userData interface{}, codec codec.Codec) {
-	a.conn = conn
-	a.userData = userData
-	a.codec = codec
 }
 
 //Token get token
@@ -90,26 +75,6 @@ func (a *Agent) IsAuth() bool {
 //SetToken set token
 func (a *Agent) SetToken(token string) {
 	a.token = token
-}
-
-//Conn get conn
-func (a *Agent) Conn() Conn {
-	return a.conn
-}
-
-// SetConn set conn
-func (a *Agent) SetConn(conn Conn) {
-	a.conn = conn
-}
-
-// Codec get codec
-func (a *Agent) Codec() codec.Codec {
-	return a.codec
-}
-
-//SetCodec set codec
-func (a *Agent) SetCodec(c codec.Codec) {
-	a.codec = c
 }
 
 //Run agent start run
@@ -132,7 +97,14 @@ func (a *Agent) SetCodec(c codec.Codec) {
 // }
 // }
 func (a *Agent) Run() {
-
+	for {
+		data, err := a.adapter.ReadMessage()
+		if err != nil {
+			server.Debug("read message: %v", err)
+			break
+		}
+		a.adapter.ProcessMessage(data)
+	}
 }
 
 // OnClose agent close
@@ -140,44 +112,24 @@ func (a *Agent) OnClose() {
 
 }
 
-//WriteMessage to connection
-func (a *Agent) WriteMessage(msg interface{}) {
-	data, err := a.Codec().Marshal(msg, nil)
-	if err != nil {
-		server.Error("marshal message %v error: %v", reflect.TypeOf(msg), err)
-		return
-	}
-	err = a.conn.WriteMessage(data)
-	if err != nil {
-		server.Error("write message %v error: %v", reflect.TypeOf(msg), err)
-	}
-
-}
-
-//ReadMessage goroutine not safe
-func (a *Agent) ReadMessage() ([]byte, error) {
-	b, err := a.conn.ReadMessage()
-	return b, err
-}
-
 //LocalAddr get local addr
 func (a *Agent) LocalAddr() net.Addr {
-	return a.conn.LocalAddr()
+	return a.adapter.Conn().LocalAddr()
 }
 
 //RemoteAddr get remote addr
 func (a *Agent) RemoteAddr() net.Addr {
-	return a.conn.RemoteAddr()
+	return a.adapter.Conn().RemoteAddr()
 }
 
 //Close agent close
 func (a *Agent) Close() {
-	a.conn.Close()
+	a.adapter.Conn().Close()
 }
 
 //Destroy agent destory
 func (a *Agent) Destroy() {
-	a.conn.Destroy()
+	a.adapter.Conn().Destroy()
 }
 
 //UserData get userdata

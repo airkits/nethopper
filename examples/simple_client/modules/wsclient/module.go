@@ -25,11 +25,12 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package websocket
+package wsclient
 
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/examples/model"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/ws"
 	"github.com/gonethopper/nethopper/server"
@@ -46,67 +47,58 @@ func ModuleCreate() (server.Module, error) {
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	config   ws.Config
-	wsServer *ws.Server
+	wsClient *ws.Client
 }
 
-// // UserData module custom option, can you store you data and you must keep goruntine safe
-// func (s *Module) UserData() int32 {
-// 	return 0
-// }
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *Module) UserData() int32 {
+	return 0
+}
 
 // Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
-//  "address":":12080",
-//	"maxConnNum":1024,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-// //tls support
-//  "certFile":"",
-//  "keyFile":"",
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
+	s.RegisterHandler(model.CSLoginCmd, NotifyLogin)
+	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.wsServer = ws.NewServer(m, func(conn network.Conn) network.IAgent {
+	s.wsClient = ws.NewClient(m, func(conn network.Conn) network.IAgent {
 		a := network.NewAgent(nil, NewAgentAdapter(conn))
+		a.SetToken("user")
+		network.GetInstance().AddAgent(a)
 		return a
 	})
-
-	server.GO(s.web)
+	s.wsClient.Run()
 
 	return s, nil
 }
-func (s *Module) web() {
-	s.wsServer.ListenAndServe()
+
+// ReadConfig config map
+// address default :80
+func (s *Module) ReadConfig(m map[string]interface{}) error {
+	return nil
 }
 
-// config map
-// m := map[string]interface{}{
-// }
-// func (s *Module) ReadConfig(m map[string]interface{}) error {
-// 	return nil
-// }
-
-// //Reload reload config
-// func (s *Module) Reload(m map[string]interface{}) error {
-// 	return nil
-// }
+//Reload reload config
+func (s *Module) Reload(m map[string]interface{}) error {
+	return nil
+}
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
 	server.RunSimpleFrame(s, 128)
 }
 
-// // Stop goruntine
-// func (s *Module) Stop() error {
+// Stop goruntine
+func (s *Module) Stop() error {
 
-// 	return nil
-// }
+	return nil
+}
 
 // // Call async send message to module
 // func (s *Module) Call(option int32, obj *server.CallObject) error {
@@ -114,6 +106,6 @@ func (s *Module) OnRun(dt time.Duration) {
 // }
 
 // PushBytes async send string or bytes to queue
-// func (s *Module) PushBytes(option int32, buf []byte) error {
-// 	return nil
-// }
+func (s *Module) PushBytes(option int32, buf []byte) error {
+	return nil
+}

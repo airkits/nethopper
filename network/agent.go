@@ -50,6 +50,8 @@ type IAgent interface {
 	IsAuth() bool
 
 	GetAdapter() IAgentAdapter
+
+	SendMessage(payload []byte) error
 }
 
 //NewAgent create new agent
@@ -117,6 +119,11 @@ func (a *Agent) Run() {
 // OnClose agent close
 func (a *Agent) OnClose() {
 
+}
+
+// SendMessage send message to conn
+func (a *Agent) SendMessage(payload []byte) error {
+	return a.GetAdapter().WriteMessage(payload)
 }
 
 //LocalAddr get local addr

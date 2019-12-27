@@ -28,7 +28,8 @@
 package main
 
 import (
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/websocket"
+	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
+	"github.com/gonethopper/nethopper/examples/simple_client/modules/wsclient"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -37,7 +38,7 @@ func main() {
 
 	m := map[string]interface{}{
 		"filename":    "logs/server.log",
-		"level":       7,
+		"level":       DEBUG,
 		"maxSize":     50,
 		"maxLines":    1000,
 		"hourEnabled": false,
@@ -45,9 +46,11 @@ func main() {
 		"queueSize":   1000,
 	}
 	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("ws_client", websocket.ModuleCreate)
+	RegisterModule("logic", logic.ModuleCreate)
+	RegisterModule("ws_client", wsclient.ModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
-	NewNamedModule(ModuleIDWebSocketClient, "ws_client", nil, m)
+	NewNamedModule(ModuleIDLogic, "logic", nil, m)
+	NewNamedModule(ModuleIDWSClient, "ws_client", nil, m)
 
 	InitSignal()
 	//GracefulExit()

@@ -37,9 +37,8 @@ type IAgentAdapter interface {
 	//Setup AgentAdapter
 	Setup(conn Conn, codec codec.Codec)
 	//ProcessMessage process request and notify message
-	ProcessMessage(payload []byte)
-	//ProcessNotify process notify to client
-	ProcessNotify(obj interface{})
+	ProcessMessage(payload []byte) error
+
 	//WriteMessage to connection
 	WriteMessage(payload []byte) error
 	//ReadMessage goroutine not safe
@@ -66,20 +65,10 @@ func (a *AgentAdapter) Setup(conn Conn, codec codec.Codec) {
 	a.codec = codec
 }
 
-//ProcessHandler process request handler
-func (a *AgentAdapter) ProcessHandler(obj interface{}) {
-
-}
-
-//ProcessNotify process notify to client
-func (a *AgentAdapter) ProcessNotify(obj interface{}) {
-
-}
-
 //WriteMessage to connection
-func (a *AgentAdapter) WriteMessage(msg []byte) error {
-	if err := a.conn.WriteMessage(msg); err != nil {
-		server.Error("write message %x error: %v", msg, err)
+func (a *AgentAdapter) WriteMessage(payload []byte) error {
+	if err := a.conn.WriteMessage(payload); err != nil {
+		server.Error("write message %x error: %v", payload, err)
 		return err
 	}
 	return nil

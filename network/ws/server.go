@@ -136,6 +136,7 @@ func (s *Server) ListenAndServe() {
 	if err != nil {
 		server.Fatal("%v", err)
 	}
+	server.Info("websocket start listen:%s", s.Address)
 	if s.CertFile != "" || s.KeyFile != "" {
 		config := &tls.Config{}
 		config.NextProtos = []string{"http/1.1"}

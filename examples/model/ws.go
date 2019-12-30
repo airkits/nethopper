@@ -13,12 +13,12 @@ type IWSBody interface {
 
 //WSHeader request header
 type WSHeader struct {
-	UID      string `form:"uid" json:"uid"`
-	CMD      string `form:"cmd" json:"cmd"`
-	Seq      int64  `form:"seq" json:"seq"`
-	MsgType  int    `form:"msgType" json:"msgType"`
-	UserData int    `form:"userdata" json:"userdata"`
-	Payload  []byte `form:"payload" json:"payload"`
+	UID      string      `form:"uid" json:"uid"`
+	CMD      string      `form:"cmd" json:"cmd"`
+	Seq      int64       `form:"seq" json:"seq"`
+	MsgType  int         `form:"msgType" json:"msgType"`
+	UserData int         `form:"userdata" json:"userdata"`
+	Payload  interface{} `form:"payload" json:"payload"`
 }
 
 //NewWSMessage create new websocket message
@@ -77,7 +77,7 @@ func (m *WSMessage) DecodeBody() error {
 	if body, err = CreateBody(m.Head.MsgType, m.Head.CMD); err != nil {
 		return err
 	}
-	if err = m.codec.Unmarshal(m.Head.Payload, body, nil); err != nil {
+	if err = m.codec.Unmarshal([]byte((m.Head.Payload).(string)), body, nil); err != nil {
 		return err
 	}
 	m.Body = body

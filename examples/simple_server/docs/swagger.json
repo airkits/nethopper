@@ -74,6 +74,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
+                            "type": "object",
                             "$ref": "#/definitions/http.LoginReq"
                         }
                     }
@@ -88,7 +89,7 @@
                 }
             }
         },
-        "/v1/call/:module/:cmd/:opt": {
+        "/v1/call/": {
             "post": {
                 "consumes": [
                     "multipart/form-data"

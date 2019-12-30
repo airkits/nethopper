@@ -13,15 +13,16 @@ type IWSBody interface {
 
 //WSHeader request header
 type WSHeader struct {
-	UID     int64  `form:"uid" json:"uid"`
-	CMD     string `form:"cmd" json:"cmd"`
-	Seq     int64  `form:"seq" json:"seq"`
-	MsgType int    `form:"msgType" json:"msgType"`
-	Payload []byte `form:"payload" json:"payload"`
+	UID      string `form:"uid" json:"uid"`
+	CMD      string `form:"cmd" json:"cmd"`
+	Seq      int64  `form:"seq" json:"seq"`
+	MsgType  int    `form:"msgType" json:"msgType"`
+	UserData int    `form:"userdata" json:"userdata"`
+	Payload  []byte `form:"payload" json:"payload"`
 }
 
 //NewWSMessage create new websocket message
-func NewWSMessage(uid int64, cmd string, seq int64, msgType int, codec codec.Codec) *WSMessage {
+func NewWSMessage(uid string, cmd string, seq int64, msgType int, codec codec.Codec) *WSMessage {
 	m := &WSMessage{Head: &WSHeader{UID: uid, CMD: cmd, Seq: seq, MsgType: msgType}, codec: codec}
 	return m
 }

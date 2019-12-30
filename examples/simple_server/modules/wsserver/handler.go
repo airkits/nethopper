@@ -28,8 +28,6 @@
 package wsserver
 
 import (
-	"strconv"
-
 	"github.com/gonethopper/nethopper/examples/model"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/network"
@@ -40,8 +38,8 @@ import (
 func LoginHandler(agent network.IAgentAdapter, m *model.WSMessage) error {
 	req := (m.Body).(*model.LoginReq)
 	server.Info("receive message %v", m)
-	userID := strconv.FormatInt(req.UID, 10)
-	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(req.UID), userID, req.Passwd)
+	userID := server.StringToInt64(req.UID)
+	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.UID, req.Passwd)
 	outM := model.NewWSMessage(req.UID, model.CSLoginCmd, m.Head.Seq, server.MTResponse, agent.Codec())
 	resp := &model.LoginResp{
 		Msg:    "ok",

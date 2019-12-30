@@ -63,7 +63,7 @@ func (b *WSBody) Setup() {
 //LoginReq login request
 type LoginReq struct {
 	WSBody
-	UID    int64  `form:"uid" json:"uid"`
+	UID    string `form:"uid" json:"uid"`
 	Passwd string `form:"passwd" json:"passwd"`
 }
 

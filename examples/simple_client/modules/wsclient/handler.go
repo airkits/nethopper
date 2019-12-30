@@ -8,7 +8,7 @@ import (
 )
 
 // NotifyLogin user to login
-func NotifyLogin(s *Module, obj *server.CallObject, uid int64, pwd string) (string, error) {
+func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
 	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
 		m := model.NewWSMessage(uid, model.CSLoginCmd, 1, server.MTRequest, agent.GetAdapter().Codec())

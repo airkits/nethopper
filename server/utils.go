@@ -27,6 +27,8 @@
 
 package server
 
+import "strconv"
+
 // PowerCalc return size & power
 func PowerCalc(size int32) (int32, uint8) {
 
@@ -47,4 +49,18 @@ func PowerCalc(size int32) (int32, uint8) {
 	}
 	power++
 	return 1 << power, power
+}
+
+//Int64ToString convert int64 to string
+func Int64ToString(v int64) string {
+	return strconv.FormatInt(v, 10)
+}
+
+//StringToInt64 convert string to int64,if err return 0
+func StringToInt64(s string) int64 {
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return v
 }

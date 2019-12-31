@@ -21,37 +21,40 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-14 19:56:49
+// * @Date: 2019-12-25 23:19:18
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-14 19:56:49
+// * @Last Modified time: 2019-12-25 23:19:18
 
-package main
+package wsjson
 
 import (
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/wsjson"
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/examples/model/json"
+	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/server"
 )
 
-func main() {
-
-	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       DEBUG,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
+//LoginHandler request login
+func LoginHandler(agent network.IAgentAdapter, m *json.WSMessage) error {
+	req := (m.Body).(*json.LoginReq)
+	server.Info("receive message %v", m)
+	userID := server.StringToInt64(req.UID)
+	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.UID, req.Passwd)
+	outM := json.NewWSMessage(req.UID, json.CSLoginCmd, m.Head.Seq, server.MTResponse, m.Head.UserData, agent.Codec())
+	resp := &json.LoginResp{
+		Data: result.(string),
 	}
-	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("logic", logic.ModuleCreate)
-	RegisterModule("wsjson", wsjson.ModuleCreate)
-	NewNamedModule(ModuleIDLog, "log", nil, m)
-	NewNamedModule(ModuleIDLogic, "logic", nil, m)
-	NewNamedModule(ModuleIDWSClient, "wsjson", nil, m)
-
-	InitSignal()
-	//GracefulExit()
+	if err != nil {
+		resp.Error(500, err.Error())
+	} else {
+		resp.OK()
+	}
+	outM.Body = resp
+	payload, err := outM.Encode()
+	if err != nil {
+		return err
+	}
+	agent.WriteMessage(payload)
+	server.Info("send message %v", payload)
+	return nil
 }

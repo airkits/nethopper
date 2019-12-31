@@ -1,4 +1,4 @@
-package model
+package json
 
 const (
 	// CSLoginCmd login cmd

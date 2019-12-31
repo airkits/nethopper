@@ -1,10 +1,10 @@
-package wsserver
+package wspb
 
 import (
 	"errors"
 
 	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model"
+	"github.com/gonethopper/nethopper/examples/model/json"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/server"
 )
@@ -12,7 +12,7 @@ import (
 //NewAgentAdapter create agent adapter
 func NewAgentAdapter(conn network.Conn) network.IAgentAdapter {
 	a := new(AgentAdapter)
-	a.Setup(conn, codec.JSONCodec)
+	a.Setup(conn, codec.PBCodec)
 	return a
 }
 
@@ -23,7 +23,7 @@ type AgentAdapter struct {
 
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload []byte) error {
-	m := model.NewEmptyWSMessage(a.Codec())
+	m := json.NewEmptyWSMessage(a.Codec())
 	if err := m.DecodeHead(payload); err != nil {
 		server.Error("decode head failed ,err :%s", err.Error())
 		return err
@@ -47,22 +47,22 @@ func (a *AgentAdapter) ProcessMessage(payload []byte) error {
 	}
 }
 
-func (a *AgentAdapter) processRequestMessage(m *model.WSMessage) error {
+func (a *AgentAdapter) processRequestMessage(m *json.WSMessage) error {
 
 	switch m.Head.CMD {
-	case model.CSLoginCmd:
+	case json.CSLoginCmd:
 		return LoginHandler(a, m)
 	default:
 		return errors.New("unknown message")
 	}
 
 }
-func (a *AgentAdapter) processResponseMessage(m *model.WSMessage) error {
+func (a *AgentAdapter) processResponseMessage(m *json.WSMessage) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processNotifyMessage(m *model.WSMessage) error {
+func (a *AgentAdapter) processNotifyMessage(m *json.WSMessage) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processBroadcastMessage(m *model.WSMessage) error {
+func (a *AgentAdapter) processBroadcastMessage(m *json.WSMessage) error {
 	return errors.New("unknown message")
 }

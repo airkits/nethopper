@@ -1,4 +1,4 @@
-package model
+package json
 
 import (
 	"errors"
@@ -67,10 +67,36 @@ type LoginReq struct {
 	Passwd string `form:"passwd" json:"passwd"`
 }
 
+// Result response common struct
+type Result struct {
+	Code int32  `form:"code" json:"code"`
+	Msg  string `form:"msg" json:"msg"`
+}
+
+//BaseResponse base response object
+type BaseResponse struct {
+	Result Result `form:"result" json:"result"`
+}
+
+//Setup init
+func (b *BaseResponse) Setup() {
+
+}
+
+// OK set result ok
+func (b *BaseResponse) OK() {
+	b.Result.Code = 0
+	b.Result.Msg = "ok"
+}
+
+// Error set result error code and msg
+func (b *BaseResponse) Error(code int32, msg string) {
+	b.Result.Code = code
+	b.Result.Msg = msg
+}
+
 //LoginResp login response
 type LoginResp struct {
-	WSBody
-	Result string `form:"result" json:"result"`
-	Msg    string `form:"msg" json:"msg"`
-	Code   int    `form:"code" json:"code"`
+	BaseResponse
+	Data string `form:"data" json:"data"`
 }

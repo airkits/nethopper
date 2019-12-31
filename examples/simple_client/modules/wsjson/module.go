@@ -25,29 +25,35 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package logic
+package wsjson
 
 import (
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/model/json"
+	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/ws"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// Module struct to define module
-type Module struct {
-	server.BaseContext
-}
+// HTTPTimeout http timeout (second)
+const HTTPTimeout = 10
 
 // ModuleCreate  module create function
 func ModuleCreate() (server.Module, error) {
 	return &Module{}, nil
 }
 
+// Module struct to define module
+type Module struct {
+	server.BaseContext
+	wsClient *ws.Client
+}
+
 // UserData module custom option, can you store you data and you must keep goruntine safe
-// func (s *Module) UserData() int32 {
-// 	return 0
-// }
+func (s *Module) UserData() int32 {
+	return 0
+}
 
 // Setup init custom module and pass config map to module
 // config
@@ -55,42 +61,51 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+	if err := s.ReadConfig(m); err != nil {
+		panic(err)
+	}
+	s.RegisterHandler(json.CSLoginCmd, NotifyLogin)
+	s.CreateWorkerPool(s, 128, 10*time.Second, true)
+
+	s.wsClient = ws.NewClient(m, func(conn network.Conn) network.IAgent {
+		a := network.NewAgent(nil, NewAgentAdapter(conn))
+		a.SetToken("user")
+		network.GetInstance().AddAgent(a)
+		return a
+	})
+	s.wsClient.Run()
 
 	return s, nil
 }
 
-//Reload reload config
-// func (s *Module) Reload(m map[string]interface{}) error {
-// 	return nil
-// }
-
-// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
-func (s *Module) OnRun(dt time.Duration) {
-	//time.Sleep(5 * time.Second)
-	server.Call(server.ModuleIDWSClient, json.CSLoginCmd, 1, "1", "game")
-	server.Info("logic start call")
-}
-
-// func (s *Module) request() {
-// 	server.TraceCost("request cost")
-// 	for i := 0; i < 1000; i++ {
-// 	}
-// }
-
-// Stop goruntine
-func (s *Module) Stop() error {
+// ReadConfig config map
+// address default :80
+func (s *Module) ReadConfig(m map[string]interface{}) error {
 	return nil
 }
 
-// Call async send message to module
+//Reload reload config
+func (s *Module) Reload(m map[string]interface{}) error {
+	return nil
+}
+
+// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
+func (s *Module) OnRun(dt time.Duration) {
+	server.RunSimpleFrame(s, 128)
+}
+
+// Stop goruntine
+func (s *Module) Stop() error {
+
+	return nil
+}
+
+// // Call async send message to module
 // func (s *Module) Call(option int32, obj *server.CallObject) error {
-// 	if err := s.MQ().AsyncPush(obj); err != nil {
-// 		server.Error(err.Error())
-// 	}
 // 	return nil
 // }
 
 // PushBytes async send string or bytes to queue
-// func (s *Module) PushBytes(option int32, buf []byte) error {
-// 	return nil
-// }
+func (s *Module) PushBytes(option int32, buf []byte) error {
+	return nil
+}

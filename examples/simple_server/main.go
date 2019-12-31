@@ -36,7 +36,7 @@ import (
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/wsserver"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -60,7 +60,7 @@ func main() {
 	//runtime.GOMAXPROCS(1)
 	m := map[string]interface{}{
 		"filename":    "logs/server.log",
-		"level":       WARNING,
+		"level":       DEBUG,
 		"maxSize":     50,
 		"maxLines":    1000,
 		"hourEnabled": false,
@@ -75,7 +75,7 @@ func main() {
 	RegisterModule("logic", logic.ModuleCreate)
 	RegisterModule("web_http", http.ModuleCreate)
 	RegisterModule("redis", redis.ModuleCreate)
-	RegisterModule("wsserver", wsserver.ModuleCreate)
+	RegisterModule("wsjson", wsjson.ModuleCreate)
 	//	RegisterModule("redis", redis.RedisModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDDB, "mysql", nil, m)
@@ -83,7 +83,7 @@ func main() {
 	//NewNamedModule(ModuleIDTCP, "tcp", nil, m)
 	NewNamedModule(ModuleIDLogic, "logic", nil, m)
 	NewNamedModule(ModuleIDHTTP, "web_http", nil, m)
-	NewNamedModule(ModuleIDWSServer, "wsserver", nil, m)
+	NewNamedModule(ModuleIDWSServer, "wsjson", nil, m)
 
 	InitSignal()
 	//GracefulExit()

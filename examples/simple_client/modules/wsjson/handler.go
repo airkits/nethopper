@@ -1,7 +1,7 @@
-package wsclient
+package wsjson
 
 import (
-	"github.com/gonethopper/nethopper/examples/model"
+	"github.com/gonethopper/nethopper/examples/model/json"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/server"
 	"time"
@@ -11,8 +11,8 @@ import (
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
 	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
-		m := model.NewWSMessage(uid, model.CSLoginCmd, 1, server.MTRequest, agent.GetAdapter().Codec())
-		body := &model.LoginReq{
+		m := json.NewWSMessage(uid, json.CSLoginCmd, 1, 1, server.MTRequest, agent.GetAdapter().Codec())
+		body := &json.LoginReq{
 			UID:    uid,
 			Passwd: pwd,
 		}
@@ -33,7 +33,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 }
 
 //LoginResponse request login
-func LoginResponse(agent network.IAgentAdapter, m *model.WSMessage) error {
+func LoginResponse(agent network.IAgentAdapter, m *json.WSMessage) error {
 	server.Info("LoginResponse get result %v", *m.Head)
 	return nil
 }

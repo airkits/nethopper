@@ -25,30 +25,29 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-12-25 23:19:18
 
-package wsserver
+package wspb
 
 import (
-	"github.com/gonethopper/nethopper/examples/model"
+	"github.com/gonethopper/nethopper/examples/model/json"
 	"github.com/gonethopper/nethopper/examples/simple_server/common"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/server"
 )
 
 //LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m *model.WSMessage) error {
-	req := (m.Body).(*model.LoginReq)
+func LoginHandler(agent network.IAgentAdapter, m *json.WSMessage) error {
+	req := (m.Body).(*json.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.UID)
 	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.UID, req.Passwd)
-	outM := model.NewWSMessage(req.UID, model.CSLoginCmd, m.Head.Seq, server.MTResponse, agent.Codec())
-	resp := &model.LoginResp{
-		Msg:    "ok",
-		Code:   0,
-		Result: result.(string),
+	outM := json.NewWSMessage(req.UID, json.CSLoginCmd, m.Head.Seq, server.MTResponse, m.Head.UserData, agent.Codec())
+	resp := &json.LoginResp{
+		Data: result.(string),
 	}
 	if err != nil {
-		resp.Code = 500
-		resp.Msg = err.Error()
+		resp.Error(500, err.Error())
+	} else {
+		resp.OK()
 	}
 	outM.Body = resp
 	payload, err := outM.Encode()
@@ -56,6 +55,6 @@ func LoginHandler(agent network.IAgentAdapter, m *model.WSMessage) error {
 		return err
 	}
 	agent.WriteMessage(payload)
-	server.Info("send message %v", outM)
+	server.Info("send message %v", payload)
 	return nil
 }

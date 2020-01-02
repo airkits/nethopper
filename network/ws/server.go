@@ -126,11 +126,9 @@ func (s *Server) ReadConfig(m map[string]interface{}) error {
 
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
-
 	if s.NewAgent == nil {
 		server.Fatal("NewAgent must not be nil")
 	}
-
 	s.conns = make(ConnSet)
 	ln, err := net.Listen("tcp", s.Address)
 	if err != nil {

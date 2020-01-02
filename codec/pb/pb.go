@@ -29,6 +29,7 @@ package pb
 
 import (
 	proto "github.com/golang/protobuf/proto"
+	"github.com/gonethopper/nethopper/codec/common"
 )
 
 // PBCodec use protobuf encode/decode
@@ -46,4 +47,9 @@ func Unmarshal(buf []byte, v interface{}, template interface{}) error {
 // Name of codec
 func Name() string {
 	return "PBCodec"
+}
+
+// Type return codec type
+func Type() int {
+	return common.CodecTypePB
 }

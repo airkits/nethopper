@@ -1,6 +1,11 @@
 package common
 
 const (
+	// CSLoginCmd login cmd
+	CSLoginCmd = "login"
+)
+
+const (
 	// ErrorCodeRedisKeyNotExist redis key not exist
 	ErrorCodeRedisKeyNotExist = 1000
 )

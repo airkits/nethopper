@@ -28,26 +28,34 @@
 package wspb
 
 import (
-	"github.com/gonethopper/nethopper/examples/model/json"
-	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/examples/model"
+	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/model/pb/cs"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/server"
 )
 
 //LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m *json.WSMessage) error {
-	req := (m.Body).(*json.LoginReq)
+func LoginHandler(agent network.IAgentAdapter, m *model.WSMessage) error {
+
+	req := (m.Body).(*cs.LoginReq)
 	server.Info("receive message %v", m)
-	userID := server.StringToInt64(req.UID)
-	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.UID, req.Passwd)
-	outM := json.NewWSMessage(req.UID, json.CSLoginCmd, m.Head.Seq, server.MTResponse, m.Head.UserData, agent.Codec())
-	resp := &json.LoginResp{
-		Data: result.(string),
+	userID := server.StringToInt64(req.Uid)
+	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
+	head := m.Head.(*cs.WSHeader)
+	outM := model.NewWSMessage(req.Uid, common.CSLoginCmd, head.Seq, server.MTResponse, head.Userdata, agent.Codec())
+	resp := &cs.LoginResp{
+		Result: &cs.Result{
+			Code: 0,
+			Msg:  "ok",
+		},
+		Uid:    req.Uid,
+		Passwd: result.(string),
+		Name:   result.(string),
 	}
 	if err != nil {
-		resp.Error(500, err.Error())
-	} else {
-		resp.OK()
+		resp.Result.Code = 500
+		resp.Result.Msg = err.Error()
 	}
 	outM.Body = resp
 	payload, err := outM.Encode()

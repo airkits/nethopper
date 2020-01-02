@@ -30,7 +30,7 @@ package logic
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/json"
+	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -67,7 +67,7 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
 	//time.Sleep(5 * time.Second)
-	server.Call(server.ModuleIDWSClient, json.CSLoginCmd, 1, "1", "game")
+	server.Call(server.ModuleIDWSClient, common.CSLoginCmd, 1, "1", "game")
 	server.Info("logic start call")
 }
 

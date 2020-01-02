@@ -29,6 +29,8 @@ package json
 
 import (
 	"encoding/json"
+
+	"github.com/gonethopper/nethopper/codec/common"
 )
 
 // JSONCodec use gob encode/decode
@@ -46,4 +48,9 @@ func Unmarshal(buf []byte, v interface{}, template interface{}) error {
 // Name of codec
 func Name() string {
 	return "JSONCodec"
+}
+
+// Type return codec type
+func Type() int {
+	return common.CodecTypeJSON
 }

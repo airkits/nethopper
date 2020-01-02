@@ -3,11 +3,17 @@ package json
 import (
 	"errors"
 
+	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
+//IWSBody websocket body interface
+type IWSBody interface {
+	// Setup()
+}
+
 //CreateBody create message body
-func CreateBody(msgType int, cmd string) (IWSBody, error) {
+func CreateBody(msgType int32, cmd string) (IWSBody, error) {
 	switch msgType {
 	case server.MTRequest:
 		return CreateRequestBody(cmd)
@@ -24,19 +30,23 @@ func CreateBody(msgType int, cmd string) (IWSBody, error) {
 }
 
 //CreateRequestBody create request body
-func CreateRequestBody(cmd string) (IWSBody, error) {
-	switch cmd {
-	case CSLoginCmd:
-		return &LoginReq{}, nil
+func CreateRequestBody(c string) (IWSBody, error) {
+	switch c {
+	case common.CSLoginCmd:
+		{
+			return &LoginReq{}, nil
+		}
 	}
 	return nil, errors.New("create body failed,can't find request body")
 }
 
 //CreateResponseBody create response body
-func CreateResponseBody(cmd string) (IWSBody, error) {
-	switch cmd {
-	case CSLoginCmd:
-		return &LoginResp{}, nil
+func CreateResponseBody(c string) (IWSBody, error) {
+	switch c {
+	case common.CSLoginCmd:
+		{
+			return &LoginResp{}, nil
+		}
 	}
 	return nil, errors.New("create body failed,can't find body response body")
 }

@@ -3,7 +3,7 @@ package logic
 import (
 	"strconv"
 
-	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/server"
 )
 

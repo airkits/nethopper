@@ -10,6 +10,7 @@ require (
 	github.com/go-openapi/swag v0.19.6 // indirect
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gonethopper/libs v0.0.0-20190403085111-db2aa0013842

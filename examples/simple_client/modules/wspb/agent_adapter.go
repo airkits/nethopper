@@ -14,7 +14,7 @@ import (
 //NewAgentAdapter create agent adapter
 func NewAgentAdapter(conn network.Conn) network.IAgentAdapter {
 	a := new(AgentAdapter)
-	a.Setup(conn, codec.PBCodec)
+	a.Setup(conn, codec.JSONCodec)
 	return a
 }
 
@@ -27,7 +27,7 @@ type AgentAdapter struct {
 func (a *AgentAdapter) ProcessMessage(payload []byte) error {
 	m := model.NewEmptyWSMessage(a.Codec())
 	if err := m.DecodeHead(payload); err != nil {
-		server.Error("decode head failed ,err :%s", err.Error())
+		server.Error("recevie message failed ,err :%s", err.Error())
 		return err
 	}
 	if err := m.DecodeBody(); err != nil {
@@ -50,18 +50,17 @@ func (a *AgentAdapter) ProcessMessage(payload []byte) error {
 }
 
 func (a *AgentAdapter) processRequestMessage(m *model.WSMessage) error {
-
+	return errors.New("unknown message")
+}
+func (a *AgentAdapter) processResponseMessage(m *model.WSMessage) error {
 	head := m.Head.(*cs.WSHeader)
 	switch head.Cmd {
 	case common.CSLoginCmd:
-		return LoginHandler(a, m)
+		return LoginResponse(a, m)
 	default:
 		return errors.New("unknown message")
 	}
 
-}
-func (a *AgentAdapter) processResponseMessage(m *model.WSMessage) error {
-	return errors.New("unknown message")
 }
 func (a *AgentAdapter) processNotifyMessage(m *model.WSMessage) error {
 	return errors.New("unknown message")

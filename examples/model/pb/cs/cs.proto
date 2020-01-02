@@ -13,7 +13,7 @@ enum ErrorCode {
 }
 
 
-message Message{
+message WSHeader{
   string cmd = 1;
   string uid = 2;
   int32 msgType = 3;

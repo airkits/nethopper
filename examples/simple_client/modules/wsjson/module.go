@@ -30,7 +30,7 @@ package wsjson
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/json"
+	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/ws"
 	"github.com/gonethopper/nethopper/server"
@@ -64,7 +64,7 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
-	s.RegisterHandler(json.CSLoginCmd, NotifyLogin)
+	s.RegisterHandler(common.CSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
 	s.wsClient = ws.NewClient(m, func(conn network.Conn) network.IAgent {

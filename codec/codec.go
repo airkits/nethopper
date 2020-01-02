@@ -42,15 +42,16 @@ type Codec struct {
 	Unmarshal func(buf []byte, v interface{}, template interface{}) error
 	// Name of codec
 	Name func() string
+	Type func() int
 }
 
 var (
 	// PBCodec protobuf encode/decode
-	PBCodec = Codec{pb.Marshal, pb.Unmarshal, pb.Name}
+	PBCodec = Codec{pb.Marshal, pb.Unmarshal, pb.Name, pb.Type}
 	// JSONCodec json encode/decode
-	JSONCodec = Codec{json.Marshal, json.Unmarshal, json.Name}
+	JSONCodec = Codec{json.Marshal, json.Unmarshal, json.Name, json.Type}
 	// GobCodec gob encode/decode
-	GobCodec = Codec{gob.Marshal, gob.Unmarshal, gob.Name}
+	GobCodec = Codec{gob.Marshal, gob.Unmarshal, gob.Name, gob.Type}
 	// BinaryCodec binary encode/decode
-	BinaryCodec = Codec{binary.Marshal, binary.Unmarshal, binary.Name}
+	BinaryCodec = Codec{binary.Marshal, binary.Unmarshal, binary.Name, binary.Type}
 )

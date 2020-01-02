@@ -10,7 +10,7 @@ import (
 	"github.com/gonethopper/libs/logs"
 	"github.com/gonethopper/libs/utils"
 	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/server"
 )
 

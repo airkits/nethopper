@@ -3,6 +3,8 @@ package binary
 import (
 	"encoding/binary"
 	"math"
+
+	"github.com/gonethopper/nethopper/codec/common"
 )
 
 const initialBufferSize = 1024
@@ -39,6 +41,11 @@ func Unmarshal(buf []byte, v interface{}, template interface{}) error {
 // Name of codec
 func Name() string {
 	return "BinaryCodec"
+}
+
+// Type return codec type
+func Type() int {
+	return common.CodecTypeBinary
 }
 
 // NewCoder create binary coder to Write/Read

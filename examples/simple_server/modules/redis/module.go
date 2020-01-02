@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/cache/redis"
-	"github.com/gonethopper/nethopper/examples/simple_server/common"
+	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/server"
 )
 

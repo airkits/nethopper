@@ -37,11 +37,25 @@ type WSMessage struct {
 
 //DecodeHead head decode
 func (m *WSMessage) DecodeHead(payload []byte) error {
-	head := &json.WSHeader{}
-	if err := m.codec.Unmarshal(payload, &head, nil); err != nil {
+
+	head := m.createEmptyHeader()
+	if err := m.codec.Unmarshal(payload, head, nil); err != nil {
 		return err
 	}
 	m.Head = head
+	return nil
+}
+func (m *WSMessage) createEmptyHeader() interface{} {
+	switch m.codec.Type() {
+	case common.CodecTypeJSON:
+		{
+			return &json.WSHeader{}
+		}
+	case common.CodecTypePB:
+		{
+			return &cs.WSHeader{}
+		}
+	}
 	return nil
 }
 

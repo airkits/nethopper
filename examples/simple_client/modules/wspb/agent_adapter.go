@@ -14,7 +14,7 @@ import (
 //NewAgentAdapter create agent adapter
 func NewAgentAdapter(conn network.Conn) network.IAgentAdapter {
 	a := new(AgentAdapter)
-	a.Setup(conn, codec.JSONCodec)
+	a.Setup(conn, codec.PBCodec)
 	return a
 }
 

@@ -38,5 +38,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 //LoginResponse request login
 func LoginResponse(agent network.IAgentAdapter, m *model.WSMessage) error {
 	server.Info("LoginResponse get result %v", *(m.Head.(*cs.WSHeader)))
+	server.Info("LoginResponse get body %v", *(m.Body.(*cs.LoginResp)))
+
 	return nil
 }

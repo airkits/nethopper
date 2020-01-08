@@ -39,8 +39,8 @@ func main() {
 	m := map[string]interface{}{
 		"filename":    "logs/server.log",
 		"level":       DEBUG,
-		"maxSize":     50,
-		"maxLines":    1000,
+		"maxSize":     5000,
+		"maxLines":    10000000,
 		"hourEnabled": false,
 		"dailyEnable": true,
 		"queueSize":   1000,

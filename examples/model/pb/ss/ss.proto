@@ -1,0 +1,46 @@
+syntax = "proto3";
+package ss;
+
+// client  <-> server  10000 - 19999
+enum MessageCmd //枚举消息类型
+{
+  NULL = 0;
+  Login = 1;
+}
+
+enum ErrorCode {
+  OK = 0;
+}
+
+
+message Header{
+  string cmd = 1;
+  string uid = 2;
+  int32 msgType = 3;
+  int32 seq = 4;
+  int32 userdata = 5;
+  bytes payload = 11;
+}
+
+
+message LoginReq{
+  string uid = 1;
+  string passwd =2;
+}
+
+message Result {
+  int32 code=1;
+  string msg=2;
+}
+message LoginResp {
+  Result result = 1;
+  string uid = 2;
+  string passwd = 3;
+  string name = 4;
+}
+
+
+service User {
+  // Sends a Login
+  rpc Login (LoginReq) returns (LoginResp) {}
+}

@@ -28,10 +28,10 @@
 package grpc
 
 import (
-	"net"
+	"context"
+	"io"
 	"time"
 
-	"github.com/gonethopper/nethopper/base/queue"
 	"github.com/gonethopper/nethopper/examples/model/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc"
@@ -48,76 +48,102 @@ func ModuleCreate() (server.Module, error) {
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	gs             *grpc.Server
-	Address        string
-	MaxConnNum     int
-	RWQueueSize    int
-	MaxMessageSize int
-	listener       net.Listener
+	Address string
 }
 
-//ReadConfig read config
-// config
-// m := map[string]interface{}{
-//  "queueSize":1000,
-//  "grpcAddress":":14000",
-//	"maxConnNum":1024,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-// }
-func (s *Module) ReadConfig(m map[string]interface{}) error {
-	if err := server.ParseConfigValue(m, "grpcAddress", ":14000", &s.Address); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &s.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &s.MaxMessageSize); err != nil {
-		return err
-	}
-	return nil
+// UserData module custom option, can you store you data and you must keep goruntine safe
+func (s *Module) UserData() int32 {
+	return 0
 }
 
 // Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
-//  "grpcAddress":":14000",
-//	"maxConnNum":1024,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
 
-	s.gs = grpc.NewServer()
-	ss.RegisterRouterServer(s.gs, &Server{q: queue.NewChanQueue(1024)})
-
-	lis, err := net.Listen("tcp", s.Address)
-
+	conn, err := grpc.Dial(s.Address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		server.Error("failed to listen: %v", err)
-		return nil, err
+		server.Fatal("did not connect: %v", err)
 	}
-	server.Info("grpc start listen:%s", s.Address)
-	s.listener = lis
+	defer conn.Close()
+	client := ss.NewRouterClient(conn)
 
-	server.GO(s.web)
-
+	Transport(client)
 	return s, nil
 }
-func (s *Module) web() {
-	if err := s.gs.Serve(s.listener); err != nil {
-		server.Fatal("failed to grpc serve: %v", err)
+
+func Transport(c ss.RouterClient) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	stream, err := c.Transport(ctx)
+	if err != nil {
+		server.Info("transport %v", err.Error())
 	}
+
+	go func() {
+		for {
+			in, err := stream.Recv()
+			if err == io.EOF {
+				return
+			}
+			if err != nil {
+				server.Error("stream get error %s", err.Error())
+				return
+			}
+			server.Info("receive message from server %v", in.GetCmd())
+		}
+	}()
+
+	i := 1
+	for {
+		i++
+		stream.Send(&ss.SSMessage{Cmd: "ss"})
+		time.Sleep(time.Second)
+		if i > 10 {
+			break
+		}
+
+	}
+	stream.CloseSend()
+	return nil
+}
+
+// ReadConfig config map
+// address default :14000
+func (s *Module) ReadConfig(m map[string]interface{}) error {
+	if err := server.ParseConfigValue(m, "address", ":14000", &s.Address); err != nil {
+		return err
+	}
+	return nil
+}
+
+//Reload reload config
+func (s *Module) Reload(m map[string]interface{}) error {
+	return nil
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
 	server.RunSimpleFrame(s, 128)
+}
+
+// Stop goruntine
+func (s *Module) Stop() error {
+
+	return nil
+}
+
+// // Call async send message to module
+// func (s *Module) Call(option int32, obj *server.CallObject) error {
+// 	return nil
+// }
+
+// PushBytes async send string or bytes to queue
+func (s *Module) PushBytes(option int32, buf []byte) error {
+	return nil
 }

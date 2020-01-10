@@ -13,12 +13,13 @@ enum ErrorCode {
 }
 
 
-message Header{
+message SSMessage{
   string cmd = 1;
   string uid = 2;
   int32 msgType = 3;
   int32 seq = 4;
   int32 userdata = 5;
+  map<string,  bytes> header =  6;
   bytes payload = 11;
 }
 
@@ -40,7 +41,7 @@ message LoginResp {
 }
 
 
-service User {
-  // Sends a Login
-  rpc Login (LoginReq) returns (LoginResp) {}
+service Router {
+  rpc Transport (stream SSMessage) returns (stream SSMessage){}
 }
+

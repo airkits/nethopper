@@ -654,6 +654,7 @@ github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijb
 github.com/vmware/govmomi v0.18.0/go.mod h1:URlwyTFZX72RmxtxuaFL2Uj3fD1JTvZdx59bHWk6aFU=
 github.com/vmware/vic v1.4.1/go.mod h1:AiTDrZuV13NkqRzseA5ZmF2QqLpTydaaGN75xgV6Ork=
 github.com/willf/bitset v1.1.9/go.mod h1:RjeCKbqT1RxIR/KWY6phxZiaY1IyutSBfGjNPySAYV4=
+github.com/wuqifei/server_lib v0.0.0-20180919081200-afb6b43059f3 h1:plcA477Lxrq0N4Ho5G3Dx9rxg+tN78Bt00sR9KaagqY=
 github.com/wuqifei/server_lib v0.0.0-20180919081200-afb6b43059f3/go.mod h1:7Rdwcy69xOYRsfAOEkJG9doF/o6UmTX5hQCsuIEBTOU=
 github.com/xanzy/ssh-agent v0.2.0/go.mod h1:0NyE30eGUDliuLEHJgYte/zncp2zdTStcOnWhgSqHD8=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=

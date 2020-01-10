@@ -161,6 +161,7 @@ reconnect:
 	}
 }
 
+// Close client connections
 func (c *Client) Close() {
 	c.Lock()
 	c.closeFlag = true

@@ -55,8 +55,8 @@ const (
 	ModuleIDKCP
 	// ModuleIDWSServer ws server
 	ModuleIDWSServer
-	// ModuleIDWSClient ws client
-	ModuleIDWSClient
+	// ModuleIDGRPCServer grpc server
+	ModuleIDGRPCServer
 	// ModuleIDHTTP http module
 	ModuleIDHTTP
 	// ModuleIDLogic logic module
@@ -69,8 +69,13 @@ const (
 	ModuleIDKCPClient
 	// ModuleIDHTTPClient http client module
 	ModuleIDHTTPClient
+	// ModuleIDGRPCClient grpc client module
+	ModuleIDGRPCClient
+	// ModuleIDWSClient ws client
+	ModuleIDWSClient
 	// ModuleIDDB common db module
 	ModuleIDDB
+
 	// ModuleIDUserCustom User custom define named modules from 64-128
 	ModuleIDUserCustom = 64
 	// ModuleIDNamedMax named modules max ID

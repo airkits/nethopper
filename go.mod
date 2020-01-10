@@ -33,6 +33,7 @@ require (
 	github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 // indirect
 	github.com/templexxx/xor v0.0.0-20181023030647-4e92f724b73b // indirect
 	github.com/tjfoc/gmsm v1.0.1 // indirect
+	github.com/wuqifei/server_lib v0.0.0-20180919081200-afb6b43059f3
 	github.com/xtaci/kcp-go v5.4.2+incompatible
 	github.com/xtaci/lossyconn v0.0.0-20190602105132-8df528c0c9ae // indirect
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect

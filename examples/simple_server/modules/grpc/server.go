@@ -21,33 +21,39 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2020-01-09 11:01:43
+// * @Date: 2020-01-09 11:20:09
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2020-01-09 11:01:43
+// * @Last Modified time: 2020-01-09 11:20:09
 
-package redis
+package grpc
 
 import (
-	"fmt"
+	"io"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/base/queue"
+	"github.com/gonethopper/nethopper/examples/model/pb/ss"
 )
 
-// GetUserInfoHander 获取用户信息
-func GetUserInfoHander(s *Module, obj *server.CallObject, uid string) (string, error) {
-	defer server.TraceCost("GetUserInfoHander")()
-	password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%s", uid))
-	return password, err
-
+// Server is used to implement ss.UnimplementedRPCServer
+type Server struct {
+	ss.UnimplementedRouterServer
+	q queue.Queue
 }
 
-// UpdateUserInfoHandler update user info
-func UpdateUserInfoHandler(s *Module, obj *server.CallObject, uid string, pwd string) (bool, error) {
+//Transport grpc connection
+func (s *Server) Transport(stream ss.Router_TransportServer) error {
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
 
-	var key = fmt.Sprintf("uid_%s", uid)
-	err := s.rdb.Set(s.Context(), key, pwd, 0)
-	if err != nil {
-		return false, err
+		if err := stream.Send(msg); err != nil {
+			return err
+		}
+
 	}
-	return true, nil
 }

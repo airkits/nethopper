@@ -72,79 +72,87 @@ func (ErrorCode) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_dc711c54c28c22d7, []int{1}
 }
 
-type Header struct {
-	Cmd                  string   `protobuf:"bytes,1,opt,name=cmd,proto3" json:"cmd,omitempty"`
-	Uid                  string   `protobuf:"bytes,2,opt,name=uid,proto3" json:"uid,omitempty"`
-	MsgType              int32    `protobuf:"varint,3,opt,name=msgType,proto3" json:"msgType,omitempty"`
-	Seq                  int32    `protobuf:"varint,4,opt,name=seq,proto3" json:"seq,omitempty"`
-	Userdata             int32    `protobuf:"varint,5,opt,name=userdata,proto3" json:"userdata,omitempty"`
-	Payload              []byte   `protobuf:"bytes,11,opt,name=payload,proto3" json:"payload,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+type SSMessage struct {
+	Cmd                  string            `protobuf:"bytes,1,opt,name=cmd,proto3" json:"cmd,omitempty"`
+	Uid                  string            `protobuf:"bytes,2,opt,name=uid,proto3" json:"uid,omitempty"`
+	MsgType              int32             `protobuf:"varint,3,opt,name=msgType,proto3" json:"msgType,omitempty"`
+	Seq                  int32             `protobuf:"varint,4,opt,name=seq,proto3" json:"seq,omitempty"`
+	Userdata             int32             `protobuf:"varint,5,opt,name=userdata,proto3" json:"userdata,omitempty"`
+	Header               map[string][]byte `protobuf:"bytes,6,rep,name=header,proto3" json:"header,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Payload              []byte            `protobuf:"bytes,11,opt,name=payload,proto3" json:"payload,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
-func (m *Header) Reset()         { *m = Header{} }
-func (m *Header) String() string { return proto.CompactTextString(m) }
-func (*Header) ProtoMessage()    {}
-func (*Header) Descriptor() ([]byte, []int) {
+func (m *SSMessage) Reset()         { *m = SSMessage{} }
+func (m *SSMessage) String() string { return proto.CompactTextString(m) }
+func (*SSMessage) ProtoMessage()    {}
+func (*SSMessage) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dc711c54c28c22d7, []int{0}
 }
 
-func (m *Header) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Header.Unmarshal(m, b)
+func (m *SSMessage) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SSMessage.Unmarshal(m, b)
 }
-func (m *Header) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Header.Marshal(b, m, deterministic)
+func (m *SSMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SSMessage.Marshal(b, m, deterministic)
 }
-func (m *Header) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Header.Merge(m, src)
+func (m *SSMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SSMessage.Merge(m, src)
 }
-func (m *Header) XXX_Size() int {
-	return xxx_messageInfo_Header.Size(m)
+func (m *SSMessage) XXX_Size() int {
+	return xxx_messageInfo_SSMessage.Size(m)
 }
-func (m *Header) XXX_DiscardUnknown() {
-	xxx_messageInfo_Header.DiscardUnknown(m)
+func (m *SSMessage) XXX_DiscardUnknown() {
+	xxx_messageInfo_SSMessage.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Header proto.InternalMessageInfo
+var xxx_messageInfo_SSMessage proto.InternalMessageInfo
 
-func (m *Header) GetCmd() string {
+func (m *SSMessage) GetCmd() string {
 	if m != nil {
 		return m.Cmd
 	}
 	return ""
 }
 
-func (m *Header) GetUid() string {
+func (m *SSMessage) GetUid() string {
 	if m != nil {
 		return m.Uid
 	}
 	return ""
 }
 
-func (m *Header) GetMsgType() int32 {
+func (m *SSMessage) GetMsgType() int32 {
 	if m != nil {
 		return m.MsgType
 	}
 	return 0
 }
 
-func (m *Header) GetSeq() int32 {
+func (m *SSMessage) GetSeq() int32 {
 	if m != nil {
 		return m.Seq
 	}
 	return 0
 }
 
-func (m *Header) GetUserdata() int32 {
+func (m *SSMessage) GetUserdata() int32 {
 	if m != nil {
 		return m.Userdata
 	}
 	return 0
 }
 
-func (m *Header) GetPayload() []byte {
+func (m *SSMessage) GetHeader() map[string][]byte {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *SSMessage) GetPayload() []byte {
 	if m != nil {
 		return m.Payload
 	}
@@ -311,7 +319,8 @@ func (m *LoginResp) GetName() string {
 func init() {
 	proto.RegisterEnum("ss.MessageCmd", MessageCmd_name, MessageCmd_value)
 	proto.RegisterEnum("ss.ErrorCode", ErrorCode_name, ErrorCode_value)
-	proto.RegisterType((*Header)(nil), "ss.Header")
+	proto.RegisterType((*SSMessage)(nil), "ss.SSMessage")
+	proto.RegisterMapType((map[string][]byte)(nil), "ss.SSMessage.HeaderEntry")
 	proto.RegisterType((*LoginReq)(nil), "ss.LoginReq")
 	proto.RegisterType((*Result)(nil), "ss.Result")
 	proto.RegisterType((*LoginResp)(nil), "ss.LoginResp")
@@ -320,27 +329,31 @@ func init() {
 func init() { proto.RegisterFile("ss.proto", fileDescriptor_dc711c54c28c22d7) }
 
 var fileDescriptor_dc711c54c28c22d7 = []byte{
-	// 313 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x91, 0xcf, 0x6a, 0xf2, 0x40,
-	0x14, 0xc5, 0x1d, 0x4d, 0xf2, 0x25, 0x57, 0x3f, 0x08, 0x53, 0x28, 0x83, 0x2b, 0x9b, 0x45, 0x11,
-	0x17, 0x59, 0xd8, 0xbe, 0x81, 0x14, 0x0a, 0xb5, 0x2d, 0x0c, 0xf5, 0x01, 0xa6, 0xce, 0x25, 0x08,
-	0x8e, 0x89, 0x73, 0x13, 0x8a, 0x2f, 0xd1, 0x67, 0x2e, 0x33, 0x66, 0xaa, 0x8b, 0xee, 0xce, 0x39,
-	0xb9, 0x7f, 0x7e, 0xb9, 0x03, 0x29, 0x51, 0xd9, 0xd8, 0xba, 0xad, 0xf9, 0x90, 0xa8, 0xf8, 0x66,
-	0x90, 0x3c, 0xa3, 0xd2, 0x68, 0x79, 0x0e, 0xa3, 0xad, 0xd1, 0x82, 0xcd, 0xd8, 0x3c, 0x93, 0x4e,
-	0xba, 0xa4, 0xdb, 0x69, 0x31, 0x3c, 0x27, 0xdd, 0x4e, 0x73, 0x01, 0xff, 0x0c, 0x55, 0x1f, 0xa7,
-	0x06, 0xc5, 0x68, 0xc6, 0xe6, 0xb1, 0x0c, 0xd6, 0xd5, 0x12, 0x1e, 0x45, 0xe4, 0x53, 0x27, 0xf9,
-	0x14, 0xd2, 0x8e, 0xd0, 0x6a, 0xd5, 0x2a, 0x11, 0xfb, 0xf8, 0xd7, 0xbb, 0x39, 0x8d, 0x3a, 0xed,
-	0x6b, 0xa5, 0xc5, 0x78, 0xc6, 0xe6, 0x13, 0x19, 0x6c, 0xf1, 0x08, 0xe9, 0xba, 0xae, 0x76, 0x07,
-	0x89, 0xc7, 0xb0, 0x9f, 0x5d, 0xf6, 0xdf, 0x42, 0xd2, 0x28, 0xa2, 0xaf, 0x00, 0xd5, 0xbb, 0xa2,
-	0x84, 0x44, 0x22, 0x75, 0xfb, 0x96, 0x73, 0x88, 0xb6, 0xb5, 0x46, 0xdf, 0x14, 0x4b, 0xaf, 0xdd,
-	0x1c, 0x43, 0x55, 0xf8, 0x0f, 0x43, 0x55, 0x61, 0x20, 0xeb, 0xb7, 0x50, 0xc3, 0x0b, 0x48, 0xac,
-	0x6f, 0xf6, 0x4d, 0xe3, 0x25, 0x94, 0x44, 0xe5, 0x79, 0x9c, 0xec, 0xbf, 0xfc, 0x71, 0x8a, 0x0b,
-	0xca, 0xe8, 0x1a, 0xc5, 0x01, 0x1c, 0x94, 0x41, 0x7f, 0x89, 0x4c, 0x7a, 0xbd, 0xb8, 0x03, 0x78,
-	0x45, 0x22, 0x55, 0xe1, 0xca, 0x68, 0x9e, 0x42, 0xf4, 0xb6, 0x59, 0xaf, 0xf3, 0x01, 0xcf, 0x20,
-	0xf6, 0x18, 0x39, 0x5b, 0xdc, 0x40, 0xf6, 0x64, 0x6d, 0x6d, 0x57, 0x0e, 0x38, 0x81, 0xe1, 0xfb,
-	0x4b, 0x3e, 0x58, 0x96, 0x10, 0x6d, 0x08, 0x2d, 0xbf, 0xef, 0xeb, 0xf8, 0xc4, 0xa1, 0x85, 0xfb,
-	0x4c, 0xff, 0x5f, 0x39, 0x6a, 0x8a, 0xc1, 0x67, 0xe2, 0x1f, 0xf6, 0xe1, 0x27, 0x00, 0x00, 0xff,
-	0xff, 0xd1, 0xd7, 0x97, 0xef, 0xe4, 0x01, 0x00, 0x00,
+	// 380 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x52, 0x4d, 0x6f, 0xd4, 0x30,
+	0x14, 0x5c, 0x27, 0x1b, 0x93, 0xbc, 0x14, 0x29, 0x32, 0x08, 0x99, 0x3d, 0x85, 0x9c, 0xa2, 0x1e,
+	0x02, 0x2c, 0x1c, 0x28, 0xd7, 0xaa, 0x12, 0x12, 0x0b, 0x48, 0x6e, 0xf9, 0x01, 0xa6, 0xb6, 0xc2,
+	0xaa, 0x9b, 0x38, 0xf5, 0x4b, 0x40, 0xf9, 0xf5, 0x20, 0x7b, 0x93, 0xfd, 0x90, 0x7a, 0x7b, 0x33,
+	0xf6, 0xf8, 0xcd, 0x4c, 0x02, 0x31, 0x62, 0xd5, 0x59, 0xd3, 0x1b, 0x16, 0x20, 0x16, 0xff, 0x08,
+	0x24, 0xb7, 0xb7, 0xdf, 0x34, 0xa2, 0xac, 0x35, 0xcb, 0x20, 0xbc, 0x6f, 0x14, 0x27, 0x39, 0x29,
+	0x13, 0xe1, 0x46, 0xc7, 0x0c, 0x5b, 0xc5, 0x83, 0x3d, 0x33, 0x6c, 0x15, 0xe3, 0xf0, 0xac, 0xc1,
+	0xfa, 0x6e, 0xec, 0x34, 0x0f, 0x73, 0x52, 0x46, 0x62, 0x86, 0xee, 0x2e, 0xea, 0x47, 0xbe, 0xf4,
+	0xac, 0x1b, 0xd9, 0x0a, 0xe2, 0x01, 0xb5, 0x55, 0xb2, 0x97, 0x3c, 0xf2, 0xf4, 0x01, 0xb3, 0xf7,
+	0x40, 0x7f, 0x6b, 0xa9, 0xb4, 0xe5, 0x34, 0x0f, 0xcb, 0x74, 0xfd, 0xba, 0x42, 0xac, 0x0e, 0x56,
+	0xaa, 0x2f, 0xfe, 0xec, 0xa6, 0xed, 0xed, 0x28, 0xa6, 0x8b, 0x6e, 0x75, 0x27, 0xc7, 0x9d, 0x91,
+	0x8a, 0xa7, 0x39, 0x29, 0x2f, 0xc4, 0x0c, 0x57, 0x57, 0x90, 0x9e, 0x08, 0x9c, 0x93, 0x07, 0x3d,
+	0xce, 0x39, 0x1e, 0xf4, 0xc8, 0x5e, 0x42, 0xf4, 0x47, 0xee, 0x06, 0xed, 0x93, 0x5c, 0x88, 0x3d,
+	0xf8, 0x1c, 0x7c, 0x22, 0xc5, 0x47, 0x88, 0x37, 0xa6, 0xde, 0xb6, 0x42, 0x3f, 0xce, 0x69, 0xc9,
+	0x31, 0xed, 0x2b, 0xa0, 0x9d, 0x44, 0xfc, 0x3b, 0x57, 0x30, 0xa1, 0xa2, 0x02, 0x2a, 0x34, 0x0e,
+	0xbb, 0x9e, 0x31, 0x58, 0xde, 0x1b, 0xa5, 0xbd, 0x28, 0x12, 0x7e, 0x76, 0xef, 0x34, 0x58, 0xcf,
+	0xad, 0x35, 0x58, 0x17, 0x0d, 0x24, 0xd3, 0x16, 0xec, 0x58, 0x01, 0xd4, 0x7a, 0xb1, 0x17, 0xa5,
+	0x6b, 0x70, 0xd1, 0xf7, 0xcf, 0x89, 0xe9, 0xe4, 0x89, 0xe2, 0x8f, 0x56, 0xc2, 0x53, 0x2b, 0xce,
+	0x40, 0x2b, 0x1b, 0xed, 0x7b, 0x4f, 0x84, 0x9f, 0x2f, 0xdf, 0x00, 0x4c, 0x45, 0x5e, 0x37, 0x8a,
+	0xc5, 0xb0, 0xfc, 0xfe, 0x73, 0xb3, 0xc9, 0x16, 0x2c, 0x81, 0xc8, 0xdb, 0xc8, 0xc8, 0xe5, 0x0b,
+	0x48, 0x6e, 0xac, 0x35, 0xf6, 0xda, 0x19, 0xa6, 0x10, 0xfc, 0xf8, 0x9a, 0x2d, 0xd6, 0x57, 0x40,
+	0x85, 0x19, 0x7a, 0x6d, 0xd9, 0x5b, 0x48, 0xee, 0xac, 0x6c, 0xb1, 0x33, 0xb6, 0x67, 0xcf, 0xcf,
+	0xbe, 0xcd, 0xea, 0x1c, 0x16, 0x8b, 0x92, 0xbc, 0x23, 0xbf, 0xa8, 0xff, 0xa9, 0x3e, 0xfc, 0x0f,
+	0x00, 0x00, 0xff, 0xff, 0x9f, 0x16, 0xc6, 0xfb, 0x60, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -351,76 +364,106 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// UserClient is the client API for User service.
+// RouterClient is the client API for Router service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type UserClient interface {
-	// Sends a Login
-	Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error)
+type RouterClient interface {
+	Transport(ctx context.Context, opts ...grpc.CallOption) (Router_TransportClient, error)
 }
 
-type userClient struct {
+type routerClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewUserClient(cc *grpc.ClientConn) UserClient {
-	return &userClient{cc}
+func NewRouterClient(cc *grpc.ClientConn) RouterClient {
+	return &routerClient{cc}
 }
 
-func (c *userClient) Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error) {
-	out := new(LoginResp)
-	err := c.cc.Invoke(ctx, "/ss.User/Login", in, out, opts...)
+func (c *routerClient) Transport(ctx context.Context, opts ...grpc.CallOption) (Router_TransportClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Router_serviceDesc.Streams[0], "/ss.Router/Transport", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &routerTransportClient{stream}
+	return x, nil
 }
 
-// UserServer is the server API for User service.
-type UserServer interface {
-	// Sends a Login
-	Login(context.Context, *LoginReq) (*LoginResp, error)
+type Router_TransportClient interface {
+	Send(*SSMessage) error
+	Recv() (*SSMessage, error)
+	grpc.ClientStream
 }
 
-// UnimplementedUserServer can be embedded to have forward compatible implementations.
-type UnimplementedUserServer struct {
+type routerTransportClient struct {
+	grpc.ClientStream
 }
 
-func (*UnimplementedUserServer) Login(ctx context.Context, req *LoginReq) (*LoginResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+func (x *routerTransportClient) Send(m *SSMessage) error {
+	return x.ClientStream.SendMsg(m)
 }
 
-func RegisterUserServer(s *grpc.Server, srv UserServer) {
-	s.RegisterService(&_User_serviceDesc, srv)
-}
-
-func _User_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginReq)
-	if err := dec(in); err != nil {
+func (x *routerTransportClient) Recv() (*SSMessage, error) {
+	m := new(SSMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(UserServer).Login(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ss.User/Login",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServer).Login(ctx, req.(*LoginReq))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
-var _User_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "ss.User",
-	HandlerType: (*UserServer)(nil),
-	Methods: []grpc.MethodDesc{
+// RouterServer is the server API for Router service.
+type RouterServer interface {
+	Transport(Router_TransportServer) error
+}
+
+// UnimplementedRouterServer can be embedded to have forward compatible implementations.
+type UnimplementedRouterServer struct {
+}
+
+func (*UnimplementedRouterServer) Transport(srv Router_TransportServer) error {
+	return status.Errorf(codes.Unimplemented, "method Transport not implemented")
+}
+
+func RegisterRouterServer(s *grpc.Server, srv RouterServer) {
+	s.RegisterService(&_Router_serviceDesc, srv)
+}
+
+func _Router_Transport_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(RouterServer).Transport(&routerTransportServer{stream})
+}
+
+type Router_TransportServer interface {
+	Send(*SSMessage) error
+	Recv() (*SSMessage, error)
+	grpc.ServerStream
+}
+
+type routerTransportServer struct {
+	grpc.ServerStream
+}
+
+func (x *routerTransportServer) Send(m *SSMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *routerTransportServer) Recv() (*SSMessage, error) {
+	m := new(SSMessage)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+var _Router_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "ss.Router",
+	HandlerType: (*RouterServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "Login",
-			Handler:    _User_Login_Handler,
+			StreamName:    "Transport",
+			Handler:       _Router_Transport_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "ss.proto",
 }

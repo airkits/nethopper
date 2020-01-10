@@ -33,6 +33,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
@@ -73,18 +74,19 @@ func main() {
 	RegisterModule("mysql", db.ModuleCreate)
 	//	RegisterModule("tcp", tcp.SocketModuleCreate)
 	RegisterModule("logic", logic.ModuleCreate)
-	RegisterModule("web_http", http.ModuleCreate)
+	RegisterModule("http", http.ModuleCreate)
 	RegisterModule("redis", redis.ModuleCreate)
 	RegisterModule("wspb", wspb.ModuleCreate)
+	RegisterModule("grpc", grpc.ModuleCreate)
 	//	RegisterModule("redis", redis.RedisModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDDB, "mysql", nil, m)
 	NewNamedModule(ModuleIDRedis, "redis", nil, m)
 	//NewNamedModule(ModuleIDTCP, "tcp", nil, m)
 	NewNamedModule(ModuleIDLogic, "logic", nil, m)
-	NewNamedModule(ModuleIDHTTP, "web_http", nil, m)
+	NewNamedModule(ModuleIDHTTP, "http", nil, m)
 	NewNamedModule(ModuleIDWSServer, "wspb", nil, m)
-
+	NewNamedModule(ModuleIDGRPCServer, "grpc", nil, m)
 	InitSignal()
 	//GracefulExit()
 }

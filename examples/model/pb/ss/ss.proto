@@ -41,7 +41,7 @@ message LoginResp {
 }
 
 
-service Router {
+service RPC {
   rpc Transport (stream SSMessage) returns (stream SSMessage){}
 }
 

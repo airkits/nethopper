@@ -71,13 +71,14 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 		server.Fatal("did not connect: %v", err)
 	}
 	defer conn.Close()
-	client := ss.NewRouterClient(conn)
+	client := ss.NewRPCClient(conn)
 
 	Transport(client)
 	return s, nil
 }
 
-func Transport(c ss.RouterClient) error {
+//Transport send and receive message by grpc connection
+func Transport(c ss.RPCClient) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	stream, err := c.Transport(ctx)

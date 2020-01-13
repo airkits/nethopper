@@ -36,12 +36,12 @@ import (
 
 // Server is used to implement ss.UnimplementedRPCServer
 type Server struct {
-	ss.UnimplementedRouterServer
+	ss.UnimplementedRPCServer
 	q queue.Queue
 }
 
 //Transport grpc connection
-func (s *Server) Transport(stream ss.Router_TransportServer) error {
+func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {

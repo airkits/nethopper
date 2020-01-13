@@ -96,7 +96,7 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	}
 
 	s.gs = grpc.NewServer()
-	ss.RegisterRouterServer(s.gs, &Server{q: queue.NewChanQueue(1024)})
+	ss.RegisterRPCServer(s.gs, &Server{q: queue.NewChanQueue(1024)})
 
 	lis, err := net.Listen("tcp", s.Address)
 

@@ -1,44 +1,33 @@
 package grpc
 
 import (
-	"errors"
 	"net"
 	"sync"
 
+	"github.com/gonethopper/nethopper/examples/model/pb/ss"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gorilla/websocket"
+	"google.golang.org/grpc/peer"
 )
 
-//Config websocket conn config
-type Config struct {
-	Address        string
-	MaxConnNum     int
-	RWQueueSize    int
-	MaxMessageSize uint32
-	HTTPTimeout    uint32
-	CertFile       string
-	KeyFile        string
-}
-
 //ConnSet websocket conn set
-type ConnSet map[*websocket.Conn]struct{}
+type ConnSet map[ss.RPC_TransportServer]struct{}
 
 //Conn websocket conn define
 type Conn struct {
 	sync.Mutex
-	conn           *websocket.Conn
-	writeChan      chan []byte
+	stream         ss.RPC_TransportServer
+	writeChan      chan *ss.SSMessage
 	maxMessageSize uint32
 	closeFlag      bool
 }
 
 //NewConn create websocket conn
-func NewConn(conn *websocket.Conn, rwQueueSize int, maxMessageSize uint32) network.Conn {
-	wsConn := new(Conn)
-	wsConn.conn = conn
-	wsConn.writeChan = make(chan []byte, rwQueueSize)
-	wsConn.maxMessageSize = maxMessageSize
+func NewConn(stream ss.RPC_TransportServer, rwQueueSize int, maxMessageSize uint32) network.Conn {
+	grpcConn := new(Conn)
+	grpcConn.stream = stream
+	grpcConn.writeChan = make(chan *ss.SSMessage, rwQueueSize)
+	grpcConn.maxMessageSize = maxMessageSize
 
 	go func() {
 		defer func() {
@@ -46,29 +35,29 @@ func NewConn(conn *websocket.Conn, rwQueueSize int, maxMessageSize uint32) netwo
 				server.PrintStack(false)
 			}
 		}()
-		for b := range wsConn.writeChan {
+		for b := range grpcConn.writeChan {
 			if b == nil {
 				break
 			}
 
-			err := conn.WriteMessage(websocket.BinaryMessage, b)
+			err := stream.Send(b)
 			if err != nil {
 				break
 			}
 		}
 
-		conn.Close()
-		wsConn.Lock()
-		wsConn.closeFlag = true
-		wsConn.Unlock()
+		//	conn.Close()
+		grpcConn.Lock()
+		grpcConn.closeFlag = true
+		grpcConn.Unlock()
 	}()
 
-	return wsConn
+	return grpcConn
 }
 
 func (c *Conn) doDestroy() {
-	c.conn.UnderlyingConn().(*net.TCPConn).SetLinger(0)
-	c.conn.Close()
+	// c.conn.UnderlyingConn().(*net.TCPConn).SetLinger(0)
+	// c.conn.Close()
 
 	if !c.closeFlag {
 		close(c.writeChan)
@@ -96,7 +85,7 @@ func (c *Conn) Close() {
 	c.closeFlag = true
 }
 
-func (c *Conn) doWrite(b []byte) {
+func (c *Conn) doWrite(b *ss.SSMessage) {
 	if len(c.writeChan) == cap(c.writeChan) {
 		server.Debug("close conn: channel full")
 		c.doDestroy()
@@ -108,56 +97,40 @@ func (c *Conn) doWrite(b []byte) {
 
 //LocalAddr get local addr
 func (c *Conn) LocalAddr() net.Addr {
-	return c.conn.LocalAddr()
+	server.Error("[LocalAddr] invoke LocalAddr() failed")
+	return nil
 }
 
 //RemoteAddr get remote addr
 func (c *Conn) RemoteAddr() net.Addr {
-	return c.conn.RemoteAddr()
+	pr, ok := peer.FromContext(c.stream.Context())
+	if !ok {
+		server.Error("[RemoteAddr] invoke FromContext() failed")
+		return nil
+	}
+	if pr.Addr == net.Addr(nil) {
+		server.Error("[RemoteAddr] peer.Addr is nil")
+		return nil
+	}
+
+	return pr.Addr
 }
 
 //ReadMessage goroutine not safe
-func (c *Conn) ReadMessage() ([]byte, error) {
-	_, b, err := c.conn.ReadMessage()
-	return b, err
+func (c *Conn) ReadMessage() (*ss.SSMessage, error) {
+	return c.stream.Recv()
 }
 
 //WriteMessage args must not be modified by the others goroutines
-func (c *Conn) WriteMessage(args ...[]byte) error {
+func (c *Conn) WriteMessage(args ...*ss.SSMessage) error {
 	c.Lock()
 	defer c.Unlock()
 	if c.closeFlag {
 		return nil
 	}
 
-	// get len
-	var msgLen uint32
 	for i := 0; i < len(args); i++ {
-		msgLen += uint32(len(args[i]))
+		c.doWrite(args[i])
 	}
-
-	// check len
-	if msgLen > c.maxMessageSize {
-		return errors.New("message too long")
-	} else if msgLen < 1 {
-		return errors.New("message too short")
-	}
-
-	// don't copy
-	if len(args) == 1 {
-		c.doWrite(args[0])
-		return nil
-	}
-
-	// merge the args
-	msg := make([]byte, msgLen)
-	l := 0
-	for i := 0; i < len(args); i++ {
-		copy(msg[l:], args[i])
-		l += len(args[i])
-	}
-
-	c.doWrite(msg)
-
 	return nil
 }

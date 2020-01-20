@@ -117,13 +117,13 @@ func (c *Conn) RemoteAddr() net.Addr {
 }
 
 //ReadMessage goroutine not safe
-func (c *Conn) ReadMessage() ([]byte, error) {
+func (c *Conn) ReadMessage() (interface{}, error) {
 	_, b, err := c.conn.ReadMessage()
 	return b, err
 }
 
 //WriteMessage args must not be modified by the others goroutines
-func (c *Conn) WriteMessage(args ...[]byte) error {
+func (c *Conn) WriteMessage(args ...interface{}) error {
 	c.Lock()
 	defer c.Unlock()
 	if c.closeFlag {
@@ -133,7 +133,7 @@ func (c *Conn) WriteMessage(args ...[]byte) error {
 	// get len
 	var msgLen uint32
 	for i := 0; i < len(args); i++ {
-		msgLen += uint32(len(args[i]))
+		msgLen += uint32(len(args[i].([]byte)))
 	}
 
 	// check len
@@ -145,7 +145,7 @@ func (c *Conn) WriteMessage(args ...[]byte) error {
 
 	// don't copy
 	if len(args) == 1 {
-		c.doWrite(args[0])
+		c.doWrite(args[0].([]byte))
 		return nil
 	}
 
@@ -153,8 +153,8 @@ func (c *Conn) WriteMessage(args ...[]byte) error {
 	msg := make([]byte, msgLen)
 	l := 0
 	for i := 0; i < len(args); i++ {
-		copy(msg[l:], args[i])
-		l += len(args[i])
+		copy(msg[l:], args[i].([]byte))
+		l += len(args[i].([]byte))
 	}
 
 	c.doWrite(msg)

@@ -37,12 +37,12 @@ type IAgentAdapter interface {
 	//Setup AgentAdapter
 	Setup(conn Conn, codec codec.Codec)
 	//ProcessMessage process request and notify message
-	ProcessMessage(payload []byte) error
+	ProcessMessage(payload interface{}) error
 
 	//WriteMessage to connection
-	WriteMessage(payload []byte) error
+	WriteMessage(payload interface{}) error
 	//ReadMessage goroutine not safe
-	ReadMessage() ([]byte, error)
+	ReadMessage() (interface{}, error)
 	// Codec get codec
 	Codec() codec.Codec
 	//SetCodec set codec
@@ -66,8 +66,8 @@ func (a *AgentAdapter) Setup(conn Conn, codec codec.Codec) {
 }
 
 //WriteMessage to connection
-func (a *AgentAdapter) WriteMessage(payload []byte) error {
-	if err := a.conn.WriteMessage(payload); err != nil {
+func (a *AgentAdapter) WriteMessage(payload interface{}) error {
+	if err := a.conn.WriteMessage(payload.([]byte)); err != nil {
 		server.Error("write message %x error: %v", payload, err)
 		return err
 	}
@@ -75,7 +75,7 @@ func (a *AgentAdapter) WriteMessage(payload []byte) error {
 }
 
 //ReadMessage goroutine not safe
-func (a *AgentAdapter) ReadMessage() ([]byte, error) {
+func (a *AgentAdapter) ReadMessage() (interface{}, error) {
 	b, err := a.conn.ReadMessage()
 	return b, err
 }

@@ -24,9 +24,9 @@ type AgentAdapter struct {
 }
 
 //ProcessMessage process request and notify message
-func (a *AgentAdapter) ProcessMessage(payload []byte) error {
+func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	m := model.NewEmptyWSMessage(a.Codec())
-	if err := m.DecodeHead(payload); err != nil {
+	if err := m.DecodeHead(payload.([]byte)); err != nil {
 		server.Error("recevie message failed ,err :%s", err.Error())
 		return err
 	}

@@ -97,7 +97,7 @@ func (c *Conn) doWrite(b *ss.SSMessage) {
 
 //LocalAddr get local addr
 func (c *Conn) LocalAddr() net.Addr {
-	server.Error("[LocalAddr] invoke LocalAddr() failed")
+	server.Error("[LocalAddr] invoke LocalAddr() unsupport")
 	return nil
 }
 
@@ -117,12 +117,12 @@ func (c *Conn) RemoteAddr() net.Addr {
 }
 
 //ReadMessage goroutine not safe
-func (c *Conn) ReadMessage() (*ss.SSMessage, error) {
+func (c *Conn) ReadMessage() (interface{}, error) {
 	return c.stream.Recv()
 }
 
 //WriteMessage args must not be modified by the others goroutines
-func (c *Conn) WriteMessage(args ...*ss.SSMessage) error {
+func (c *Conn) WriteMessage(args ...interface{}) error {
 	c.Lock()
 	defer c.Unlock()
 	if c.closeFlag {
@@ -130,7 +130,7 @@ func (c *Conn) WriteMessage(args ...*ss.SSMessage) error {
 	}
 
 	for i := 0; i < len(args); i++ {
-		c.doWrite(args[i])
+		c.doWrite(args[i].(*ss.SSMessage))
 	}
 	return nil
 }

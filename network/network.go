@@ -31,10 +31,10 @@ import "net"
 
 // Conn define network conn interface
 type Conn interface {
-	//ReadMessage read message from conn
-	ReadMessage() ([]byte, error)
-	//WriteMessage write message to conn
-	WriteMessage(args ...[]byte) error
+	//ReadMessage read message/[]byte from conn
+	ReadMessage() (interface{}, error)
+	//WriteMessage write message/[]byte to conn
+	WriteMessage(args ...interface{}) error
 	//LocalAddr get local addr
 	LocalAddr() net.Addr
 	//RemoteAddr get remote addr

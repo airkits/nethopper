@@ -1,19 +1,14 @@
 package grpc
 
 import (
-	"crypto/tls"
-	"io"
 	"net"
-	"net/http"
 	"sync"
-	"time"
 
 	"github.com/gonethopper/nethopper/base/queue"
 	"github.com/gonethopper/nethopper/examples/model/pb/ss"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gorilla/websocket"
+	"google.golang.org/grpc"
 )
 
 //Config grpc conn config
@@ -37,17 +32,14 @@ func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Ser
 // Server grpc server define
 type Server struct {
 	ss.UnimplementedRPCServer
-	Address        string
-	MaxConnNum     int
-	RWQueueSize    int
-	MaxMessageSize uint32
-	NewAgent       network.AgentCreateFunc
-	gs             *grpc.Server
-	listener       net.Listener
-	conns          ConnSet
-	mutexConns     sync.Mutex
-	wg             sync.WaitGroup
-	q              queue.Queue
+	Config
+	NewAgent   network.AgentCreateFunc
+	gs         *grpc.Server
+	listener   net.Listener
+	conns      ConnSet
+	mutexConns sync.Mutex
+	wg         sync.WaitGroup
+	q          queue.Queue
 }
 
 // ReadConfig config map
@@ -62,7 +54,7 @@ type Server struct {
 // }
 func (s *Server) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "address", ":12080", &s.Address); err != nil {
+	if err := server.ParseConfigValue(m, "grpcAddress", ":14000", &s.Address); err != nil {
 		return err
 	}
 	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
@@ -83,51 +75,28 @@ func (s *Server) ListenAndServe() {
 		server.Fatal("NewAgent must not be nil")
 	}
 	s.conns = make(ConnSet)
-	ln, err := net.Listen("tcp", s.Address)
+
+	s.gs = grpc.NewServer()
+	ss.RegisterRPCServer(s.gs, &Server{q: queue.NewChanQueue(1024)})
+
+	lis, err := net.Listen("tcp", s.Address)
+
 	if err != nil {
-		server.Fatal("%v", err)
+		server.Error("failed to listen: %v", err)
+		return
 	}
-	server.Info("websocket start listen:%s", s.Address)
-	if s.CertFile != "" || s.KeyFile != "" {
-		config := &tls.Config{}
-		config.NextProtos = []string{"http/1.1"}
+	server.Info("grpc start listen:%s", s.Address)
+	s.listener = lis
 
-		var err error
-		config.Certificates = make([]tls.Certificate, 1)
-		config.Certificates[0], err = tls.LoadX509KeyPair(s.CertFile, s.KeyFile)
-		if err != nil {
-			server.Fatal("%v", err)
-		}
-
-		ln = tls.NewListener(ln, config)
-	}
-
-	s.ln = ln
-
-	s.upgrader = websocket.Upgrader{
-		HandshakeTimeout: time.Duration(s.HTTPTimeout) * time.Second,
-		CheckOrigin: func(r *http.Request) bool {
-			server.Info("connection header:%v", r.Header)
-			return true
-		}}
-
-	s.httpServer = &http.Server{
-		Addr:           s.Address,
-		Handler:        s,
-		ReadTimeout:    time.Duration(s.HTTPTimeout) * time.Second,
-		WriteTimeout:   time.Duration(s.HTTPTimeout) * time.Second,
-		MaxHeaderBytes: 1024,
-	}
-	s.httpServer.Serve(s.ln)
 }
 
 //Close websocket server
 func (s *Server) Close() {
-	s.ln.Close()
+	s.listener.Close()
 
 	s.mutexConns.Lock()
 	for conn := range s.conns {
-		conn.Close()
+		conn.Context().Done()
 	}
 	s.conns = nil
 	s.mutexConns.Unlock()
@@ -137,24 +106,25 @@ func (s *Server) Close() {
 
 //Transport grpc connection
 func (s *Server) Transport(stream ss.RPC_TransportServer) error {
-	for {
-		msg, err := stream.Recv()
-		if err == io.EOF {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if err := s.q.AsyncPush(msg); err != nil {
-			server.Error("%s", err.Error())
-		}
-		m, err := s.q.AsyncPop()
-		if err != nil {
-			server.Error("%s", err.Error())
-		} else {
-			if err := stream.Send(m.(*ss.SSMessage)); err != nil {
-				return err
-			}
-		}
-	}
+
+	s.wg.Add(1)
+	defer s.wg.Done()
+
+	s.conns[stream] = struct{}{}
+	s.mutexConns.Unlock()
+
+	var agent network.IAgent
+	conn := NewConn(stream, s.RWQueueSize, s.MaxMessageSize)
+	agent = s.NewAgent(conn)
+	agent.SetToken("token")
+	network.GetInstance().AddAgent(agent)
+	agent.Run()
+
+	// cleanup
+	conn.Close()
+	s.mutexConns.Lock()
+	delete(s.conns, stream)
+	s.mutexConns.Unlock()
+	agent.OnClose()
+	return nil
 }

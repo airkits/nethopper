@@ -10,16 +10,16 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-//ConnSet websocket conn set
+//ConnSet grpc conn set
 type ConnSet map[ss.RPC_TransportServer]struct{}
 
-//Conn websocket conn define
+//Conn grpc conn define
 type Conn struct {
 	sync.Mutex
 	stream         ss.RPC_TransportServer
 	writeChan      chan *ss.SSMessage
 	maxMessageSize uint32
-	closeFlag      bool
+	closeFlag      bool 
 }
 
 //NewConn create websocket conn
@@ -65,7 +65,7 @@ func (c *Conn) doDestroy() {
 	}
 }
 
-//Destroy websocket conn destory
+//Destroy grpc conn destory
 func (c *Conn) Destroy() {
 	c.Lock()
 	defer c.Unlock()
@@ -73,7 +73,7 @@ func (c *Conn) Destroy() {
 	c.doDestroy()
 }
 
-//Close websocket conn close
+//Close grpc conn close
 func (c *Conn) Close() {
 	c.Lock()
 	defer c.Unlock()

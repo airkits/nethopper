@@ -21,46 +21,30 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2020-01-09 11:20:09
+// * @Date: 2019-12-25 23:19:18
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2020-01-09 11:20:09
+// * @Last Modified time: 2019-12-25 23:19:18
 
 package grpc
 
 import (
-	"io"
-
-	"github.com/gonethopper/nethopper/base/queue"
 	"github.com/gonethopper/nethopper/examples/model/pb/ss"
+	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// Server is used to implement ss.UnimplementedRPCServer
-type Server struct {
-	ss.UnimplementedRPCServer
-	q queue.Queue
-}
+//LoginHandler request login
+func LoginHandler(agent network.IAgentAdapter, m *ss.SSMessage, body interface{}) error {
 
-//Transport grpc connection
-func (s *Server) Transport(stream ss.RPC_TransportServer) error {
-	for {
-		msg, err := stream.Recv()
-		if err == io.EOF {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if err := s.q.AsyncPush(msg); err != nil {
-			server.Error("%s", err.Error())
-		}
-		m, err := s.q.AsyncPop()
-		if err != nil {
-			server.Error("%s", err.Error())
-		} else {
-			if err := stream.Send(m.(*ss.SSMessage)); err != nil {
-				return err
-			}
-		}
+	req := body.(*ss.LoginReq)
+	server.Info("receive message %v", m)
+	//userID := server.StringToInt64(req.Uid)
+	//	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
+	resp := &ss.LoginResp{
+		Uid:  req.GetUid(),
+		Name: req.GetPasswd(),
 	}
+	agent.WriteMessage(resp)
+	server.Info("send message %v", resp)
+	return nil
 }

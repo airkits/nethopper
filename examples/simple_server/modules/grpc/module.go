@@ -28,17 +28,12 @@
 package grpc
 
 import (
-	"net"
 	"time"
 
-	"github.com/gonethopper/nethopper/base/queue"
-	"github.com/gonethopper/nethopper/examples/model/pb/ss"
+	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/grpc"
 	"github.com/gonethopper/nethopper/server"
-	"google.golang.org/grpc"
 )
-
-// HTTPTimeout http timeout (second)
-const HTTPTimeout = 10
 
 // ModuleCreate  module create function
 func ModuleCreate() (server.Module, error) {
@@ -48,37 +43,7 @@ func ModuleCreate() (server.Module, error) {
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	gs             *grpc.Server
-	Address        string
-	MaxConnNum     int
-	RWQueueSize    int
-	MaxMessageSize int
-	listener       net.Listener
-}
-
-//ReadConfig read config
-// config
-// m := map[string]interface{}{
-//  "queueSize":1000,
-//  "grpcAddress":":14000",
-//	"maxConnNum":1024,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-// }
-func (s *Module) ReadConfig(m map[string]interface{}) error {
-	if err := server.ParseConfigValue(m, "grpcAddress", ":14000", &s.Address); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &s.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &s.MaxMessageSize); err != nil {
-		return err
-	}
-	return nil
+	gs *grpc.Server
 }
 
 // Setup init custom module and pass config map to module
@@ -91,30 +56,18 @@ func (s *Module) ReadConfig(m map[string]interface{}) error {
 //  "maxMessageSize":4096
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
-	if err := s.ReadConfig(m); err != nil {
-		panic(err)
-	}
 
-	s.gs = grpc.NewServer()
-	ss.RegisterRPCServer(s.gs, &Server{q: queue.NewChanQueue(1024)})
-
-	lis, err := net.Listen("tcp", s.Address)
-
-	if err != nil {
-		server.Error("failed to listen: %v", err)
-		return nil, err
-	}
-	server.Info("grpc start listen:%s", s.Address)
-	s.listener = lis
+	s.gs = grpc.NewServer(m, func(conn network.Conn) network.IAgent {
+		a := network.NewAgent(nil, NewAgentAdapter(conn))
+		return a
+	})
 
 	server.GO(s.web)
 
 	return s, nil
 }
 func (s *Module) web() {
-	if err := s.gs.Serve(s.listener); err != nil {
-		server.Fatal("failed to grpc serve: %v", err)
-	}
+	s.gs.ListenAndServe()
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function

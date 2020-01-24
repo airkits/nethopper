@@ -99,19 +99,21 @@ func Transport(c ss.RPCClient) error {
 			server.Info("receive message from server %v", in.GetCmd())
 		}
 	}()
-	go func() {
-		i := 1
-		for {
-			i++
-			stream.Send(&ss.SSMessage{Cmd: "login"})
-			time.Sleep(time.Second)
-			if i > 10 {
-				break
-			}
-
+	//	go func() {
+	i := 1
+	for {
+		i++
+		server.Info("send message %d", i)
+		stream.Send(&ss.SSMessage{Cmd: "login"})
+		server.Info("send message over %d", i)
+		time.Sleep(time.Second)
+		if i > 10 {
+			break
 		}
-		//stream.CloseSend()
-	}()
+
+	}
+	stream.CloseSend()
+	//}()
 	return nil
 }
 

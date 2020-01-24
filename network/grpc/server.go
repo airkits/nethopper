@@ -77,7 +77,7 @@ func (s *Server) ListenAndServe() {
 	s.conns = make(ConnSet)
 
 	s.gs = grpc.NewServer()
-	ss.RegisterRPCServer(s.gs, &Server{q: queue.NewChanQueue(1024)})
+	ss.RegisterRPCServer(s.gs, s)
 
 	lis, err := net.Listen("tcp", s.Address)
 
@@ -87,7 +87,7 @@ func (s *Server) ListenAndServe() {
 	}
 	server.Info("grpc start listen:%s", s.Address)
 	s.listener = lis
-
+	s.gs.Serve(lis)
 }
 
 //Close websocket server
@@ -110,8 +110,8 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 	s.wg.Add(1)
 	defer s.wg.Done()
 
-	s.conns[stream] = struct{}{}
-	s.mutexConns.Unlock()
+	// s.conns[stream] = struct{}{}
+	// s.mutexConns.Unlock()
 
 	var agent network.IAgent
 	conn := NewConn(stream, s.RWQueueSize, s.MaxMessageSize)
@@ -122,9 +122,9 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 
 	// cleanup
 	conn.Close()
-	s.mutexConns.Lock()
-	delete(s.conns, stream)
-	s.mutexConns.Unlock()
+	// s.mutexConns.Lock()
+	// delete(s.conns, stream)
+	// s.mutexConns.Unlock()
 	agent.OnClose()
 	return nil
 }

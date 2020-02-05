@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/gonethopper/nethopper/base/queue"
-	"github.com/gonethopper/nethopper/examples/model/pb/ss"
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc"
 )
@@ -20,7 +20,7 @@ type Config struct {
 }
 
 //NewServer create grpc server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Server {
+func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) network.IServer {
 	s := new(Server)
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)

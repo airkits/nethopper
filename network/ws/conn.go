@@ -34,7 +34,7 @@ type Conn struct {
 }
 
 //NewConn create websocket conn
-func NewConn(conn *websocket.Conn, rwQueueSize int, maxMessageSize uint32) network.Conn {
+func NewConn(conn *websocket.Conn, rwQueueSize int, maxMessageSize uint32) network.IConn {
 	wsConn := new(Conn)
 	wsConn.conn = conn
 	wsConn.writeChan = make(chan []byte, rwQueueSize)

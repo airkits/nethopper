@@ -32,6 +32,7 @@ import (
 	"testing"
 
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/server"
 )
 
 const Step = 1000000
@@ -41,7 +42,7 @@ func BenchmarkFormatLog(t *testing.B) {
 
 	msg := "format log test"
 	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg)
+		_ = server.FormatLog(server.INFO, msg)
 	}
 
 }
@@ -50,7 +51,7 @@ func BenchmarkFormatLogWithParams(t *testing.B) {
 
 	msg := "format %d log test"
 	for i := 0; i < Step; i++ {
-		_ = log.FormatLog(log.INFO, msg, i)
+		_ = server.FormatLog(server.INFO, msg, i)
 	}
 }
 

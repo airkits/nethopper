@@ -29,17 +29,19 @@ package wsjson
 
 import (
 	"errors"
+	"reflect"
 
 	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model"
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/json"
+	csjson "github.com/gonethopper/nethopper/examples/model/json"
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/transport"
+	"github.com/gonethopper/nethopper/network/transport/json"
 	"github.com/gonethopper/nethopper/server"
 )
 
 //NewAgentAdapter create agent adapter
-func NewAgentAdapter(conn network.Conn) network.IAgentAdapter {
+func NewAgentAdapter(conn network.IConn) network.IAgentAdapter {
 	a := new(AgentAdapter)
 	a.Setup(conn, codec.JSONCodec)
 	return a
@@ -50,18 +52,49 @@ type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-//ProcessMessage process request and notify message
-func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	m := model.NewEmptyWSMessage(a.Codec())
-	if err := m.DecodeHead(payload.([]byte)); err != nil {
-		server.Error("decode head failed ,err :%s", err.Error())
+func (a *AgentAdapter) decodeJSONBody(m *transport.Message) error {
+	header := m.Header.(*json.Header)
+	var body transport.IBody
+	var err error
+	if body, err = csjson.CreateBody(header.MsgType, header.Cmd); err != nil {
 		return err
 	}
-	if err := m.DecodeBody(); err != nil {
+	server.Info("type %s", reflect.TypeOf(header.Payload))
+	switch header.Payload.(type) {
+	case string:
+		{
+			if err = m.Codec().Unmarshal([]byte((header.Payload).(string)), body, nil); err != nil {
+				return err
+			}
+		}
+	case []byte:
+		{
+			if err = m.Codec().Unmarshal((header.Payload).([]byte), body, nil); err != nil {
+				return err
+			}
+		}
+
+	default:
+		server.Error("receive unknown message %x", header.Payload)
+	}
+
+	m.Body = body
+	return nil
+}
+
+//ProcessMessage process request and notify message
+func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
+	m := transport.NewMessage(transport.HeaderTypeWSJSON, a.Codec())
+	if err := m.DecodeHeader(payload.([]byte)); err != nil {
+		server.Error("decode header failed ,err :%s", err.Error())
+		return err
+	}
+
+	if err := a.decodeJSONBody(m); err != nil {
 		server.Error("decode body failed ,err :%s", err.Error())
 		return err
 	}
-	head := m.Head.(*json.WSHeader)
+	head := m.Header.(*json.Header)
 	switch head.MsgType {
 	case server.MTRequest:
 		return a.processRequestMessage(m)
@@ -76,9 +109,9 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	}
 }
 
-func (a *AgentAdapter) processRequestMessage(m *model.WSMessage) error {
+func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
 
-	head := m.Head.(*json.WSHeader)
+	head := m.Header.(*json.Header)
 	switch head.Cmd {
 	case common.CSLoginCmd:
 		return LoginHandler(a, m)
@@ -87,12 +120,12 @@ func (a *AgentAdapter) processRequestMessage(m *model.WSMessage) error {
 	}
 
 }
-func (a *AgentAdapter) processResponseMessage(m *model.WSMessage) error {
+func (a *AgentAdapter) processResponseMessage(m *transport.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processNotifyMessage(m *model.WSMessage) error {
+func (a *AgentAdapter) processNotifyMessage(m *transport.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processBroadcastMessage(m *model.WSMessage) error {
+func (a *AgentAdapter) processBroadcastMessage(m *transport.Message) error {
 	return errors.New("unknown message")
 }

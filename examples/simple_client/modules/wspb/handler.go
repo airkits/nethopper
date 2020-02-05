@@ -3,10 +3,10 @@ package wspb
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model"
-	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb/cs"
+	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/transport"
+	"github.com/gonethopper/nethopper/network/transport/pb/cs"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -14,8 +14,8 @@ import (
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
 	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
-		m := model.NewWSMessage(uid, common.CSLoginCmd, 1, 1, server.MTRequest, agent.GetAdapter().Codec())
-		body := &cs.LoginReq{
+		m := transport.NewMessage(transport.HeaderTypeWSJSON, agent.GetAdapter().Codec())
+		body := &c2s.LoginReq{
 			Uid:    uid,
 			Passwd: pwd,
 		}
@@ -36,9 +36,9 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 }
 
 //LoginResponse request login
-func LoginResponse(agent network.IAgentAdapter, m *model.WSMessage) error {
-	server.Info("LoginResponse get result %v", *(m.Head.(*cs.WSHeader)))
-	server.Info("LoginResponse get body %v", *(m.Body.(*cs.LoginResp)))
+func LoginResponse(agent network.IAgentAdapter, m *transport.Message) error {
+	server.Info("LoginResponse get result %v", *(m.Header.(*cs.Header)))
+	server.Info("LoginResponse get body %v", *(m.Body.(*c2s.LoginResp)))
 
 	return nil
 }

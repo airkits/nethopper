@@ -1,0 +1,11 @@
+syntax = "proto3";
+package cs;
+
+
+message Header{
+  int32 ID = 1;
+  string cmd = 2;
+  int32 msgType = 3;
+  map<string,  bytes> options =  4;
+  bytes payload = 11;
+}

@@ -67,8 +67,8 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	s.RegisterHandler(common.CSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.wsClient = ws.NewClient(m, func(conn network.Conn) network.IAgent {
-		a := network.NewAgent(nil, NewAgentAdapter(conn))
+	s.wsClient = ws.NewClient(m, func(conn network.IConn) network.IAgent {
+		a := network.NewAgent(NewAgentAdapter(conn))
 		a.SetToken("user")
 		network.GetInstance().AddAgent(a)
 		return a

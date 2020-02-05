@@ -1,0 +1,15 @@
+syntax = "proto3";
+package ss;
+
+message Header{
+  int32 ID = 1;
+  string cmd = 2;
+  int32 msgType = 3;
+  map<string,  bytes> options =  4;
+  bytes payload = 11;
+}
+
+service RPC {
+  rpc Transport (stream Header) returns (stream Header){}
+}
+

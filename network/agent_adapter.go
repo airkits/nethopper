@@ -32,35 +32,14 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// IAgentAdapter agent adapter interface
-type IAgentAdapter interface {
-	//Setup AgentAdapter
-	Setup(conn Conn, codec codec.Codec)
-	//ProcessMessage process request and notify message
-	ProcessMessage(payload interface{}) error
-
-	//WriteMessage to connection
-	WriteMessage(payload interface{}) error
-	//ReadMessage goroutine not safe
-	ReadMessage() (interface{}, error)
-	// Codec get codec
-	Codec() codec.Codec
-	//SetCodec set codec
-	SetCodec(c codec.Codec)
-	//Conn get conn
-	Conn() Conn
-	// SetConn set conn
-	SetConn(conn Conn)
-}
-
 //AgentAdapter agent adapter
 type AgentAdapter struct {
 	codec codec.Codec
-	conn  Conn
+	conn  IConn
 }
 
 //Setup AgentAdapter
-func (a *AgentAdapter) Setup(conn Conn, codec codec.Codec) {
+func (a *AgentAdapter) Setup(conn IConn, codec codec.Codec) {
 	a.conn = conn
 	a.codec = codec
 }
@@ -91,11 +70,11 @@ func (a *AgentAdapter) SetCodec(c codec.Codec) {
 }
 
 //Conn get conn
-func (a *AgentAdapter) Conn() Conn {
+func (a *AgentAdapter) Conn() IConn {
 	return a.conn
 }
 
 // SetConn set conn
-func (a *AgentAdapter) SetConn(conn Conn) {
+func (a *AgentAdapter) SetConn(conn IConn) {
 	a.conn = conn
 }

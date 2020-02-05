@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/websocket"
 )
 
 //NewServer create ws server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Server {
+func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) network.IServer {
 	s := new(Server)
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
@@ -64,7 +65,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	s.conns[conn] = struct{}{}
 	s.mutexConns.Unlock()
-	var token = r.Header.Get("token")
+	var token = r.Header.Get(common.HeaderToken)
 	var agent network.IAgent
 	var ok bool
 
@@ -76,7 +77,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	wsConn := NewConn(conn, s.RWQueueSize, s.MaxMessageSize)
 	agent = s.NewAgent(wsConn)
-	agent.SetToken(r.Header.Get("token"))
+	agent.SetToken(token)
 	network.GetInstance().AddAgent(agent)
 	agent.Run()
 

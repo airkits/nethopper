@@ -28,22 +28,24 @@
 package wsjson
 
 import (
-	"github.com/gonethopper/nethopper/examples/model"
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/json"
+	csjson "github.com/gonethopper/nethopper/examples/model/json"
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/transport"
+	"github.com/gonethopper/nethopper/network/transport/json"
 	"github.com/gonethopper/nethopper/server"
 )
 
 //LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m *model.WSMessage) error {
-	req := (m.Body).(*json.LoginReq)
+func LoginHandler(agent network.IAgentAdapter, m *transport.Message) error {
+	req := (m.Body).(*csjson.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.UID)
 	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.UID, req.Passwd)
-	head := m.Head.(*json.WSHeader)
-	outM := model.NewWSMessage(req.UID, common.CSLoginCmd, head.Seq, server.MTResponse, head.UserData, agent.Codec())
-	resp := &json.LoginResp{
+	header := m.Header.(*json.Header)
+	outM := transport.NewMessage(transport.HeaderTypeWSJSON, agent.Codec())
+	outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), header.GetMsgType())
+	resp := &csjson.LoginResp{
 		Data: result.(string),
 	}
 	if err != nil {

@@ -47,7 +47,7 @@ func ModuleCreate() (server.Module, error) {
 type Module struct {
 	server.BaseContext
 	config   ws.Config
-	wsServer *ws.Server
+	wsServer network.IServer
 }
 
 // // UserData module custom option, can you store you data and you must keep goruntine safe
@@ -72,8 +72,8 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 		panic(err)
 	}
 
-	s.wsServer = ws.NewServer(m, func(conn network.Conn) network.IAgent {
-		a := network.NewAgent(nil, NewAgentAdapter(conn))
+	s.wsServer = ws.NewServer(m, func(conn network.IConn) network.IAgent {
+		a := network.NewAgent(NewAgentAdapter(conn))
 		return a
 	})
 

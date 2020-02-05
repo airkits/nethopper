@@ -4,8 +4,8 @@ import (
 	"net"
 	"sync"
 
-	"github.com/gonethopper/nethopper/examples/model/pb/ss"
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc/peer"
 )
@@ -17,16 +17,16 @@ type ConnSet map[ss.RPC_TransportServer]struct{}
 type Conn struct {
 	sync.Mutex
 	stream         ss.RPC_TransportServer
-	writeChan      chan *ss.SSMessage
+	writeChan      chan *ss.Header
 	maxMessageSize uint32
-	closeFlag      bool 
+	closeFlag      bool
 }
 
 //NewConn create websocket conn
-func NewConn(stream ss.RPC_TransportServer, rwQueueSize int, maxMessageSize uint32) network.Conn {
+func NewConn(stream ss.RPC_TransportServer, rwQueueSize int, maxMessageSize uint32) network.IConn {
 	grpcConn := new(Conn)
 	grpcConn.stream = stream
-	grpcConn.writeChan = make(chan *ss.SSMessage, rwQueueSize)
+	grpcConn.writeChan = make(chan *ss.Header, rwQueueSize)
 	grpcConn.maxMessageSize = maxMessageSize
 
 	go func() {
@@ -85,7 +85,7 @@ func (c *Conn) Close() {
 	c.closeFlag = true
 }
 
-func (c *Conn) doWrite(b *ss.SSMessage) {
+func (c *Conn) doWrite(b *ss.Header) {
 	if len(c.writeChan) == cap(c.writeChan) {
 		server.Debug("close conn: channel full")
 		c.doDestroy()
@@ -130,7 +130,7 @@ func (c *Conn) WriteMessage(args ...interface{}) error {
 	}
 
 	for i := 0; i < len(args); i++ {
-		c.doWrite(args[i].(*ss.SSMessage))
+		c.doWrite(args[i].(*ss.Header))
 	}
 	return nil
 }

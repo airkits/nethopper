@@ -31,6 +31,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/utils"
 )
 
@@ -73,21 +74,21 @@ func TestGetAbsFilePath(t *testing.T) {
 }
 
 func TestPowerCalc(t *testing.T) {
-	c, p := utils.PowerCalc(8)
+	c, p := server.PowerCalc(8)
 	if c != 8 || p != 3 {
 		t.Errorf("PowerCalc error %d %d", c, p)
 	}
 
-	c, p = utils.PowerCalc(9)
+	c, p = server.PowerCalc(9)
 	if c != 16 || p != 4 {
 		t.Errorf("PowerCalc error %d %d", c, p)
 	}
 
-	c, p = utils.PowerCalc(0)
+	c, p = server.PowerCalc(0)
 	if c != 0 || p != 0 {
 		t.Errorf("PowerCalc error %d %d", c, p)
 	}
-	c, p = utils.PowerCalc(1)
+	c, p = server.PowerCalc(1)
 	if c != 1 || p != 0 {
 		t.Errorf("PowerCalc error %d %d", c, p)
 	}

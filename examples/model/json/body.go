@@ -4,16 +4,12 @@ import (
 	"errors"
 
 	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/server"
 )
 
-//IWSBody websocket body interface
-type IWSBody interface {
-	// Setup()
-}
-
 //CreateBody create message body
-func CreateBody(msgType int32, cmd string) (IWSBody, error) {
+func CreateBody(msgType int32, cmd string) (transport.IBody, error) {
 	switch msgType {
 	case server.MTRequest:
 		return CreateRequestBody(cmd)
@@ -30,7 +26,7 @@ func CreateBody(msgType int32, cmd string) (IWSBody, error) {
 }
 
 //CreateRequestBody create request body
-func CreateRequestBody(c string) (IWSBody, error) {
+func CreateRequestBody(c string) (transport.IBody, error) {
 	switch c {
 	case common.CSLoginCmd:
 		{
@@ -41,7 +37,7 @@ func CreateRequestBody(c string) (IWSBody, error) {
 }
 
 //CreateResponseBody create response body
-func CreateResponseBody(c string) (IWSBody, error) {
+func CreateResponseBody(c string) (transport.IBody, error) {
 	switch c {
 	case common.CSLoginCmd:
 		{
@@ -52,27 +48,20 @@ func CreateResponseBody(c string) (IWSBody, error) {
 }
 
 //CreateNotifyBody create notify body
-func CreateNotifyBody(cmd string) (IWSBody, error) {
+func CreateNotifyBody(cmd string) (transport.IBody, error) {
 	return nil, errors.New("create body failed,can't find body notify body")
 }
 
 //CreateBroadcastBody create broadcast body
-func CreateBroadcastBody(cmd string) (IWSBody, error) {
+func CreateBroadcastBody(cmd string) (transport.IBody, error) {
 	return nil, errors.New("create body failed,can't find body broadcast body")
 }
 
 //WSBody body base
-type WSBody struct {
-}
-
-//Setup init
-func (b *WSBody) Setup() {
-
-}
 
 //LoginReq login request
 type LoginReq struct {
-	WSBody
+	transport.IBody
 	UID    string `form:"uid" json:"uid"`
 	Passwd string `form:"passwd" json:"passwd"`
 }
@@ -85,6 +74,7 @@ type Result struct {
 
 //BaseResponse base response object
 type BaseResponse struct {
+	transport.IBody
 	Result Result `form:"result" json:"result"`
 }
 

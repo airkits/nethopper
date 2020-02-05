@@ -28,24 +28,27 @@
 package wspb
 
 import (
-	"github.com/gonethopper/nethopper/examples/model"
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb/cs"
+	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/transport"
+	"github.com/gonethopper/nethopper/network/transport/pb/cs"
 	"github.com/gonethopper/nethopper/server"
 )
 
 //LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m *model.WSMessage) error {
+func LoginHandler(agent network.IAgentAdapter, m *transport.Message) error {
 
-	req := (m.Body).(*cs.LoginReq)
+	req := (m.Body).(*c2s.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.Uid)
 	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
-	head := m.Head.(*cs.WSHeader)
-	outM := model.NewWSMessage(req.Uid, common.CSLoginCmd, head.Seq, server.MTResponse, head.Userdata, agent.Codec())
-	resp := &cs.LoginResp{
-		Result: &cs.Result{
+	header := m.Header.(*cs.Header)
+	outM := transport.NewMessage(transport.HeaderTypeWSPB, agent.Codec())
+	outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), header.GetMsgType())
+
+	resp := &c2s.LoginResp{
+		Result: &c2s.Result{
 			Code: 0,
 			Msg:  "ok",
 		},

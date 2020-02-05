@@ -43,7 +43,7 @@ func ModuleCreate() (server.Module, error) {
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	gs *grpc.Server
+	gs network.IServer
 }
 
 // Setup init custom module and pass config map to module
@@ -57,8 +57,8 @@ type Module struct {
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 
-	s.gs = grpc.NewServer(m, func(conn network.Conn) network.IAgent {
-		a := network.NewAgent(nil, NewAgentAdapter(conn))
+	s.gs = grpc.NewServer(m, func(conn network.IConn) network.IAgent {
+		a := network.NewAgent(NewAgentAdapter(conn))
 		return a
 	})
 

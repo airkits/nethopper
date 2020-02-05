@@ -28,23 +28,44 @@
 package grpc
 
 import (
-	"github.com/gonethopper/nethopper/examples/model/pb/ss"
+	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/transport"
+	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 )
 
 //LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m *ss.SSMessage, body interface{}) error {
+func LoginHandler(agent network.IAgentAdapter, m *transport.Message) error {
 
-	req := body.(*ss.LoginReq)
+	req := (m.Body).(*s2s.LoginReq)
 	server.Info("receive message %v", m)
-	//userID := server.StringToInt64(req.Uid)
-	//	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
-	resp := &ss.LoginResp{
-		Uid:  req.GetUid(),
-		Name: req.GetPasswd(),
+	userID := server.StringToInt64(req.Uid)
+	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
+	header := m.Header.(*ss.Header)
+	outM := transport.NewMessage(transport.HeaderTypeWSPB, agent.Codec())
+	outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), header.GetMsgType())
+
+	resp := &s2s.LoginResp{
+		Result: &s2s.Result{
+			Code: 0,
+			Msg:  "ok",
+		},
+		Uid:    req.Uid,
+		Passwd: result.(string),
+		Name:   result.(string),
 	}
-	agent.WriteMessage(resp)
-	server.Info("send message %v", resp)
+	if err != nil {
+		resp.Result.Code = 500
+		resp.Result.Msg = err.Error()
+	}
+	outM.Body = resp
+	payload, err := outM.Encode()
+	if err != nil {
+		return err
+	}
+	agent.WriteMessage(payload)
+	server.Info("send message %v", payload)
 	return nil
 }

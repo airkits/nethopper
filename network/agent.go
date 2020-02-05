@@ -33,37 +33,15 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-//IAgent agent interface define
-type IAgent interface {
-	Run()
-	OnClose()
-
-	LocalAddr() net.Addr
-	RemoteAddr() net.Addr
-	Close()
-	Destroy()
-	UserData() interface{}
-	SetUserData(data interface{})
-
-	Token() string
-	SetToken(string)
-	IsAuth() bool
-
-	GetAdapter() IAgentAdapter
-
-	SendMessage(payload []byte) error
-}
-
 //NewAgent create new agent
-func NewAgent(userData interface{}, adapter IAgentAdapter) IAgent {
-	return &Agent{userData: userData, adapter: adapter}
+func NewAgent(adapter IAgentAdapter) IAgent {
+	return &Agent{adapter: adapter}
 }
 
 //Agent base agent struct
 type Agent struct {
-	userData interface{}
-	adapter  IAgentAdapter
-	token    string
+	adapter IAgentAdapter
+	token   string
 }
 
 //Token get token
@@ -144,14 +122,4 @@ func (a *Agent) Close() {
 //Destroy agent destory
 func (a *Agent) Destroy() {
 	a.adapter.Conn().Destroy()
-}
-
-//UserData get userdata
-func (a *Agent) UserData() interface{} {
-	return a.userData
-}
-
-//SetUserData set userdata
-func (a *Agent) SetUserData(data interface{}) {
-	a.userData = data
 }

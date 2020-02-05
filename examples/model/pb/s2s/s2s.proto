@@ -1,5 +1,5 @@
 syntax = "proto3";
-package ss;
+package s2s;
 
 // client  <-> server  10000 - 19999
 enum MessageCmd //枚举消息类型
@@ -10,17 +10,6 @@ enum MessageCmd //枚举消息类型
 
 enum ErrorCode {
   OK = 0;
-}
-
-
-message SSMessage{
-  string cmd = 1;
-  string uid = 2;
-  int32 msgType = 3;
-  int32 seq = 4;
-  int32 userdata = 5;
-  map<string,  bytes> header =  6;
-  bytes payload = 11;
 }
 
 
@@ -38,10 +27,5 @@ message LoginResp {
   string uid = 2;
   string passwd = 3;
   string name = 4;
-}
-
-
-service RPC {
-  rpc Transport (stream SSMessage) returns (stream SSMessage){}
 }
 

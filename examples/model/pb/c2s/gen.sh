@@ -1,0 +1,1 @@
+protoc --go_out=. c2s.proto

@@ -32,7 +32,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/pb/ss"
+	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc"
 )
@@ -104,7 +104,7 @@ func Transport(c ss.RPCClient) error {
 	for {
 		i++
 		server.Info("send message %d", i)
-		stream.Send(&ss.SSMessage{Cmd: "login"})
+		stream.Send(&ss.Header{Cmd: "login"})
 		server.Info("send message over %d", i)
 		time.Sleep(time.Second)
 		if i > 10 {

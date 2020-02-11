@@ -144,7 +144,7 @@ func (m *Message) encodeBody() error {
 	if payload, err = m.codec.Marshal(m.Body, nil); err != nil {
 		return err
 	}
-	switch m.codec.Type() {
+	switch m.HeaderType {
 	case HeaderTypeWSJSON:
 		{
 			return m.encodeWSJSONBody(payload)

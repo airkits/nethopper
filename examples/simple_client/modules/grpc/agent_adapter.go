@@ -70,7 +70,7 @@ func (a *AgentAdapter) decodePBBody(m *transport.Message) error {
 
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	m := transport.NewMessage(transport.HeaderTypeGRPCPB, a.Codec())
+	m := transport.NewMessage(transport.HeaderTypeWSPB, a.Codec())
 	if err := m.DecodeHeader(payload.([]byte)); err != nil {
 		server.Error("decode head failed ,err :%s", err.Error())
 		return err
@@ -96,10 +96,10 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 
 func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
 
-	header := m.Header.(*ss.Header)
-	switch header.Cmd {
+	head := m.Header.(*ss.Header)
+	switch head.Cmd {
 	case common.CSLoginCmd:
-		return LoginHandler(a, m)
+		return LoginResponse(a, m)
 	default:
 		return errors.New("unknown message")
 	}

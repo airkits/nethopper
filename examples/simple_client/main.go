@@ -51,7 +51,7 @@ func main() {
 	RegisterModule("wspb", wspb.ModuleCreate)
 	RegisterModule("grpc", grpc.ModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
-	//	NewNamedModule(ModuleIDLogic, "logic", nil, m)
+	NewNamedModule(ModuleIDLogic, "logic", nil, m)
 	//	NewNamedModule(ModuleIDWSClient, "wspb", nil, m)
 	NewNamedModule(ModuleIDGRPCClient, "grpc", nil, m)
 

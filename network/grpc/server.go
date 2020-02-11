@@ -44,7 +44,7 @@ type Server struct {
 
 // ReadConfig config map
 // m := map[string]interface{}{
-//  "address":":12080",
+//  "address":":14000",
 //	"maxConnNum":1024,
 //  "socketQueueSize":100,
 //  "maxMessageSize":4096
@@ -54,7 +54,7 @@ type Server struct {
 // }
 func (s *Server) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "grpcAddress", ":14000", &s.Address); err != nil {
+	if err := server.ParseConfigValue(m, "address", ":14000", &s.Address); err != nil {
 		return err
 	}
 	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {

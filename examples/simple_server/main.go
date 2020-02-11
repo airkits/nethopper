@@ -68,7 +68,7 @@ func main() {
 		"dailyEnable": true,
 		"queueSize":   1000,
 		"driver":      "mysql",
-		"dsn":         "root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
+		"dsn":         "game:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
 	}
 	RegisterModule("log", log.LogModuleCreate)
 	RegisterModule("mysql", db.ModuleCreate)

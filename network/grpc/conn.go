@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"context"
 	"net"
 	"sync"
 
@@ -11,19 +12,27 @@ import (
 )
 
 //ConnSet grpc conn set
-type ConnSet map[ss.RPC_TransportServer]struct{}
+type ConnSet map[IRPCStream]struct{}
+
+//IRPCStream define rpc stream interface
+type IRPCStream interface {
+	Send(*ss.Header) error
+	Recv() (*ss.Header, error)
+	// Context returns the context for this stream.
+	Context() context.Context
+}
 
 //Conn grpc conn define
 type Conn struct {
 	sync.Mutex
-	stream         ss.RPC_TransportServer
+	stream         IRPCStream
 	writeChan      chan *ss.Header
 	maxMessageSize uint32
 	closeFlag      bool
 }
 
 //NewConn create websocket conn
-func NewConn(stream ss.RPC_TransportServer, rwQueueSize int, maxMessageSize uint32) network.IConn {
+func NewConn(stream IRPCStream, rwQueueSize int, maxMessageSize uint32) network.IConn {
 	grpcConn := new(Conn)
 	grpcConn.stream = stream
 	grpcConn.writeChan = make(chan *ss.Header, rwQueueSize)

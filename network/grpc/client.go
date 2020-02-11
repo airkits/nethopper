@@ -1,14 +1,16 @@
 package grpc
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gorilla/websocket"
+	"google.golang.org/grpc"
 )
 
 // NewClient create websocket client
@@ -33,10 +35,8 @@ type Client struct {
 	HandshakeTimeout time.Duration
 	AutoReconnect    bool
 	NewAgent         network.AgentCreateFunc
-	dialer           websocket.Dialer
 	conns            ConnSet
 	wg               sync.WaitGroup
-	closeFlag        bool
 	headers          http.Header
 	Token            string
 }
@@ -62,7 +62,7 @@ func (c *Client) Run() {
 // }
 func (c *Client) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "address", "ws://127.0.0.1:12080", &c.Address); err != nil {
+	if err := server.ParseConfigValue(m, "address", "127.0.0.1:12080", &c.Address); err != nil {
 		return err
 	}
 
@@ -105,53 +105,39 @@ func (c *Client) init() {
 	}
 
 	c.conns = make(ConnSet)
-	c.closeFlag = false
-	c.dialer = websocket.Dialer{
-		HandshakeTimeout: c.HandshakeTimeout,
-	}
 
-}
-
-func (c *Client) dial() *websocket.Conn {
-	for {
-		conn, _, err := c.dialer.Dial(c.Address, c.headers)
-		if err == nil || c.closeFlag {
-			return conn
-		}
-
-		server.Warning("connect to %v error: %v", c.Address, err)
-		time.Sleep(c.ConnectInterval)
-		continue
-	}
 }
 
 func (c *Client) connect() {
 	defer c.wg.Done()
 
 reconnect:
-	conn := c.dial()
-	if conn == nil {
-		return
+	conn, err := grpc.Dial(c.Address, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		server.Fatal("did not connect: %v", err)
 	}
-	conn.SetReadLimit(int64(c.MaxMessageSize))
+
+	client := ss.NewRPCClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	stream, err := client.Transport(ctx)
+	if err != nil {
+		server.Info("transport %v", err.Error())
+	}
 
 	c.Lock()
-	if c.closeFlag {
-		c.Unlock()
-		conn.Close()
-		return
-	}
-	c.conns[conn] = struct{}{}
+	c.conns[stream] = struct{}{}
 	c.Unlock()
 
-	wsConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(wsConn)
+	grpcConn := NewConn(stream, c.RWQueueSize, c.MaxMessageSize)
+	agent := c.NewAgent(grpcConn)
 	agent.Run()
 
 	// cleanup
-	wsConn.Close()
+	cancel()
+	grpcConn.Close()
 	c.Lock()
-	delete(c.conns, conn)
+	delete(c.conns, stream)
 	c.Unlock()
 	agent.OnClose()
 
@@ -164,9 +150,8 @@ reconnect:
 // Close client connections
 func (c *Client) Close() {
 	c.Lock()
-	c.closeFlag = true
 	for conn := range c.conns {
-		conn.Close()
+		conn.Context().Done()
 	}
 	c.conns = nil
 	c.Unlock()

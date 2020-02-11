@@ -1,3 +1,5 @@
+// +build linux darwin
+
 // MIT License
 
 // Copyright (c) 2019 gonethopper

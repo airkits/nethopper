@@ -32,7 +32,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -68,11 +67,15 @@ func GetWorkDirectory() (string, error) {
 	// 	return "", err
 	// }
 
-	file, err := exec.LookPath(os.Args[0])
-	if err != nil {
-		return "", err
-	}
-	path, err := filepath.Abs(file)
+	// file, err := exec.LookPath(os.Args[0])
+	// if err != nil {
+	// 	return "", err
+	// }
+	// path, err := filepath.Abs(file)
+	// if err != nil {
+	// 	return "", err
+	// }
+	path, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		return "", err
 	}

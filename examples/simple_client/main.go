@@ -28,7 +28,7 @@
 package main
 
 import (
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/grpc"
+	"github.com/gonethopper/nethopper/examples/simple_client/modules/grpc2"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/wspb"
 	"github.com/gonethopper/nethopper/log"
@@ -49,7 +49,7 @@ func main() {
 	RegisterModule("log", log.LogModuleCreate)
 	RegisterModule("logic", logic.ModuleCreate)
 	RegisterModule("wspb", wspb.ModuleCreate)
-	RegisterModule("grpc", grpc.ModuleCreate)
+	RegisterModule("grpc", grpc2.ModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDLogic, "logic", nil, m)
 	//	NewNamedModule(ModuleIDWSClient, "wspb", nil, m)

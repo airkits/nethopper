@@ -106,7 +106,7 @@ func (m *Message) Encode() ([]byte, error) {
 	}
 
 	var err error
-	if err = m.encodeBody(); err != nil {
+	if err = m.EncodeBody(); err != nil {
 		return nil, err
 	}
 	var payload []byte
@@ -134,8 +134,8 @@ func (m *Message) encodeGRPCPBBody(payload []byte) error {
 	return nil
 }
 
-//encodeBody encode body
-func (m *Message) encodeBody() error {
+//EncodeBody encode body
+func (m *Message) EncodeBody() error {
 	if m.Header == nil {
 		return errors.New("message head is null")
 	}

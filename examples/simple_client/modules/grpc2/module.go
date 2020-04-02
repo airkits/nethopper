@@ -32,6 +32,10 @@ import (
 	"io"
 	"time"
 
+	"github.com/gonethopper/nethopper/codec"
+	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
+	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc"
@@ -104,7 +108,20 @@ func Transport(c ss.RPCClient) error {
 	for {
 		i++
 		server.Info("send message %d", i)
-		stream.Send(&ss.Header{Cmd: "login"})
+
+		m := transport.NewMessage(transport.HeaderTypeGRPCPB, codec.PBCodec)
+		m.Header = m.NewHeader(1, common.CSLoginCmd, server.MTRequest)
+
+		body := &c2s.LoginReq{
+			Uid:    "1234",
+			Passwd: "game",
+		}
+		m.Body = body
+		if err := m.EncodeBody(); err != nil {
+			continue
+		}
+
+		stream.SendMsg((m.Header).(*ss.Header))
 		server.Info("send message over %d", i)
 		time.Sleep(time.Second)
 		if i > 10 {

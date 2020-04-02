@@ -29,6 +29,7 @@ package grpc
 
 import (
 	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
 	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport"
@@ -39,7 +40,7 @@ import (
 //LoginHandler request login
 func LoginHandler(agent network.IAgentAdapter, m *transport.Message) error {
 
-	req := (m.Body).(*s2s.LoginReq)
+	req := (m.Body).(*c2s.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.Uid)
 	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
@@ -65,7 +66,7 @@ func LoginHandler(agent network.IAgentAdapter, m *transport.Message) error {
 	if err != nil {
 		return err
 	}
-	agent.WriteMessage(payload)
+	agent.WriteMessage(outM.Header)
 	server.Info("send message %v", payload)
 	return nil
 }

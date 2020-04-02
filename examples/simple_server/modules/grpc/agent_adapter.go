@@ -71,10 +71,7 @@ func (a *AgentAdapter) decodePBBody(m *transport.Message) error {
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	m := transport.NewMessage(transport.HeaderTypeGRPCPB, a.Codec())
-	if err := m.DecodeHeader(payload.([]byte)); err != nil {
-		server.Error("decode head failed ,err :%s", err.Error())
-		return err
-	}
+	m.Header = payload.(*ss.Header)
 	if err := a.decodePBBody(m); err != nil {
 		server.Error("decode body failed ,err :%s", err.Error())
 		return err

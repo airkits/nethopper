@@ -36,9 +36,6 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// HTTPTimeout http timeout (second)
-const HTTPTimeout = 10
-
 // ModuleCreate  module create function
 func ModuleCreate() (server.Module, error) {
 	return &Module{}, nil

@@ -20,12 +20,16 @@ const (
 	HeaderTypeGRPCPB
 )
 
-//IHeader message header interface
-// type IHeader interface {
+//IMessage message interface
+// type IMessage interface {
 // 	GetID() int32
+// 	SetID(v int32)
 // 	GetCmd() string
+// 	SetCmd(v string)
 // 	GetMsgType() int32
+// 	SetMsgType(v int32)
 // 	GetPayload() interface{}
+// 	SetPayLoad(v interface{})
 // }
 
 //IBody message body interface

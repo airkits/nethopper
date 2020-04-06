@@ -66,7 +66,7 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 	//	server.Call(server.ModuleIDWSClient, common.CSLoginCmd, 1, "1", "game")
 	server.Call(server.ModuleIDGRPCClient, common.SSLoginCmd, 1, "1", "game")
 

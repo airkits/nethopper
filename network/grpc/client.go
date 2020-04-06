@@ -119,7 +119,7 @@ reconnect:
 
 	client := ss.NewRPCClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithCancel(context.Background()) // context.WithTimeout(context.Background(), 10*time.Second)
 	stream, err := client.Transport(ctx)
 	if err != nil {
 		server.Info("transport %v", err.Error())

@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
+	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport"
-	"github.com/gonethopper/nethopper/network/transport/pb/cs"
+	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -16,19 +16,18 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 
 	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
 		m := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.GetAdapter().Codec())
-		m.Header = m.NewHeader(1, common.CSLoginCmd, server.MTRequest)
+		m.Header = m.NewHeader(1, common.SSLoginCmd, server.MTRequest)
 
-		body := &c2s.LoginReq{
+		body := &s2s.LoginReq{
 			Uid:    uid,
 			Passwd: pwd,
 		}
 		m.Body = body
-		var payload []byte
-		var err error
-		if payload, err = m.Encode(); err != nil {
-			return "", err
+		if err := m.EncodeBody(); err != nil {
+			server.Error("Notify login send failed %s ", err.Error())
+			return "error", nil
 		}
-		if err := agent.SendMessage(payload); err != nil {
+		if err := agent.GetAdapter().WriteMessage(m.Header); err != nil {
 			server.Error("Notify login send failed %s ", err.Error())
 			time.Sleep(1 * time.Second)
 		} else {
@@ -40,8 +39,8 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 
 //LoginResponse request login
 func LoginResponse(agent network.IAgentAdapter, m *transport.Message) error {
-	server.Info("LoginResponse get result %v", *(m.Header.(*cs.Header)))
-	server.Info("LoginResponse get body %v", *(m.Body.(*c2s.LoginResp)))
+	server.Info("LoginResponse get result %v", *(m.Header.(*ss.Header)))
+	server.Info("LoginResponse get body %v", *(m.Body.(*s2s.LoginResp)))
 
 	return nil
 }

@@ -70,11 +70,8 @@ func (a *AgentAdapter) decodePBBody(m *transport.Message) error {
 
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	m := transport.NewMessage(transport.HeaderTypeWSPB, a.Codec())
-	if err := m.DecodeHeader(payload.([]byte)); err != nil {
-		server.Error("decode head failed ,err :%s", err.Error())
-		return err
-	}
+	m := transport.NewMessage(transport.HeaderTypeGRPCPB, a.Codec())
+	m.Header = payload.(*ss.Header)
 	if err := a.decodePBBody(m); err != nil {
 		server.Error("decode body failed ,err :%s", err.Error())
 		return err
@@ -98,15 +95,19 @@ func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
 
 	head := m.Header.(*ss.Header)
 	switch head.Cmd {
-	case common.CSLoginCmd:
-		return LoginResponse(a, m)
 	default:
 		return errors.New("unknown message")
 	}
 
 }
 func (a *AgentAdapter) processResponseMessage(m *transport.Message) error {
-	return errors.New("unknown message")
+	head := m.Header.(*ss.Header)
+	switch head.Cmd {
+	case common.SSLoginCmd:
+		return LoginResponse(a, m)
+	default:
+		return errors.New("unknown message")
+	}
 }
 func (a *AgentAdapter) processNotifyMessage(m *transport.Message) error {
 	return errors.New("unknown message")

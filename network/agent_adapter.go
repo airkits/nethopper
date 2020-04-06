@@ -46,7 +46,7 @@ func (a *AgentAdapter) Setup(conn IConn, codec codec.Codec) {
 
 //WriteMessage to connection
 func (a *AgentAdapter) WriteMessage(payload interface{}) error {
-	if err := a.conn.WriteMessage(payload.([]byte)); err != nil {
+	if err := a.conn.WriteMessage(payload); err != nil {
 		server.Error("write message %x error: %v", payload, err)
 		return err
 	}

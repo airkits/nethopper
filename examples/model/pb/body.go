@@ -6,6 +6,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
+	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -30,9 +31,9 @@ func CreateBody(msgType int32, cmd string) (proto.Message, error) {
 func CreateRequestBody(c string) (proto.Message, error) {
 	switch c {
 	case common.CSLoginCmd:
-		{
-			return &c2s.LoginReq{}, nil
-		}
+		return &c2s.LoginReq{}, nil
+	case common.SSLoginCmd:
+		return &s2s.LoginReq{}, nil
 	}
 	return nil, errors.New("create body failed,can't find request body")
 }
@@ -41,9 +42,9 @@ func CreateRequestBody(c string) (proto.Message, error) {
 func CreateResponseBody(c string) (proto.Message, error) {
 	switch c {
 	case common.CSLoginCmd:
-		{
-			return &c2s.LoginResp{}, nil
-		}
+		return &c2s.LoginResp{}, nil
+	case common.SSLoginCmd:
+		return &s2s.LoginResp{}, nil
 	}
 	return nil, errors.New("create body failed,can't find body response body")
 }

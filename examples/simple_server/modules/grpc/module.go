@@ -56,7 +56,6 @@ type Module struct {
 //  "maxMessageSize":4096
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
-
 	s.gs = grpc.NewServer(m, func(conn network.IConn) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn))
 		return a

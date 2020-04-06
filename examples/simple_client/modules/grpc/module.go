@@ -61,7 +61,7 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
-	s.RegisterHandler(common.CSLoginCmd, NotifyLogin)
+	s.RegisterHandler(common.SSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
 	s.grpcClient = grpc.NewClient(m, func(conn network.IConn) network.IAgent {

@@ -34,7 +34,7 @@ import (
 
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
+	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
@@ -110,9 +110,9 @@ func Transport(c ss.RPCClient) error {
 		server.Info("send message %d", i)
 
 		m := transport.NewMessage(transport.HeaderTypeGRPCPB, codec.PBCodec)
-		m.Header = m.NewHeader(1, common.CSLoginCmd, server.MTRequest)
+		m.Header = m.NewHeader(1, common.SSLoginCmd, server.MTRequest)
 
-		body := &c2s.LoginReq{
+		body := &s2s.LoginReq{
 			Uid:    "1234",
 			Passwd: "game",
 		}

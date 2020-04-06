@@ -2,7 +2,9 @@ package common
 
 const (
 	// CSLoginCmd login cmd
-	CSLoginCmd = "login"
+	CSLoginCmd = "cs_login"
+	// SSLoginCmd login cmd
+	SSLoginCmd = "ss_login"
 )
 
 const (

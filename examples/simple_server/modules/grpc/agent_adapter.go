@@ -95,7 +95,7 @@ func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
 
 	header := m.Header.(*ss.Header)
 	switch header.Cmd {
-	case common.CSLoginCmd:
+	case common.SSLoginCmd:
 		return LoginHandler(a, m)
 	default:
 		return errors.New("unknown message")

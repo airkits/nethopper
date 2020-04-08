@@ -37,13 +37,13 @@ import (
 )
 
 //LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m *transport.Message) error {
-
-	req := (m.Body).(*s2s.LoginReq)
+func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
+	message := m.(*ss.Message)
+	req := (message.Body).(s2s.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.Uid)
 	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
-	header := m.Header.(*ss.Header)
+	header := m.(*ss.Header)
 	outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
 	outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
 

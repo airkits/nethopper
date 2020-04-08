@@ -37,7 +37,7 @@ import (
 )
 
 //LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m *transport.Message) error {
+func LoginHandler(agent network.IAgentAdapter, m *transport.IMessage) error {
 	req := (m.Body).(*csjson.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.UID)

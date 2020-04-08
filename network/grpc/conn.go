@@ -16,8 +16,8 @@ type ConnSet map[IRPCStream]struct{}
 
 //IRPCStream define rpc stream interface
 type IRPCStream interface {
-	Send(*ss.Header) error
-	Recv() (*ss.Header, error)
+	Send(*ss.Message) error
+	Recv() (*ss.Message, error)
 	// Context returns the context for this stream.
 	Context() context.Context
 }
@@ -26,7 +26,7 @@ type IRPCStream interface {
 type Conn struct {
 	sync.Mutex
 	stream         IRPCStream
-	writeChan      chan *ss.Header
+	writeChan      chan *ss.Message
 	maxMessageSize uint32
 	closeFlag      bool
 }
@@ -35,7 +35,7 @@ type Conn struct {
 func NewConn(stream IRPCStream, rwQueueSize int, maxMessageSize uint32) network.IConn {
 	grpcConn := new(Conn)
 	grpcConn.stream = stream
-	grpcConn.writeChan = make(chan *ss.Header, rwQueueSize)
+	grpcConn.writeChan = make(chan *ss.Message, rwQueueSize)
 	grpcConn.maxMessageSize = maxMessageSize
 
 	go func() {
@@ -94,7 +94,7 @@ func (c *Conn) Close() {
 	c.closeFlag = true
 }
 
-func (c *Conn) doWrite(b *ss.Header) {
+func (c *Conn) doWrite(b *ss.Message) {
 	if len(c.writeChan) == cap(c.writeChan) {
 		server.Debug("close conn: channel full")
 		c.doDestroy()
@@ -139,7 +139,7 @@ func (c *Conn) WriteMessage(args ...interface{}) error {
 	}
 
 	for i := 0; i < len(args); i++ {
-		c.doWrite(args[i].(*ss.Header))
+		c.doWrite(args[i].(*ss.Message))
 	}
 	return nil
 }

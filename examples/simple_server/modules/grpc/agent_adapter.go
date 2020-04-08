@@ -30,12 +30,9 @@ package grpc
 import (
 	"errors"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb"
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 
 	"github.com/gonethopper/nethopper/server"
@@ -53,61 +50,39 @@ type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-func (a *AgentAdapter) decodePBBody(m *transport.Message) error {
-	head := m.Header.(*ss.Header)
-	var body proto.Message
-	var err error
-	if body, err = pb.CreateBody(head.MsgType, head.Cmd); err != nil {
-		return err
-	}
-	if err = m.Codec().Unmarshal(head.Payload, body, nil); err != nil {
-		return err
-	}
-
-	m.Body = body
-	return nil
-}
-
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	m := transport.NewMessage(transport.HeaderTypeGRPCPB, a.Codec())
-	m.Header = payload.(*ss.Header)
-	if err := a.decodePBBody(m); err != nil {
-		server.Error("decode body failed ,err :%s", err.Error())
-		return err
-	}
-	head := m.Header.(*ss.Header)
-	switch head.MsgType {
+	message := payload.(*ss.Message)
+	switch message.MsgType {
 	case server.MTRequest:
-		return a.processRequestMessage(m)
+		return a.processRequestMessage(message)
 	case server.MTResponse:
-		return a.processResponseMessage(m)
+		return a.processResponseMessage(message)
 	case server.MTNotify:
-		return a.processNotifyMessage(m)
+		return a.processNotifyMessage(message)
 	case server.MTBroadcast:
-		return a.processResponseMessage(m)
+		return a.processResponseMessage(message)
 	default:
 		return errors.New("unknown message type")
 	}
 }
 
-func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
+func (a *AgentAdapter) processRequestMessage(message *ss.Message) error {
 
-	header := m.Header.(*ss.Header)
-	switch header.Cmd {
+	switch message.Cmd {
 	case common.SSLoginCmd:
-		return LoginHandler(a, m)
+		return LoginHandler(a, message)
 	default:
 		return errors.New("unknown message")
 	}
 
 }
-func (a *AgentAdapter) processResponseMessage(m *transport.Message) error {
+func (a *AgentAdapter) processResponseMessage(message *ss.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processNotifyMessage(m *transport.Message) error {
+func (a *AgentAdapter) processNotifyMessage(message *ss.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processBroadcastMessage(m *transport.Message) error {
+func (a *AgentAdapter) processBroadcastMessage(message *ss.Message) error {
 	return errors.New("unknown message")
 }

@@ -53,7 +53,7 @@ type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-func (a *AgentAdapter) decodePBBody(m *transport.Message) error {
+func (a *AgentAdapter) decodePBBody(m *transport.IMessage) error {
 	head := m.Header.(*cs.Header)
 	var body proto.Message
 	var err error

@@ -1,11 +1,11 @@
 syntax = "proto3";
 package cs;
+import "google/protobuf/any.proto";
 
-
-message Header{
+message Message{
   int32 ID = 1;
   string cmd = 2;
   int32 msgType = 3;
   map<string,  bytes> options =  4;
-  bytes payload = 11;
+  google.protobuf.Any body = 11;
 }

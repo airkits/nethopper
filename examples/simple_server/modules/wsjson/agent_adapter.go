@@ -52,7 +52,7 @@ type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-func (a *AgentAdapter) decodeJSONBody(m *transport.Message) error {
+func (a *AgentAdapter) decodeJSONBody(m *transport.IMessage) error {
 	header := m.Header.(*json.Header)
 	var body transport.IBody
 	var err error

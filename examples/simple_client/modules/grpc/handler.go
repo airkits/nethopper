@@ -1,8 +1,12 @@
 package grpc
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
 	"github.com/gonethopper/nethopper/network"
@@ -15,19 +19,26 @@ import (
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
 	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
-		m := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.GetAdapter().Codec())
-		m.Header = m.NewHeader(1, common.SSLoginCmd, server.MTRequest)
 
-		body := &s2s.LoginReq{
+		req := &s2s.LoginReq{
 			Uid:    uid,
 			Passwd: pwd,
 		}
-		m.Body = body
-		if err := m.EncodeBody(); err != nil {
-			server.Error("Notify login send failed %s ", err.Error())
+
+		body, err := proto.Marshal(req)
+		if err != nil {
+			server.Error("Notify login send failed")
 			return "error", nil
 		}
-		if err := agent.GetAdapter().WriteMessage(m.Header); err != nil {
+
+		m := &ss.Message{
+			ID:      1,
+			Cmd:     common.SSLoginCmd,
+			MsgType: server.MTRequest,
+			Body:    &any.Any{TypeUrl: "./" + common.SSLoginCmd, Value: body},
+		}
+
+		if err := agent.GetAdapter().WriteMessage(m); err != nil {
 			server.Error("Notify login send failed %s ", err.Error())
 			time.Sleep(1 * time.Second)
 		} else {
@@ -38,9 +49,15 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 }
 
 //LoginResponse request login
-func LoginResponse(agent network.IAgentAdapter, m *transport.Message) error {
-	server.Info("LoginResponse get result %v", *(m.Header.(*ss.Header)))
-	server.Info("LoginResponse get body %v", *(m.Body.(*s2s.LoginResp)))
+func LoginResponse(agent network.IAgentAdapter, m transport.IMessage) error {
+	msg := m.(*ss.Message)
+	server.Info("LoginResponse get result %v", msg)
+	resp := &s2s.LoginResp{}
+	if err := ptypes.UnmarshalAny(msg.Body, resp); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	server.Info("LoginResponse get body %v", resp)
 
 	return nil
 }

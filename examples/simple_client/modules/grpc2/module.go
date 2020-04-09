@@ -32,10 +32,10 @@ import (
 	"io"
 	"time"
 
-	"github.com/gonethopper/nethopper/codec"
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
-	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc"
@@ -109,19 +109,25 @@ func Transport(c ss.RPCClient) error {
 		i++
 		server.Info("send message %d", i)
 
-		m := transport.NewMessage(transport.HeaderTypeGRPCPB, codec.PBCodec)
-		m.Header = m.NewHeader(1, common.SSLoginCmd, server.MTRequest)
-
-		body := &s2s.LoginReq{
+		req := &s2s.LoginReq{
 			Uid:    "1234",
 			Passwd: "game",
 		}
-		m.Body = body
-		if err := m.EncodeBody(); err != nil {
-			continue
+
+		body, err := proto.Marshal(req)
+		if err != nil {
+			server.Error("Notify login send failed")
+			break
 		}
 
-		stream.SendMsg((m.Header).(*ss.Header))
+		m := &ss.Message{
+			ID:      1,
+			Cmd:     common.SSLoginCmd,
+			MsgType: server.MTRequest,
+			Body:    &any.Any{TypeUrl: "./" + common.SSLoginCmd, Value: body},
+		}
+
+		stream.SendMsg(m)
 		server.Info("send message over %d", i)
 		time.Sleep(time.Second)
 		if i > 10 {

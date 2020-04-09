@@ -28,6 +28,11 @@
 package grpc
 
 import (
+	"fmt"
+
+	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
 	"github.com/gonethopper/nethopper/network"
@@ -39,13 +44,17 @@ import (
 //LoginHandler request login
 func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	message := m.(*ss.Message)
-	req := (message.Body).(s2s.LoginReq)
-	server.Info("receive message %v", m)
+	req := s2s.LoginReq{}
+	if err := ptypes.UnmarshalAny(message.Body, &req); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	server.Info("receive message %v", req)
 	userID := server.StringToInt64(req.Uid)
 	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
-	header := m.(*ss.Header)
-	outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
-	outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
+	// header := m.(*ss.Header)
+	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
+	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
 
 	resp := &s2s.LoginResp{
 		Result: &s2s.Result{
@@ -60,12 +69,19 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 		resp.Result.Code = 500
 		resp.Result.Msg = err.Error()
 	}
-	outM.Body = resp
-	payload, err := outM.Encode()
+	body, err := proto.Marshal(resp)
 	if err != nil {
-		return err
+		return nil
 	}
-	agent.WriteMessage(outM.Header)
-	server.Info("send message %v", payload)
+
+	respMsg := &ss.Message{
+		ID:      message.GetID(),
+		Cmd:     message.GetCmd(),
+		MsgType: server.MTResponse,
+		Body:    &any.Any{TypeUrl: "./" + message.GetCmd(), Value: body},
+	}
+
+	agent.WriteMessage(respMsg)
+	server.Info("send message %v", respMsg)
 	return nil
 }

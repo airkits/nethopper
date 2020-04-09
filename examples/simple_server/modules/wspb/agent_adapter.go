@@ -30,12 +30,9 @@ package wspb
 import (
 	"errors"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb"
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/cs"
 
 	"github.com/gonethopper/nethopper/server"
@@ -53,34 +50,14 @@ type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-func (a *AgentAdapter) decodePBBody(m *transport.IMessage) error {
-	head := m.Header.(*cs.Header)
-	var body proto.Message
-	var err error
-	if body, err = pb.CreateBody(head.MsgType, head.Cmd); err != nil {
-		return err
-	}
-	if err = m.Codec().Unmarshal(head.Payload, body, nil); err != nil {
-		return err
-	}
-
-	m.Body = body
-	return nil
-}
-
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	m := transport.NewMessage(transport.HeaderTypeWSPB, a.Codec())
-	if err := m.DecodeHeader(payload.([]byte)); err != nil {
-		server.Error("decode head failed ,err :%s", err.Error())
+	m := &cs.Message{}
+	if err := a.Codec().Unmarshal(payload.([]byte), m, nil); err != nil {
+		server.Error("decode cs message failed ,err :%s", err.Error())
 		return err
 	}
-	if err := a.decodePBBody(m); err != nil {
-		server.Error("decode body failed ,err :%s", err.Error())
-		return err
-	}
-	head := m.Header.(*cs.Header)
-	switch head.MsgType {
+	switch m.MsgType {
 	case server.MTRequest:
 		return a.processRequestMessage(m)
 	case server.MTResponse:
@@ -94,10 +71,9 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	}
 }
 
-func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
+func (a *AgentAdapter) processRequestMessage(m *cs.Message) error {
 
-	head := m.Header.(*cs.Header)
-	switch head.Cmd {
+	switch m.Cmd {
 	case common.CSLoginCmd:
 		return LoginHandler(a, m)
 	default:
@@ -105,12 +81,12 @@ func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
 	}
 
 }
-func (a *AgentAdapter) processResponseMessage(m *transport.Message) error {
+func (a *AgentAdapter) processResponseMessage(m *cs.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processNotifyMessage(m *transport.Message) error {
+func (a *AgentAdapter) processNotifyMessage(m *cs.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processBroadcastMessage(m *transport.Message) error {
+func (a *AgentAdapter) processBroadcastMessage(m *cs.Message) error {
 	return errors.New("unknown message")
 }

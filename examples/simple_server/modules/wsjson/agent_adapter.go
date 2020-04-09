@@ -52,30 +52,30 @@ type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-func (a *AgentAdapter) decodeJSONBody(m *transport.IMessage) error {
-	header := m.Header.(*json.Header)
+func (a *AgentAdapter) decodeJSONBody(m *json.Message) error {
+
 	var body transport.IBody
 	var err error
-	if body, err = csjson.CreateBody(header.MsgType, header.Cmd); err != nil {
+	if body, err = csjson.CreateBody(m.MsgType, m.Cmd); err != nil {
 		return err
 	}
-	server.Info("type %s", reflect.TypeOf(header.Payload))
-	switch header.Payload.(type) {
+	server.Info("type %s", reflect.TypeOf(m.Body))
+	switch m.Body.(type) {
 	case string:
 		{
-			if err = m.Codec().Unmarshal([]byte((header.Payload).(string)), body, nil); err != nil {
+			if err = a.Codec().Unmarshal([]byte((m.Body).(string)), body, nil); err != nil {
 				return err
 			}
 		}
 	case []byte:
 		{
-			if err = m.Codec().Unmarshal((header.Payload).([]byte), body, nil); err != nil {
+			if err = a.Codec().Unmarshal((m.Body).([]byte), body, nil); err != nil {
 				return err
 			}
 		}
 
 	default:
-		server.Error("receive unknown message %x", header.Payload)
+		server.Error("receive unknown message %x", m.Body)
 	}
 
 	m.Body = body
@@ -84,18 +84,16 @@ func (a *AgentAdapter) decodeJSONBody(m *transport.IMessage) error {
 
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	m := transport.NewMessage(transport.HeaderTypeWSJSON, a.Codec())
-	if err := m.DecodeHeader(payload.([]byte)); err != nil {
+	m := &json.Message{}
+	if err := a.Codec().Unmarshal(payload.([]byte), m, nil); err != nil {
 		server.Error("decode header failed ,err :%s", err.Error())
 		return err
 	}
-
 	if err := a.decodeJSONBody(m); err != nil {
 		server.Error("decode body failed ,err :%s", err.Error())
 		return err
 	}
-	head := m.Header.(*json.Header)
-	switch head.MsgType {
+	switch m.MsgType {
 	case server.MTRequest:
 		return a.processRequestMessage(m)
 	case server.MTResponse:
@@ -109,10 +107,8 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	}
 }
 
-func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
-
-	head := m.Header.(*json.Header)
-	switch head.Cmd {
+func (a *AgentAdapter) processRequestMessage(m *json.Message) error {
+	switch m.Cmd {
 	case common.CSLoginCmd:
 		return LoginHandler(a, m)
 	default:
@@ -120,12 +116,12 @@ func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
 	}
 
 }
-func (a *AgentAdapter) processResponseMessage(m *transport.Message) error {
+func (a *AgentAdapter) processResponseMessage(m *json.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processNotifyMessage(m *transport.Message) error {
+func (a *AgentAdapter) processNotifyMessage(m *json.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processBroadcastMessage(m *transport.Message) error {
+func (a *AgentAdapter) processBroadcastMessage(m *json.Message) error {
 	return errors.New("unknown message")
 }

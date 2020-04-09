@@ -37,14 +37,12 @@ import (
 )
 
 //LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m *transport.IMessage) error {
-	req := (m.Body).(*csjson.LoginReq)
+func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
+	message := m.(*json.Message)
+	req := message.Body.(*csjson.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.UID)
 	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.UID, req.Passwd)
-	header := m.Header.(*json.Header)
-	outM := transport.NewMessage(transport.HeaderTypeWSJSON, agent.Codec())
-	outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), header.GetMsgType())
 	resp := &csjson.LoginResp{
 		Data: result.(string),
 	}
@@ -53,11 +51,23 @@ func LoginHandler(agent network.IAgentAdapter, m *transport.IMessage) error {
 	} else {
 		resp.OK()
 	}
-	outM.Body = resp
-	payload, err := outM.Encode()
-	if err != nil {
+
+	var body []byte
+	if body, err = agent.Codec().Marshal(resp, nil); err != nil {
 		return err
 	}
+	respMsg := &json.Message{
+		Cmd:     message.GetCmd(),
+		MsgType: server.MTResponse,
+		ID:      message.GetID(),
+		Body:    body,
+	}
+
+	var payload []byte
+	if payload, err = agent.Codec().Marshal(respMsg, nil); err != nil {
+		return err
+	}
+
 	agent.WriteMessage(payload)
 	server.Info("send message %v", payload)
 	return nil

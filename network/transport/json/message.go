@@ -6,7 +6,7 @@ type Message struct {
 	Cmd     string      `form:"cmd" json:"cmd"`
 	MsgType int32       `form:"msgType" json:"msgType"`
 	Options string      `form:"options" json:"options"`
-	Payload interface{} `form:"payload" json:"payload"`
+	Body    interface{} `form:"body" json:"body"`
 }
 
 //GetMsgType >
@@ -15,9 +15,9 @@ func (m *Message) GetMsgType() int32 {
 }
 
 //SetMsgType >
-func (m *Message) SetMsgType(v int32) {
-	m.MsgType = v
-}
+// func (m *Message) SetMsgType(v int32) {
+// 	m.MsgType = v
+// }
 
 //GetCmd >
 func (m *Message) GetCmd() string {
@@ -25,9 +25,9 @@ func (m *Message) GetCmd() string {
 }
 
 //SetCmd >
-func (m *Message) SetCmd(v string) {
-	m.Cmd = v
-}
+// func (m *Message) SetCmd(v string) {
+// 	m.Cmd = v
+// }
 
 //GetID >
 func (m *Message) GetID() int32 {
@@ -35,9 +35,9 @@ func (m *Message) GetID() int32 {
 }
 
 //SetID >
-func (m *Message) SetID(v int32) {
-	m.ID = v
-}
+// func (m *Message) SetID(v int32) {
+// 	m.ID = v
+// }
 
 //GetOptions >
 func (m *Message) GetOptions() interface{} {
@@ -45,16 +45,16 @@ func (m *Message) GetOptions() interface{} {
 }
 
 //SetOptions >
-func (m *Message) SetOptions(v string) {
-	m.Options = v
-}
+// func (m *Message) SetOptions(v string) {
+// 	m.Options = v
+// }
 
-//GetPayload >
-func (m *Message) GetPayload() interface{} {
-	return m.Payload
+//GetBody >
+func (m *Message) GetBody() interface{} {
+	return m.Body
 }
 
 //SetPayload >
-func (m *Message) SetPayload(v string) {
-	m.Payload = v
-}
+// func (m *Message) SetPayload(v string) {
+// 	m.Payload = v
+// }

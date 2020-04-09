@@ -30,12 +30,9 @@ package grpc
 import (
 	"errors"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb"
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 
 	"github.com/gonethopper/nethopper/server"
@@ -53,31 +50,25 @@ type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-func (a *AgentAdapter) decodePBBody(m *transport.Message) error {
-	head := m.Header.(*ss.Header)
-	var body proto.Message
-	var err error
-	if body, err = pb.CreateBody(head.MsgType, head.Cmd); err != nil {
-		return err
-	}
-	if err = m.Codec().Unmarshal(head.Payload, body, nil); err != nil {
-		return err
-	}
+// func (a *AgentAdapter) decodePBBody(m transport.IMessage) error {
+// 	message := m.(*ss.Message)
+// 	var body proto.Message
+// 	var err error
+// 	if body, err = pb.CreateBody(head.MsgType, head.Cmd); err != nil {
+// 		return err
+// 	}
+// 	if err = m.Codec().Unmarshal(head.Payload, body, nil); err != nil {
+// 		return err
+// 	}
 
-	m.Body = body
-	return nil
-}
+// 	m.Body = body
+// 	return nil
+// }
 
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	m := transport.NewMessage(transport.HeaderTypeGRPCPB, a.Codec())
-	m.Header = payload.(*ss.Header)
-	if err := a.decodePBBody(m); err != nil {
-		server.Error("decode body failed ,err :%s", err.Error())
-		return err
-	}
-	head := m.Header.(*ss.Header)
-	switch head.MsgType {
+	m := payload.(*ss.Message)
+	switch m.MsgType {
 	case server.MTRequest:
 		return a.processRequestMessage(m)
 	case server.MTResponse:
@@ -91,27 +82,25 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	}
 }
 
-func (a *AgentAdapter) processRequestMessage(m *transport.Message) error {
+func (a *AgentAdapter) processRequestMessage(m *ss.Message) error {
 
-	head := m.Header.(*ss.Header)
-	switch head.Cmd {
+	switch m.Cmd {
 	default:
 		return errors.New("unknown message")
 	}
 
 }
-func (a *AgentAdapter) processResponseMessage(m *transport.Message) error {
-	head := m.Header.(*ss.Header)
-	switch head.Cmd {
+func (a *AgentAdapter) processResponseMessage(m *ss.Message) error {
+	switch m.Cmd {
 	case common.SSLoginCmd:
 		return LoginResponse(a, m)
 	default:
 		return errors.New("unknown message")
 	}
 }
-func (a *AgentAdapter) processNotifyMessage(m *transport.Message) error {
+func (a *AgentAdapter) processNotifyMessage(m *ss.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processBroadcastMessage(m *transport.Message) error {
+func (a *AgentAdapter) processBroadcastMessage(m *ss.Message) error {
 	return errors.New("unknown message")
 }

@@ -3,9 +3,11 @@ package wspb
 import (
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
+	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/cs"
 	"github.com/gonethopper/nethopper/server"
 )
@@ -14,15 +16,24 @@ import (
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
 	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
-		m := transport.NewMessage(transport.HeaderTypeWSJSON, agent.GetAdapter().Codec())
-		body := &c2s.LoginReq{
+		req := &c2s.LoginReq{
 			Uid:    uid,
 			Passwd: pwd,
 		}
-		m.Body = body
-		var payload []byte
+
+		var body []byte
 		var err error
-		if payload, err = m.Encode(); err != nil {
+		if body, err = agent.GetAdapter().Codec().Marshal(req, nil); err != nil {
+			return "", err
+		}
+		msg := &cs.Message{
+			ID:      1,
+			Cmd:     common.CSLoginCmd,
+			MsgType: server.MTRequest,
+			Body:    &any.Any{TypeUrl: "./" + common.CSLoginCmd, Value: body},
+		}
+		var payload []byte
+		if payload, err = agent.GetAdapter().Codec().Marshal(msg, nil); err != nil {
 			return "", err
 		}
 		if err := agent.SendMessage(payload); err != nil {
@@ -36,9 +47,12 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 }
 
 //LoginResponse request login
-func LoginResponse(agent network.IAgentAdapter, m *transport.Message) error {
-	server.Info("LoginResponse get result %v", *(m.Header.(*cs.Header)))
-	server.Info("LoginResponse get body %v", *(m.Body.(*c2s.LoginResp)))
-
+func LoginResponse(agent network.IAgentAdapter, m *cs.Message) error {
+	server.Info("LoginResponse get result %v", *m)
+	resp := &c2s.LoginResp{}
+	if err := ptypes.UnmarshalAny(m.Body, resp); err != nil {
+		return nil
+	}
+	server.Info("LoginResponse get body %v", resp)
 	return nil
 }

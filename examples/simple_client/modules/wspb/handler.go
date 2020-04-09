@@ -30,7 +30,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 			ID:      1,
 			Cmd:     common.CSLoginCmd,
 			MsgType: server.MTRequest,
-			Body:    &any.Any{TypeUrl: "./" + common.CSLoginCmd, Value: body},
+			Body:    &any.Any{TypeUrl: "./c2s.LoginReq", Value: body},
 		}
 		var payload []byte
 		if payload, err = agent.GetAdapter().Codec().Marshal(msg, nil); err != nil {

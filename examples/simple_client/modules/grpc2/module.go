@@ -124,7 +124,7 @@ func Transport(c ss.RPCClient) error {
 			ID:      1,
 			Cmd:     common.SSLoginCmd,
 			MsgType: server.MTRequest,
-			Body:    &any.Any{TypeUrl: "./" + common.SSLoginCmd, Value: body},
+			Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},
 		}
 
 		stream.SendMsg(m)

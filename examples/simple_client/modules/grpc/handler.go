@@ -35,7 +35,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 			ID:      1,
 			Cmd:     common.SSLoginCmd,
 			MsgType: server.MTRequest,
-			Body:    &any.Any{TypeUrl: "./" + common.SSLoginCmd, Value: body},
+			Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},
 		}
 
 		if err := agent.GetAdapter().WriteMessage(m); err != nil {

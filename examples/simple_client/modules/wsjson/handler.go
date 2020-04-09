@@ -30,11 +30,12 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 			ID:      1,
 			Cmd:     common.CSLoginCmd,
 			MsgType: server.MTRequest,
-			Body:    payload,
+			Body:    string(payload),
 		}
 		if payload, err = agent.GetAdapter().Codec().Marshal(m, nil); err != nil {
 			return "", err
 		}
+
 		if err := agent.SendMessage(payload); err != nil {
 			server.Error("Notify login send failed %s ", err.Error())
 			time.Sleep(1 * time.Second)

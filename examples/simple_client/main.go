@@ -30,7 +30,7 @@ package main
 import (
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/wspb"
+	"github.com/gonethopper/nethopper/examples/simple_client/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -48,12 +48,13 @@ func main() {
 	}
 	RegisterModule("log", log.LogModuleCreate)
 	RegisterModule("logic", logic.ModuleCreate)
-	RegisterModule("wspb", wspb.ModuleCreate)
+	RegisterModule("wsjson", wsjson.ModuleCreate)
 	RegisterModule("grpc", grpc.ModuleCreate)
+
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDLogic, "logic", nil, m)
-	//	NewNamedModule(ModuleIDWSClient, "wspb", nil, m)
-	NewNamedModule(ModuleIDGRPCClient, "grpc", nil, m)
+	NewNamedModule(ModuleIDWSClient, "wsjson", nil, m)
+	//	NewNamedModule(ModuleIDGRPCClient, "grpc", nil, m)
 
 	InitSignal()
 	//GracefulExit()

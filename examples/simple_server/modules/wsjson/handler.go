@@ -60,7 +60,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 		Cmd:     message.GetCmd(),
 		MsgType: server.MTResponse,
 		ID:      message.GetID(),
-		Body:    body,
+		Body:    string(body),
 	}
 
 	var payload []byte

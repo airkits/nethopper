@@ -77,7 +77,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 		ID:      message.GetID(),
 		Cmd:     message.GetCmd(),
 		MsgType: server.MTResponse,
-		Body:    &any.Any{TypeUrl: "./" + message.GetCmd(), Value: body},
+		Body:    &any.Any{TypeUrl: "./c2s.LoginResp", Value: body},
 	}
 
 	payload, err := proto.Marshal(respMsg)

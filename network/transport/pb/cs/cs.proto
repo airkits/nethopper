@@ -6,6 +6,7 @@ message Message{
   int32 ID = 1;
   string cmd = 2;
   int32 msgType = 3;
-  map<string,  bytes> options =  4;
+  int32 seq = 4;
+  map<string,  bytes> options =  5;
   google.protobuf.Any body = 11;
 }

@@ -88,15 +88,18 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 
 func (a *AgentAdapter) processRequestMessage(m *cs.Message) error {
 	switch m.Cmd {
-	case common.CSLoginCmd:
-		return LoginResponse(a, m)
 	default:
 		return errors.New("unknown message")
 	}
 
 }
 func (a *AgentAdapter) processResponseMessage(m *cs.Message) error {
-	return errors.New("unknown message")
+	switch m.Cmd {
+	case common.CSLoginCmd:
+		return LoginResponse(a, m)
+	default:
+		return errors.New("unknown message")
+	}
 }
 func (a *AgentAdapter) processNotifyMessage(m *cs.Message) error {
 	return errors.New("unknown message")

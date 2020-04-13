@@ -50,9 +50,11 @@ func main() {
 	RegisterModule("logic", logic.ModuleCreate)
 	RegisterModule("wsjson", wsjson.ModuleCreate)
 	RegisterModule("grpc", grpc.ModuleCreate)
+	//RegisterModule("wspb", wspb.ModuleCreate)
 
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDLogic, "logic", nil, m)
+	//NewNamedModule(ModuleIDWSClient, "wspb", nil, m)
 	NewNamedModule(ModuleIDWSClient, "wsjson", nil, m)
 	//	NewNamedModule(ModuleIDGRPCClient, "grpc", nil, m)
 

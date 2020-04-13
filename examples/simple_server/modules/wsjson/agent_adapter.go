@@ -35,7 +35,6 @@ import (
 	"github.com/gonethopper/nethopper/examples/model/common"
 	csjson "github.com/gonethopper/nethopper/examples/model/json"
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/json"
 	"github.com/gonethopper/nethopper/server"
 )
@@ -54,7 +53,7 @@ type AgentAdapter struct {
 
 func (a *AgentAdapter) decodeJSONBody(m *json.Message) error {
 
-	var body transport.IBody
+	var body interface{}
 	var err error
 	if body, err = csjson.CreateBody(m.MsgType, m.Cmd); err != nil {
 		return err

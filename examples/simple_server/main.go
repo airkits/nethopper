@@ -77,6 +77,7 @@ func main() {
 	RegisterModule("http", http.ModuleCreate)
 	RegisterModule("redis", redis.ModuleCreate)
 	RegisterModule("wsjson", wsjson.ModuleCreate)
+	//RegisterModule("wspb", wspb.ModuleCreate)
 	RegisterModule("grpc", grpc.ModuleCreate)
 	//	RegisterModule("redis", redis.RedisModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)

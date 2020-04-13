@@ -54,7 +54,7 @@ type AgentAdapter struct {
 
 func (a *AgentAdapter) decodeJSONBody(m transport.IMessage) error {
 	msg := m.(*json.Message)
-	var body transport.IBody
+	var body interface{}
 	var err error
 	if body, err = csjson.CreateBody(msg.MsgType, msg.Cmd); err != nil {
 		return err

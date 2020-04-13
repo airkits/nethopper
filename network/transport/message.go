@@ -14,15 +14,9 @@ const (
 //IMessage message interface
 type IMessage interface {
 	GetID() int32
-	//	SetID(v int32)
 	GetCmd() string
-	//	SetCmd(v string)
 	GetMsgType() int32
-	//	SetMsgType(v int32)
-}
-
-//IBody message body interface
-type IBody interface {
+	GetSeq() int32
 }
 
 // //NewMessage create new message with headerType

@@ -37,6 +37,7 @@ import (
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/tcp"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
@@ -77,6 +78,7 @@ func main() {
 	RegisterModule("http", http.ModuleCreate)
 	RegisterModule("redis", redis.ModuleCreate)
 	RegisterModule("wsjson", wsjson.ModuleCreate)
+	RegisterModule("tcp", tcp.ModuleCreate)
 	//RegisterModule("wspb", wspb.ModuleCreate)
 	RegisterModule("grpc", grpc.ModuleCreate)
 	//	RegisterModule("redis", redis.RedisModuleCreate)
@@ -88,6 +90,7 @@ func main() {
 	NewNamedModule(ModuleIDHTTP, "http", nil, m)
 	NewNamedModule(ModuleIDWSServer, "wsjson", nil, m)
 	NewNamedModule(ModuleIDGRPCServer, "grpc", nil, m)
+	NewNamedModule(ModuleIDTCP, "tcp", nil, m)
 	InitSignal()
 	//GracefulExit()
 }

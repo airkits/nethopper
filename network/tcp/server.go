@@ -19,7 +19,7 @@ func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) netw
 	return s
 }
 
-// Server websocket server define
+// Server tcp server define
 type Server struct {
 	Config
 	NewAgent    network.AgentCreateFunc
@@ -35,7 +35,7 @@ type Server struct {
 // m := map[string]interface{}{
 // readBufferSize default 32767
 // writeBufferSize default 32767
-// address default :8888
+// address default :15000
 // network default "tcp4"  use "tcp4/tcp6"
 // readDeadline default 15
 //	"maxConnNum":1024,
@@ -47,7 +47,7 @@ type Server struct {
 // }
 func (s *Server) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "address", ":8888", &s.Address); err != nil {
+	if err := server.ParseConfigValue(m, "address", ":15000", &s.Address); err != nil {
 		return err
 	}
 	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
@@ -101,6 +101,7 @@ func (s *Server) ListenAndServe() {
 			server.Warning("accept failed: %s", err.Error())
 			continue
 		}
+		server.Info("receive one client peer %s", conn.RemoteAddr().String())
 		// set socket read buffer
 		conn.SetReadBuffer(s.ReadBufferSize)
 		// set socket write buffer
@@ -136,7 +137,7 @@ func (s *Server) Transport(conn net.Conn) error {
 	return nil
 }
 
-//Close websocket server
+//Close tcp server
 func (s *Server) Close() {
 	s.tcpListener.Close()
 

@@ -24,7 +24,7 @@ const (
 	PackageLengthSize = 2
 )
 
-//Config websocket conn config
+//Config tcp conn config
 type Config struct {
 	Address         string
 	Network         string
@@ -36,10 +36,10 @@ type Config struct {
 	ReadDeadline    time.Duration
 }
 
-//ConnSet websocket conn set
+//ConnSet tcp conn set
 type ConnSet map[net.Conn]struct{}
 
-//Conn websocket conn define
+//Conn tcp conn define
 type Conn struct {
 	sync.Mutex
 	conn           net.Conn
@@ -92,7 +92,7 @@ func (c *Conn) doDestroy() {
 	}
 }
 
-//Destroy websocket conn destory
+//Destroy tcp conn destory
 func (c *Conn) Destroy() {
 	c.Lock()
 	defer c.Unlock()
@@ -100,7 +100,7 @@ func (c *Conn) Destroy() {
 	c.doDestroy()
 }
 
-//Close websocket conn close
+//Close tcp conn close
 func (c *Conn) Close() {
 	c.Lock()
 	defer c.Unlock()

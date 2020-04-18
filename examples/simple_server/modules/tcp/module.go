@@ -25,13 +25,13 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package grpc
+package tcp
 
 import (
 	"time"
 
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/grpc"
+	"github.com/gonethopper/nethopper/network/tcp"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -50,13 +50,13 @@ type Module struct {
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
-//  "grpcAddress":":14000",
+//  "address":":15000",
 //	"maxConnNum":1024,
 //  "socketQueueSize":100,
 //  "maxMessageSize":4096
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
-	s.gs = grpc.NewServer(m, func(conn network.IConn) network.IAgent {
+	s.gs = tcp.NewServer(m, func(conn network.IConn) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn))
 		return a
 	})

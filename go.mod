@@ -33,6 +33,5 @@ require (
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
 	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
 	golang.org/x/tools v0.0.0-20200408132156-9ee5ef7a2c0d // indirect
-	google.golang.org/appengine v1.4.0
 	google.golang.org/grpc v1.26.0
 )

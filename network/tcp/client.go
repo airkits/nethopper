@@ -1,15 +1,13 @@
 package tcp
 
 import (
-	"context"
 	"log"
+	"net"
 	"sync"
 	"time"
 
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
-	"google.golang.org/grpc"
 )
 
 // NewClient create tcp client
@@ -22,7 +20,7 @@ func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Cli
 	return c
 }
 
-//Client websocket client
+//Client tcp client
 type Client struct {
 	sync.Mutex
 	Address          string
@@ -53,7 +51,7 @@ func (c *Client) Run() {
 
 // ReadConfig config map
 // m := map[string]interface{}{
-//  "address":":8888",
+//  "address":":15000",
 //	"connNum":1,
 //  "socketQueueSize":100,
 //  "maxMessageSize":4096
@@ -63,7 +61,7 @@ func (c *Client) Run() {
 // }
 func (c *Client) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "address", "127.0.0.1:8888", &c.Address); err != nil {
+	if err := server.ParseConfigValue(m, "address", "127.0.0.1:15000", &c.Address); err != nil {
 		return err
 	}
 
@@ -121,36 +119,40 @@ func (c *Client) init() {
 
 }
 
+func (c *Client) dial() net.Conn {
+	for {
+		//conn, err := net.DialTimeout(c.Network, c.Address, time.Second*30)
+		conn, err := net.Dial(c.Network, c.Address)
+		if err == nil {
+			return conn
+		}
+
+		server.Warning("connect to %v error: %v", c.Address, err)
+		time.Sleep(c.ConnectInterval)
+		continue
+	}
+}
+
 func (c *Client) connect() {
 	defer c.wg.Done()
 
 reconnect:
-	conn, err := grpc.Dial(c.Address, grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		server.Fatal("did not connect: %v", err)
+	conn := c.dial()
+	if conn == nil {
+		return
 	}
-
-	client := ss.NewRPCClient(conn)
-
-	ctx, cancel := context.WithCancel(context.Background()) // context.WithTimeout(context.Background(), 10*time.Second)
-	stream, err := client.Transport(ctx)
-	if err != nil {
-		server.Info("transport %v", err.Error())
-	}
-
 	c.Lock()
-	c.conns[stream] = struct{}{}
+	c.conns[conn] = struct{}{}
 	c.Unlock()
 
-	grpcConn := NewConn(stream, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(grpcConn)
+	tcpConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize, c.ReadDeadline)
+	agent := c.NewAgent(tcpConn)
 	agent.Run()
 
 	// cleanup
-	cancel()
-	grpcConn.Close()
+	tcpConn.Close()
 	c.Lock()
-	delete(c.conns, stream)
+	delete(c.conns, conn)
 	c.Unlock()
 	agent.OnClose()
 

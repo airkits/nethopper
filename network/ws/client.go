@@ -103,7 +103,7 @@ func (c *Client) init() {
 	if c.conns != nil {
 		log.Fatal("client is running")
 	}
- 
+
 	c.conns = make(ConnSet)
 	c.closeFlag = false
 	c.dialer = websocket.Dialer{

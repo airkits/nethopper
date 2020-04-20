@@ -28,13 +28,12 @@
 package tcp
 
 import (
-	"encoding/binary"
 	"errors"
 
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport/pb/ss"
+	"github.com/gonethopper/nethopper/network/transport/raw"
 
 	"github.com/gonethopper/nethopper/server"
 )
@@ -42,7 +41,7 @@ import (
 //NewAgentAdapter create agent adapter
 func NewAgentAdapter(conn network.IConn) network.IAgentAdapter {
 	a := new(AgentAdapter)
-	a.Setup(conn, codec.PBCodec)
+	a.Setup(conn, codec.RawCodec)
 	return a
 }
 
@@ -52,20 +51,13 @@ type AgentAdapter struct {
 }
 
 //WriteMessage to connection
-func (a *AgentAdapter) WriteMessage(payload interface{}) (err error) {
-	if msgBytes, err := a.Codec().Marshal(payload, nil); err == nil {
-		// pack message
-		packLen := len(msgBytes)
-		msg := make([]byte, packLen+2)
-		binary.BigEndian.PutUint16(msg, uint16(packLen))
-		copy(msg[2:], msgBytes)
-		if err := a.Conn().WriteMessage(msgBytes); err != nil {
-			server.Error("write message %x error: %v", msgBytes, err)
-			return err
-		}
-		return nil
+func (a *AgentAdapter) WriteMessage(msg interface{}) (err error) {
+	msgBytes := msg.(*raw.Message).Pack()
+	if err := a.Conn().WriteMessage(msgBytes); err != nil {
+		server.Error("write message %x error: %v", msgBytes, err)
+		return err
 	}
-	return err
+	return nil
 }
 
 //ReadMessage goroutine not safe
@@ -76,13 +68,12 @@ func (a *AgentAdapter) ReadMessage() (interface{}, error) {
 		if b == nil {
 			return b, err
 		}
-		msg := &ss.Message{}
-		if err := a.Codec().Unmarshal(b.([]byte), &msg, nil); err != nil {
+		msg := &raw.Message{}
+		if err := msg.Unpack(b.([]byte)); err != nil {
 			return nil, err
 		}
 		return msg, nil
 	}
-
 	return nil, err
 }
 
@@ -103,7 +94,7 @@ func (a *AgentAdapter) ReadMessage() (interface{}, error) {
 
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	m := payload.(*ss.Message)
+	m := payload.(*raw.Message)
 	switch m.MsgType {
 	case server.MTRequest:
 		return a.processRequestMessage(m)
@@ -118,7 +109,7 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	}
 }
 
-func (a *AgentAdapter) processRequestMessage(m *ss.Message) error {
+func (a *AgentAdapter) processRequestMessage(m *raw.Message) error {
 
 	switch m.Cmd {
 	default:
@@ -126,7 +117,7 @@ func (a *AgentAdapter) processRequestMessage(m *ss.Message) error {
 	}
 
 }
-func (a *AgentAdapter) processResponseMessage(m *ss.Message) error {
+func (a *AgentAdapter) processResponseMessage(m *raw.Message) error {
 	switch m.Cmd {
 	case common.SSLoginCmd:
 		return LoginResponse(a, m)
@@ -134,9 +125,9 @@ func (a *AgentAdapter) processResponseMessage(m *ss.Message) error {
 		return errors.New("unknown message")
 	}
 }
-func (a *AgentAdapter) processNotifyMessage(m *ss.Message) error {
+func (a *AgentAdapter) processNotifyMessage(m *raw.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processBroadcastMessage(m *ss.Message) error {
+func (a *AgentAdapter) processBroadcastMessage(m *raw.Message) error {
 	return errors.New("unknown message")
 }

@@ -1,4 +1,4 @@
-package binary
+package raw
 
 import (
 	"encoding/binary"
@@ -101,6 +101,11 @@ func (c *Coder) Reset() {
 // Pos get the buffer offset position
 func (c *Coder) Pos() uint32 {
 	return c.Offset
+}
+
+// Length get buffer length
+func (c *Coder) Length() uint32 {
+	return c.Offset + 1
 }
 
 // SkipUint8 skip uint8
@@ -320,9 +325,13 @@ func (c *Coder) ReadRaw() []byte {
 // WriteRaw use uint16 length and copy raw bytes to buffer
 func (c *Coder) WriteRaw(b []byte) {
 	size := uint32(len(b))
-	c.ensureCapacity(uint32(size))
-	copy(c.Buffer[c.Offset:], b)
-	c.Offset += size
+	c.WriteUint16(uint16(size))
+	if size > 0 {
+		c.ensureCapacity(uint32(size))
+		copy(c.Buffer[c.Offset:], b)
+		c.Offset += size
+	}
+
 }
 
 ///// seek function ////////////////////////

@@ -30,22 +30,20 @@ package tcp
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
+	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport"
-	"github.com/gonethopper/nethopper/network/transport/pb/ss"
+	"github.com/gonethopper/nethopper/network/transport/raw"
 	"github.com/gonethopper/nethopper/server"
 )
 
 //LoginHandler request login
 func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
-	message := m.(*ss.Message)
+	message := m.(*raw.Message)
 	req := s2s.LoginReq{}
-	if err := ptypes.UnmarshalAny(message.Body, &req); err != nil {
+	if err := codec.PBCodec.Unmarshal((message.Body).([]byte), &req, nil); err != nil {
 		fmt.Println(err)
 		return nil
 	}
@@ -69,16 +67,16 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 		resp.Result.Code = 500
 		resp.Result.Msg = err.Error()
 	}
-	body, err := proto.Marshal(resp)
+	body, err := codec.PBCodec.Marshal(resp, nil)
 	if err != nil {
 		return nil
 	}
 
-	respMsg := &ss.Message{
+	respMsg := &raw.Message{
 		ID:      message.GetID(),
 		Cmd:     message.GetCmd(),
 		MsgType: server.MTResponse,
-		Body:    &any.Any{TypeUrl: "./s2s.LoginResp", Value: body},
+		Body:    body,
 	}
 
 	agent.WriteMessage(respMsg)

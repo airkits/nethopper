@@ -28,10 +28,10 @@
 package codec
 
 import (
-	"github.com/gonethopper/nethopper/codec/binary"
 	"github.com/gonethopper/nethopper/codec/gob"
 	"github.com/gonethopper/nethopper/codec/json"
 	"github.com/gonethopper/nethopper/codec/pb"
+	"github.com/gonethopper/nethopper/codec/raw"
 )
 
 // Codec encodes/decodes
@@ -52,6 +52,6 @@ var (
 	JSONCodec = Codec{json.Marshal, json.Unmarshal, json.Name, json.Type}
 	// GobCodec gob encode/decode
 	GobCodec = Codec{gob.Marshal, gob.Unmarshal, gob.Name, gob.Type}
-	// BinaryCodec binary encode/decode
-	BinaryCodec = Codec{binary.Marshal, binary.Unmarshal, binary.Name, binary.Type}
+	// RawCodec binary encode/decode
+	RawCodec = Codec{raw.Marshal, raw.Unmarshal, raw.Name, raw.Type}
 )

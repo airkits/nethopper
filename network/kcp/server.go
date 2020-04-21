@@ -35,7 +35,7 @@ type Server struct {
 // ReadConfig config map
 // m := map[string]interface{}{
 // udpSocketBuf default 4194304
-// address default :8888
+// address default :14000
 // readDeadline default 15
 //	"maxConnNum":1024,
 //  "socketQueueSize":100,
@@ -49,7 +49,7 @@ type Server struct {
 // }
 func (s *Server) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "address", ":8888", &s.Address); err != nil {
+	if err := server.ParseConfigValue(m, "address", ":14000", &s.Address); err != nil {
 		return err
 	}
 	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
@@ -107,7 +107,7 @@ func (s *Server) ListenAndServe() {
 	if err != nil {
 		panic(err)
 	}
-	server.Info("listening on: %s", listener.Addr())
+	server.Info("KCP listening on: %s", listener.Addr())
 	s.kcpListener = listener.(*kcp.Listener)
 
 	if err := s.kcpListener.SetReadBuffer(s.UDPSocketBufferSize); err != nil {

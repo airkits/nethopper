@@ -23,7 +23,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 			Passwd: pwd,
 		}
 
-		body, err := codec.PBCodec.Marshal(req, nil)
+		body, err := codec.PBCodec.Marshal(req)
 		if err != nil {
 			server.Error("Notify login send failed")
 			return "error", nil
@@ -50,8 +50,8 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 func LoginResponse(agent network.IAgentAdapter, m transport.IMessage) error {
 	msg := m.(*raw.Message)
 	server.Info("LoginResponse get result %v", msg)
-	resp := &s2s.LoginResp{}
-	if err := codec.PBCodec.Unmarshal((msg.Body).([]byte), resp, nil); err != nil {
+	resp := s2s.LoginResp{}
+	if err := codec.PBCodec.Unmarshal((msg.Body).([]byte), &resp); err != nil {
 		fmt.Println(err)
 		return nil
 	}

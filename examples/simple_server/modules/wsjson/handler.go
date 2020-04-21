@@ -53,7 +53,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 
 	var body []byte
-	if body, err = agent.Codec().Marshal(resp, nil); err != nil {
+	if body, err = agent.Codec().Marshal(resp); err != nil {
 		return err
 	}
 	respMsg := &json.Message{
@@ -64,7 +64,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 
 	var payload []byte
-	if payload, err = agent.Codec().Marshal(respMsg, nil); err != nil {
+	if payload, err = agent.Codec().Marshal(respMsg); err != nil {
 		return err
 	}
 

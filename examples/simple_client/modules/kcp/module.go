@@ -32,7 +32,7 @@ import (
 
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/grpc"
+	"github.com/gonethopper/nethopper/network/kcp"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -44,7 +44,7 @@ func ModuleCreate() (server.Module, error) {
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	grpcClient *grpc.Client
+	kcpClient *kcp.Client
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
@@ -64,13 +64,13 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	s.RegisterHandler(common.SSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.grpcClient = grpc.NewClient(m, func(conn network.IConn) network.IAgent {
+	s.kcpClient = kcp.NewClient(m, func(conn network.IConn) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn))
 		a.SetToken("user")
 		network.GetInstance().AddAgent(a)
 		return a
 	})
-	s.grpcClient.Run()
+	s.kcpClient.Run()
 
 	return s, nil
 }

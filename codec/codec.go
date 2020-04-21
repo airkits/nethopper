@@ -37,9 +37,9 @@ import (
 // Codec encodes/decodes
 type Codec struct {
 	// marshal encode message
-	Marshal func(v interface{}, template interface{}) ([]byte, error)
+	Marshal func(v interface{}) ([]byte, error)
 	// Unmarshal decode message
-	Unmarshal func(buf []byte, v interface{}, template interface{}) error
+	Unmarshal func(buf []byte, v interface{}) error
 	// Name of codec
 	Name func() string
 	Type func() int

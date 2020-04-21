@@ -23,7 +23,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 
 		var body []byte
 		var err error
-		if body, err = agent.GetAdapter().Codec().Marshal(req, nil); err != nil {
+		if body, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
 			return "", err
 		}
 		msg := &cs.Message{
@@ -33,7 +33,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 			Body:    &any.Any{TypeUrl: "./c2s.LoginReq", Value: body},
 		}
 		var payload []byte
-		if payload, err = agent.GetAdapter().Codec().Marshal(msg, nil); err != nil {
+		if payload, err = agent.GetAdapter().Codec().Marshal(msg); err != nil {
 			return "", err
 		}
 		if err := agent.SendMessage(payload); err != nil {

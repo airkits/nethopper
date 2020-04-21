@@ -17,3 +17,4 @@ logs/*
 **/simple_server/simple_server
 **/simple_client/simple_client
 
+__debug_bin

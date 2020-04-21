@@ -28,13 +28,13 @@ const (
 )
 
 // Marshal encode message
-func Marshal(v interface{}, template interface{}) ([]byte, error) {
+func Marshal(v interface{}) ([]byte, error) {
 	return nil, nil
 
 }
 
 // Unmarshal decode message
-func Unmarshal(buf []byte, v interface{}, template interface{}) error {
+func Unmarshal(buf []byte, v interface{}) error {
 	return nil
 }
 
@@ -105,7 +105,7 @@ func (c *Coder) Pos() uint32 {
 
 // Length get buffer length
 func (c *Coder) Length() uint32 {
-	return c.Offset + 1
+	return c.Offset
 }
 
 // SkipUint8 skip uint8

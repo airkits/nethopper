@@ -195,7 +195,7 @@ func Call(c *gin.Context) {
 
 	data = c.PostForm("data")
 	var model map[string]interface{}
-	if err := codec.JSONCodec.Unmarshal([]byte(data), &model, nil); err != nil {
+	if err := codec.JSONCodec.Unmarshal([]byte(data), &model); err != nil {
 		ResponseError(session, CSErrorCodeClientError, err)
 		return
 	}

@@ -130,7 +130,7 @@ func Request(url string, method string, requestType int, header interface{}, dat
 		switch requestType {
 		case RequestTypeJSON:
 			{
-				bytesData, err = codec.JSONCodec.Marshal(params, nil)
+				bytesData, err = codec.JSONCodec.Marshal(params)
 				break
 			}
 		case RequestTypeText:
@@ -140,12 +140,12 @@ func Request(url string, method string, requestType int, header interface{}, dat
 			}
 		case RequestTypeByte:
 			{
-				bytesData, err = codec.BinaryCodec.Marshal(params, nil)
+				bytesData, err = codec.RawCodec.Marshal(params)
 				break
 			}
 		case RequestTypePB:
 			{
-				bytesData, err = codec.PBCodec.Marshal(params, nil)
+				bytesData, err = codec.PBCodec.Marshal(params)
 				break
 			}
 		}
@@ -212,7 +212,7 @@ func Request(url string, method string, requestType int, header interface{}, dat
 	switch responseType {
 	case ResponseTypeJSON:
 		{
-			err = codec.JSONCodec.Unmarshal(respBody, results, nil)
+			err = codec.JSONCodec.Unmarshal(respBody, results)
 			break
 		}
 	case ResponseTypeText:
@@ -222,12 +222,12 @@ func Request(url string, method string, requestType int, header interface{}, dat
 		}
 	case ResponseTypeByte:
 		{
-			err = codec.BinaryCodec.Unmarshal(respBody, results, nil)
+			err = codec.RawCodec.Unmarshal(respBody, results)
 			break
 		}
 	case ResponseTypePB:
 		{
-			err = codec.PBCodec.Unmarshal(respBody, results, nil)
+			err = codec.PBCodec.Unmarshal(respBody, results)
 			break
 		}
 	}

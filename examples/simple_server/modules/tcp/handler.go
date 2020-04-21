@@ -43,7 +43,7 @@ import (
 func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	message := m.(*raw.Message)
 	req := s2s.LoginReq{}
-	if err := codec.PBCodec.Unmarshal((message.Body).([]byte), &req, nil); err != nil {
+	if err := codec.PBCodec.Unmarshal((message.Body).([]byte), &req); err != nil {
 		fmt.Println(err)
 		return nil
 	}
@@ -67,7 +67,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 		resp.Result.Code = 500
 		resp.Result.Msg = err.Error()
 	}
-	body, err := codec.PBCodec.Marshal(resp, nil)
+	body, err := codec.PBCodec.Marshal(resp)
 	if err != nil {
 		return nil
 	}

@@ -45,7 +45,7 @@ type Config struct {
 //ConnSet kcp conn set
 type ConnSet map[net.Conn]struct{}
 
-//Conn k c p conn define
+//Conn kcp conn define
 type Conn struct {
 	sync.Mutex
 	conn           net.Conn
@@ -140,6 +140,7 @@ func (c *Conn) RemoteAddr() net.Addr {
 
 //ReadMessage goroutine not safe
 func (c *Conn) ReadMessage() (interface{}, error) {
+
 	// for reading the 2-Byte Package Length
 	pkgLen := make([]byte, common.PackageLengthSize)
 	// read loop
@@ -147,7 +148,7 @@ func (c *Conn) ReadMessage() (interface{}, error) {
 		// solve dead link problem:
 		// physical disconnection without any communcation between client and server
 		// will cause the read to block FOREVER, so a timeout is a rescue.
-		c.conn.SetReadDeadline(time.Now().Add(c.readDeadline))
+		//c.conn.SetReadDeadline(time.Now().Add(c.readDeadline))
 
 		// read 2B Package Length
 		n, err := io.ReadFull(c.conn, pkgLen)
@@ -158,7 +159,7 @@ func (c *Conn) ReadMessage() (interface{}, error) {
 		size := binary.BigEndian.Uint16(pkgLen)
 
 		// alloc a byte slice of the size defined in the package length for reading data
-		payload := make([]byte, size)
+		payload := make([]byte, size-2)
 		n, err = io.ReadFull(c.conn, payload)
 		if err != nil {
 			server.Warning("read payload failed, ip:%v reason:%v size:%v", c.RemoteAddr().String(), err, n)

@@ -63,13 +63,13 @@ func (a *AgentAdapter) decodeJSONBody(m transport.IMessage) error {
 	switch msg.Body.(type) {
 	case string:
 		{
-			if err = a.Codec().Unmarshal([]byte((msg.Body).(string)), body, nil); err != nil {
+			if err = a.Codec().Unmarshal([]byte((msg.Body).(string)), body); err != nil {
 				return err
 			}
 		}
 	case []byte:
 		{
-			if err = a.Codec().Unmarshal((msg.Body).([]byte), body, nil); err != nil {
+			if err = a.Codec().Unmarshal((msg.Body).([]byte), body); err != nil {
 				return err
 			}
 		}
@@ -85,7 +85,7 @@ func (a *AgentAdapter) decodeJSONBody(m transport.IMessage) error {
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	m := &json.Message{}
-	if err := a.Codec().Unmarshal(payload.([]byte), m, nil); err != nil {
+	if err := a.Codec().Unmarshal(payload.([]byte), m); err != nil {
 		server.Error("decode header failed ,err :%s", err.Error())
 		return err
 	}

@@ -33,7 +33,7 @@ import (
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport/pb/ss"
+	"github.com/gonethopper/nethopper/network/transport/raw"
 
 	"github.com/gonethopper/nethopper/server"
 )
@@ -52,7 +52,7 @@ type AgentAdapter struct {
 
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
-	message := payload.(*ss.Message)
+	message := payload.(*raw.Message)
 	switch message.MsgType {
 	case server.MTRequest:
 		return a.processRequestMessage(message)
@@ -67,7 +67,35 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	}
 }
 
-func (a *AgentAdapter) processRequestMessage(message *ss.Message) error {
+//WriteMessage to connection
+func (a *AgentAdapter) WriteMessage(msg interface{}) (err error) {
+	msgBytes := msg.(*raw.Message).Pack()
+	if err := a.Conn().WriteMessage(msgBytes); err != nil {
+		server.Error("write message %x error: %v", msgBytes, err)
+		return err
+	}
+	server.Info("send message success, length:%d", len(msgBytes))
+	return nil
+}
+
+//ReadMessage goroutine not safe
+func (a *AgentAdapter) ReadMessage() (interface{}, error) {
+	var err error
+	var b interface{}
+	if b, err = a.Conn().ReadMessage(); err == nil {
+		if b == nil {
+			return b, err
+		}
+		msg := &raw.Message{}
+		if err := msg.Unpack(b.([]byte)); err != nil {
+			return nil, err
+		}
+		return msg, nil
+	}
+	return nil, err
+}
+
+func (a *AgentAdapter) processRequestMessage(message *raw.Message) error {
 
 	switch message.Cmd {
 	case common.SSLoginCmd:
@@ -77,12 +105,12 @@ func (a *AgentAdapter) processRequestMessage(message *ss.Message) error {
 	}
 
 }
-func (a *AgentAdapter) processResponseMessage(message *ss.Message) error {
+func (a *AgentAdapter) processResponseMessage(message *raw.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processNotifyMessage(message *ss.Message) error {
+func (a *AgentAdapter) processNotifyMessage(message *raw.Message) error {
 	return errors.New("unknown message")
 }
-func (a *AgentAdapter) processBroadcastMessage(message *ss.Message) error {
+func (a *AgentAdapter) processBroadcastMessage(message *raw.Message) error {
 	return errors.New("unknown message")
 }

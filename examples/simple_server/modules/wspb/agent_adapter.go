@@ -53,7 +53,7 @@ type AgentAdapter struct {
 //ProcessMessage process request and notify message
 func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 	m := &cs.Message{}
-	if err := a.Codec().Unmarshal(payload.([]byte), m, nil); err != nil {
+	if err := a.Codec().Unmarshal(payload.([]byte), m); err != nil {
 		server.Error("decode cs message failed ,err :%s", err.Error())
 		return err
 	}

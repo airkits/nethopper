@@ -23,7 +23,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 
 		var payload []byte
 		var err error
-		if payload, err = agent.GetAdapter().Codec().Marshal(req, nil); err != nil {
+		if payload, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
 			return "", err
 		}
 		m := &json.Message{
@@ -32,7 +32,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 			MsgType: server.MTRequest,
 			Body:    string(payload),
 		}
-		if payload, err = agent.GetAdapter().Codec().Marshal(m, nil); err != nil {
+		if payload, err = agent.GetAdapter().Codec().Marshal(m); err != nil {
 			return "", err
 		}
 

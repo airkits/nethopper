@@ -74,6 +74,7 @@ func (a *AgentAdapter) WriteMessage(msg interface{}) (err error) {
 		server.Error("write message %x error: %v", msgBytes, err)
 		return err
 	}
+	server.Info("send message success, length:%d",len(msgBytes))
 	return nil
 }
 

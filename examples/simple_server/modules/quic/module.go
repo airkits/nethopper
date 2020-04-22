@@ -25,77 +25,51 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package logic
+package quic
 
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/quic"
 	"github.com/gonethopper/nethopper/server"
 )
-
-// Module struct to define module
-type Module struct {
-	server.BaseContext
-}
 
 // ModuleCreate  module create function
 func ModuleCreate() (server.Module, error) {
 	return &Module{}, nil
 }
 
-// UserData module custom option, can you store you data and you must keep goruntine safe
-// func (s *Module) UserData() int32 {
-// 	return 0
-// }
+// Module struct to define module
+type Module struct {
+	server.BaseContext
+	gs network.IServer
+}
 
 // Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
+//  "address":":16000",
+//	"maxConnNum":1024,
+//  "socketQueueSize":100,
+//  "maxMessageSize":4096
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+	s.gs = quic.NewServer(m, func(conn network.IConn) network.IAgent {
+		a := network.NewAgent(NewAgentAdapter(conn))
+		return a
+	})
+
+	server.GO(s.serve)
 
 	return s, nil
 }
-
-//Reload reload config
-// func (s *Module) Reload(m map[string]interface{}) error {
-// 	return nil
-// }
+func (s *Module) serve() {
+	s.gs.ListenAndServe()
+}
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
-	time.Sleep(1 * time.Second)
-	//server.Call(server.ModuleIDWSClient, common.CSLoginCmd, 1, "1", "game")
-	//server.Call(server.ModuleIDGRPCClient, common.SSLoginCmd, 1, "1", "game")
-
-	//server.Call(server.ModuleIDTCPClient, common.SSLoginCmd, 1, "1", "game")
-	//server.Call(server.ModuleIDKCPClient, common.SSLoginCmd, 1, "1", "game")
-	server.Call(server.ModuleIDQUICClient, common.SSLoginCmd, 1, "1", "game")
-	server.Info("logic start call")
+	server.RunSimpleFrame(s, 128)
 }
-
-// func (s *Module) request() {
-// 	server.TraceCost("request cost")
-// 	for i := 0; i < 1000; i++ {
-// 	}
-// }
-
-// Stop goruntine
-func (s *Module) Stop() error {
-	return nil
-}
-
-// Call async send message to module
-// func (s *Module) Call(option int32, obj *server.CallObject) error {
-// 	if err := s.MQ().AsyncPush(obj); err != nil {
-// 		server.Error(err.Error())
-// 	}
-// 	return nil
-// }
-
-// PushBytes async send string or bytes to queue
-// func (s *Module) PushBytes(option int32, buf []byte) error {
-// 	return nil
-// }

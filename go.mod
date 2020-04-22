@@ -19,6 +19,7 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/klauspost/cpuid v1.2.1 // indirect
 	github.com/klauspost/reedsolomon v1.9.2 // indirect
+	github.com/lucas-clemente/quic-go v0.15.4
 	github.com/mailru/easyjson v0.7.1 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/common v0.7.0
@@ -32,8 +33,9 @@ require (
 	github.com/urfave/cli v1.22.4 // indirect
 	github.com/xtaci/kcp-go v5.4.2+incompatible
 	github.com/xtaci/lossyconn v0.0.0-20190602105132-8df528c0c9ae // indirect
+	golang.org/x/crypto v0.0.0-20200420201142-3c4aac89819a // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
-	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
+	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
 	golang.org/x/tools v0.0.0-20200420001825-978e26b7c37c // indirect
 	google.golang.org/grpc v1.26.0
 )

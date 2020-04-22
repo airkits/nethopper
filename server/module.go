@@ -53,6 +53,8 @@ const (
 	ModuleIDTCP
 	// ModuleIDKCP kcp module
 	ModuleIDKCP
+	// ModuleIDQUIC quic module
+	ModuleIDQUIC
 	// ModuleIDWSServer ws server
 	ModuleIDWSServer
 	// ModuleIDGRPCServer grpc server
@@ -67,6 +69,8 @@ const (
 	ModuleIDTCPClient
 	// ModuleIDKCPClient kcp client module
 	ModuleIDKCPClient
+	// ModuleIDQUICClient quic client module
+	ModuleIDQUICClient
 	// ModuleIDHTTPClient http client module
 	ModuleIDHTTPClient
 	// ModuleIDGRPCClient grpc client module

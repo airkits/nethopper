@@ -18,3 +18,6 @@ logs/*
 **/simple_client/simple_client
 
 __debug_bin
+**/micro_server/gate/gate
+**/micro_server/logic/logic
+**/micro_server/gamedb/gamedb

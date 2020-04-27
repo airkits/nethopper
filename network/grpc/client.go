@@ -52,7 +52,7 @@ func (c *Client) Run() {
 
 // ReadConfig config map
 // m := map[string]interface{}{
-//  "address":":14000",
+//  "grpcAddress":":14000",
 //	"connNum":1,
 //  "socketQueueSize":100,
 //  "maxMessageSize":4096
@@ -62,7 +62,7 @@ func (c *Client) Run() {
 // }
 func (c *Client) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "address", "127.0.0.1:14000", &c.Address); err != nil {
+	if err := server.ParseConfigValue(m, "grpcAddress", "127.0.0.1:14000", &c.Address); err != nil {
 		return err
 	}
 

@@ -2,16 +2,16 @@ package json
 
 //Message json struct
 type Message struct {
-	ID      int32       `form:"id" json:"id"`
+	ID      uint32      `form:"id" json:"id"`
 	Cmd     string      `form:"cmd" json:"cmd"`
-	MsgType int32       `form:"msgType" json:"msgType"`
-	Seq     int32       `form:"seq" json:"seq"`
+	MsgType uint32      `form:"msgType" json:"msgType"`
+	Seq     uint32      `form:"seq" json:"seq"`
 	Options string      `form:"options" json:"options"`
 	Body    interface{} `form:"body" json:"body"`
 }
 
 //GetMsgType >
-func (m *Message) GetMsgType() int32 {
+func (m *Message) GetMsgType() uint32 {
 	return m.MsgType
 }
 
@@ -21,7 +21,7 @@ func (m *Message) GetCmd() string {
 }
 
 //GetID >
-func (m *Message) GetID() int32 {
+func (m *Message) GetID() uint32 {
 	return m.ID
 }
 
@@ -36,6 +36,6 @@ func (m *Message) GetBody() interface{} {
 }
 
 //GetSeq >
-func (m *Message) GetSeq() int32 {
+func (m *Message) GetSeq() uint32 {
 	return m.Seq
 }

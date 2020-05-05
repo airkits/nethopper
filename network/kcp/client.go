@@ -11,12 +11,14 @@ import (
 )
 
 // NewClient create kcp client
-func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Client {
+func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	c.NewAgent = agentFunc
+	c.CloseAgent = agentCloseFunc
+
 	return c
 }
 
@@ -31,6 +33,7 @@ type Client struct {
 	HandshakeTimeout    time.Duration
 	AutoReconnect       bool
 	NewAgent            network.AgentCreateFunc
+	CloseAgent          network.AgentCloseFunc
 	conns               ConnSet
 	wg                  sync.WaitGroup
 	Token               string
@@ -171,7 +174,7 @@ reconnect:
 	c.conns[conn] = struct{}{}
 	c.Unlock()
 	kcpConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize, c.ReadDeadline)
-	agent := c.NewAgent(kcpConn)
+	agent := c.NewAgent(kcpConn, c.Token)
 	agent.Run()
 
 	// cleanup
@@ -179,6 +182,7 @@ reconnect:
 	c.Lock()
 	delete(c.conns, conn)
 	c.Unlock()
+	c.CloseAgent(agent)
 	agent.OnClose()
 
 	if c.AutoReconnect {

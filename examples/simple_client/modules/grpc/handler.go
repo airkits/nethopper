@@ -32,7 +32,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 		}
 
 		m := &ss.Message{
-			ID:      1,
+			ID:      agent.GetAdapter().GetSequence(),
 			Cmd:     common.SSLoginCmd,
 			MsgType: server.MTRequest,
 			Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},

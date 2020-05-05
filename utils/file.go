@@ -81,12 +81,14 @@ func GetWorkDirectory() (string, error) {
 	}
 	if runtime.GOOS == "windows" {
 		path = strings.Replace(path, "\\", "/", -1)
+		i := strings.LastIndex(path, "/")
+		if i < 0 {
+			return "", errors.New("work directory invalid")
+		}
+		return string(path[0 : i+1]), nil
 	}
-	i := strings.LastIndex(path, "/")
-	if i < 0 {
-		return "", errors.New("work directory invalid")
-	}
-	return string(path[0 : i+1]), nil
+	return path + "/", nil
+
 }
 
 // GetAbsDirectory get file directory abs path

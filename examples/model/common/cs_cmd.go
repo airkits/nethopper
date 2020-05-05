@@ -5,6 +5,8 @@ const (
 	CSLoginCmd = "cs_login"
 	// SSLoginCmd login cmd
 	SSLoginCmd = "ss_login"
+	// SSGetUserInfoCmd get userinfo
+	SSGetUserInfoCmd = "ss_get_userinfo"
 )
 
 const (

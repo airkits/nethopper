@@ -56,9 +56,11 @@ type Module struct {
 //  "maxMessageSize":4096
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
-	s.gs = quic.NewServer(m, func(conn network.IConn) network.IAgent {
+	s.gs = quic.NewServer(m, func(conn network.IConn, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn))
 		return a
+	}, func(agent network.IAgent) {
+
 	})
 
 	server.GO(s.serve)

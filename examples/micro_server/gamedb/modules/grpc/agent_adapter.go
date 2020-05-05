@@ -86,3 +86,8 @@ func (a *AgentAdapter) processNotifyMessage(message *ss.Message) error {
 func (a *AgentAdapter) processBroadcastMessage(message *ss.Message) error {
 	return errors.New("unknown message")
 }
+
+//OnClose agent close and clear
+func (a *AgentAdapter) OnClose() {
+
+}

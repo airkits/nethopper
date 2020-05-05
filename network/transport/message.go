@@ -13,10 +13,10 @@ const (
 
 //IMessage message interface
 type IMessage interface {
-	GetID() int32
+	GetID() uint32
 	GetCmd() string
-	GetMsgType() int32
-	GetSeq() int32
+	GetMsgType() uint32
+	GetSeq() uint32
 }
 
 // //NewMessage create new message with headerType

@@ -9,6 +9,7 @@ import (
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 //Config grpc conn config
@@ -20,12 +21,14 @@ type Config struct {
 }
 
 //NewServer create grpc server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) network.IServer {
+func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	s.NewAgent = agentFunc
+	s.CloseAgent = agentCloseFunc
+
 	return s
 }
 
@@ -34,6 +37,7 @@ type Server struct {
 	ss.UnimplementedRPCServer
 	Config
 	NewAgent   network.AgentCreateFunc
+	CloseAgent network.AgentCloseFunc
 	gs         *grpc.Server
 	listener   net.Listener
 	conns      ConnSet
@@ -109,22 +113,33 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 
 	s.wg.Add(1)
 	defer s.wg.Done()
+	token := ""
+	// get context from stream
+	if md, ok := metadata.FromIncomingContext(stream.Context()); ok {
+		if md.Get("token") != nil {
+			token = md.Get("token")[0]
+			server.Info("token from header: %s", token)
+		}
+	}
 
-	// s.conns[stream] = struct{}{}
-	// s.mutexConns.Unlock()
+	server.Info("one client connection opened.")
+	s.mutexConns.Lock()
+	s.conns[stream] = struct{}{}
+	s.mutexConns.Unlock()
 
 	var agent network.IAgent
 	conn := NewConn(stream, s.RWQueueSize, s.MaxMessageSize)
-	agent = s.NewAgent(conn)
-	agent.SetToken("token")
-	network.GetInstance().AddAgent(agent)
+
+	agent = s.NewAgent(conn, token)
+
 	agent.Run()
 
 	// cleanup
 	conn.Close()
-	// s.mutexConns.Lock()
-	// delete(s.conns, stream)
-	// s.mutexConns.Unlock()
+	s.mutexConns.Lock()
+	delete(s.conns, stream)
+	s.mutexConns.Unlock()
+	s.CloseAgent(agent)
 	agent.OnClose()
 	return nil
 }

@@ -1,12 +1,14 @@
 syntax = "proto3";
 package ss;
+option go_package = ".;ss";
+
 import "google/protobuf/any.proto";
 
 message Message{
-  int32 ID = 1;
+  uint32 ID = 1;
   string cmd = 2;
-  int32 msgType = 3;
-  int32 seq = 4;
+  uint32 msgType = 3;
+  uint32 seq = 4;
   map<string,  bytes> options =  5;
   google.protobuf.Any body = 11;
 }

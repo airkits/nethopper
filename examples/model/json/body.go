@@ -8,7 +8,7 @@ import (
 )
 
 //CreateBody create message body
-func CreateBody(msgType int32, cmd string) (interface{}, error) {
+func CreateBody(msgType uint32, cmd string) (interface{}, error) {
 	switch msgType {
 	case server.MTRequest:
 		return CreateRequestBody(cmd)

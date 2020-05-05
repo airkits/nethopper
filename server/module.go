@@ -477,11 +477,11 @@ func NewModule(name string, parent Module, m map[string]interface{}) (Module, er
 // Call get info from modules
 func Call(destModuleID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
 	var obj = NewCallObject(cmd, option, args...)
-	s, err := GetModuleByID(destModuleID)
+	m, err := GetModuleByID(destModuleID)
 	if err != nil {
 		return nil, err
 	}
-	if err = s.Call(option, obj); err != nil {
+	if err = m.Call(option, obj); err != nil {
 		return nil, err
 	}
 	result := <-obj.ChanRet

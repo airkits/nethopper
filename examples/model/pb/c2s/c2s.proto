@@ -1,6 +1,6 @@
 syntax = "proto3";
 package c2s;
-
+option go_package = ".;c2s";
 // client  <-> server  10000 - 19999
 enum MessageCmd //枚举消息类型
 {

@@ -17,23 +17,24 @@ import (
 )
 
 //NewServer create quic server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) network.IServer {
+func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	s.NewAgent = agentFunc
+	s.CloseAgent = agentCloseFunc
+
 	return s
 }
 
 // Server quic server define
 type Server struct {
 	Config
-	NewAgent network.AgentCreateFunc
-	listener quic.Listener
-
-	conns ConnSet
-
+	NewAgent   network.AgentCreateFunc
+	listener   quic.Listener
+	CloseAgent network.AgentCloseFunc
+	conns      ConnSet
 	mutexConns sync.Mutex
 	wg         sync.WaitGroup
 }
@@ -150,9 +151,7 @@ func (s *Server) Transport(sess quic.Session, stream quic.Stream) error {
 
 	var agent network.IAgent
 	c := NewConn(sess, stream, s.RWQueueSize, s.MaxMessageSize, s.ReadDeadline)
-	agent = s.NewAgent(c)
-	agent.SetToken("token")
-	network.GetInstance().AddAgent(agent)
+	agent = s.NewAgent(c, "")
 	agent.Run()
 
 	// cleanup
@@ -160,6 +159,7 @@ func (s *Server) Transport(sess quic.Session, stream quic.Stream) error {
 	// s.mutexConns.Lock()
 	// delete(s.conns, stream)
 	// s.mutexConns.Unlock()
+	s.CloseAgent(agent)
 	agent.OnClose()
 	return nil
 }

@@ -12,13 +12,15 @@ import (
 )
 
 // NewClient create websocket client
-func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Client {
+func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
 	c.headers = make(http.Header)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	c.NewAgent = agentFunc
+	c.CloseAgent = agentCloseFunc
+
 	return c
 }
 
@@ -33,6 +35,7 @@ type Client struct {
 	HandshakeTimeout time.Duration
 	AutoReconnect    bool
 	NewAgent         network.AgentCreateFunc
+	CloseAgent       network.AgentCloseFunc
 	dialer           websocket.Dialer
 	conns            ConnSet
 	wg               sync.WaitGroup
@@ -145,7 +148,7 @@ reconnect:
 	c.Unlock()
 
 	wsConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(wsConn)
+	agent := c.NewAgent(wsConn, c.Token)
 	agent.Run()
 
 	// cleanup
@@ -153,6 +156,7 @@ reconnect:
 	c.Lock()
 	delete(c.conns, conn)
 	c.Unlock()
+	c.CloseAgent(agent)
 	agent.OnClose()
 
 	if c.AutoReconnect {

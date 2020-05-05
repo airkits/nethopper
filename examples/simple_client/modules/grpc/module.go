@@ -64,11 +64,12 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	s.RegisterHandler(common.SSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.grpcClient = grpc.NewClient(m, func(conn network.IConn) network.IAgent {
+	s.grpcClient = grpc.NewClient(m, func(conn network.IConn, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn))
-		a.SetToken("user")
 		network.GetInstance().AddAgent(a)
 		return a
+	}, func(agent network.IAgent) {
+		network.GetInstance().RemoveAgent(agent)
 	})
 	s.grpcClient.Run()
 

@@ -96,7 +96,7 @@ func (a *Agent) Run() {
 
 // OnClose agent close
 func (a *Agent) OnClose() {
-
+	a.GetAdapter().OnClose()
 }
 
 // SendMessage send message to conn

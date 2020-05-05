@@ -74,7 +74,6 @@ func main() {
 	RegisterModule("logic", logic.ModuleCreate)
 	RegisterModule("redis", redis.ModuleCreate)
 	RegisterModule("grpc", grpc.ModuleCreate)
-	RegisterModule("redis", redis.ModuleCreate)
 	RegisterModule("gclient", gclient.ModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDRedis, "redis", nil, m)

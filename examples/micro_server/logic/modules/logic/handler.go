@@ -68,7 +68,7 @@ func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (st
 		server.Info("get from redis")
 		return password.(string), err
 	}
-	password, err = server.Call(server.ModuleIDDB, common.CallIDGetUserInfoCmd, int32(opt), uid)
+	password, err = server.Call(server.ModuleIDGRPCClient, common.CallIDGetUserInfoCmd, int32(opt), uid, pwd)
 	if err != nil {
 		return "", err
 	}

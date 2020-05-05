@@ -74,7 +74,7 @@ func (a *AgentAdapter) WriteMessage(msg interface{}) (err error) {
 		server.Error("write message %x error: %v", msgBytes, err)
 		return err
 	}
-	server.Info("send message success, length:%d",len(msgBytes))
+	server.Info("send message success, length:%d", len(msgBytes))
 	return nil
 }
 
@@ -113,4 +113,9 @@ func (a *AgentAdapter) processNotifyMessage(message *raw.Message) error {
 }
 func (a *AgentAdapter) processBroadcastMessage(message *raw.Message) error {
 	return errors.New("unknown message")
+}
+
+//OnClose agent close and clear
+func (a *AgentAdapter) OnClose() {
+
 }

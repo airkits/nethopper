@@ -6,10 +6,10 @@ import (
 
 //Message raw struct
 type Message struct {
-	ID      int32
+	ID      uint32
 	Cmd     string
-	MsgType int32
-	Seq     int32
+	MsgType uint32
+	Seq     uint32
 	Options string
 	Body    interface{}
 }
@@ -32,17 +32,17 @@ func (m *Message) Pack() []byte {
 //Unpack raw message
 func (m *Message) Unpack(buffer []byte) error {
 	coder := raw.NewCoder(buffer, true)
-	m.ID = int32(coder.ReadUint32())
+	m.ID = coder.ReadUint32()
 	m.Cmd = coder.ReadString()
-	m.MsgType = int32(coder.ReadUint32())
-	m.Seq = int32(coder.ReadUint32())
+	m.MsgType = coder.ReadUint32()
+	m.Seq = coder.ReadUint32()
 	m.Options = coder.ReadString()
 	m.Body = coder.ReadRaw()
 	return nil
 }
 
 //GetID >
-func (m *Message) GetID() int32 {
+func (m *Message) GetID() uint32 {
 	return m.ID
 }
 
@@ -52,11 +52,11 @@ func (m *Message) GetCmd() string {
 }
 
 //GetMsgType >
-func (m *Message) GetMsgType() int32 {
+func (m *Message) GetMsgType() uint32 {
 	return m.MsgType
 }
 
 //GetSeq >
-func (m *Message) GetSeq() int32 {
+func (m *Message) GetSeq() uint32 {
 	return m.Seq
 }

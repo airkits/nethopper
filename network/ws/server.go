@@ -14,23 +14,25 @@ import (
 )
 
 //NewServer create ws server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) network.IServer {
+func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	s.NewAgent = agentFunc
+	s.CloseAgent = agentCloseFunc
+
 	return s
 }
 
 // Server websocket server define
 type Server struct {
 	Config
-	NewAgent network.AgentCreateFunc
-	ln       net.Listener
-	upgrader websocket.Upgrader
-	conns    ConnSet
-
+	NewAgent   network.AgentCreateFunc
+	ln         net.Listener
+	upgrader   websocket.Upgrader
+	conns      ConnSet
+	CloseAgent network.AgentCloseFunc
 	mutexConns sync.Mutex
 	wg         sync.WaitGroup
 	httpServer *http.Server
@@ -67,18 +69,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mutexConns.Unlock()
 	var token = r.Header.Get(common.HeaderToken)
 	var agent network.IAgent
-	var ok bool
 
-	if len(token) > 0 {
-		agent, ok = network.GetInstance().GetAuthAgent(token)
-		if ok { //exist agent,kick out old connection
-			network.GetInstance().RemoveAgent(agent)
-		}
-	}
 	wsConn := NewConn(conn, s.RWQueueSize, s.MaxMessageSize)
-	agent = s.NewAgent(wsConn)
-	agent.SetToken(token)
-	network.GetInstance().AddAgent(agent)
+	agent = s.NewAgent(wsConn, token)
+
 	agent.Run()
 
 	// cleanup
@@ -86,7 +80,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mutexConns.Lock()
 	delete(s.conns, conn)
 	s.mutexConns.Unlock()
+	s.CloseAgent(agent)
 	agent.OnClose()
+
 }
 
 // ReadConfig config map

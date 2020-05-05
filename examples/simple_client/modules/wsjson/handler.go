@@ -48,6 +48,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 
 //LoginResponse request login
 func LoginResponse(agent network.IAgentAdapter, m transport.IMessage) error {
-	server.Info("LoginResponse get result %v", *(m.(*json.Message)))
+
+	server.Info("LoginResponse get result %v,body %v", m.(*json.Message), m.(*json.Message).GetBody())
 	return nil
 }

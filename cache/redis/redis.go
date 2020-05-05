@@ -118,7 +118,7 @@ func (c *RedisCache) ReadConfig(m map[string]interface{}) error {
 		return err
 	}
 
-	if err := server.ParseConfigValue(m, "address", "127.0.0.1:6379", &c.Address); err != nil {
+	if err := server.ParseConfigValue(m, "redis", "127.0.0.1:6379", &c.Address); err != nil {
 		return err
 	}
 	if err := server.ParseConfigValue(m, "password", "", &c.Password); err != nil {

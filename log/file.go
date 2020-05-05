@@ -136,7 +136,7 @@ func (l *FileLog) ParseConfig(m map[string]interface{}) error {
 	}
 	filename = utils.GetAbsFilePath(filename)
 	dir := utils.GetAbsDirectory(filename)
-
+	fmt.Printf("Current Log Dir %s\n", dir)
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
 	}

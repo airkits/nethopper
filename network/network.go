@@ -100,10 +100,17 @@ type IAgentAdapter interface {
 	Conn() IConn
 	// SetConn set conn
 	SetConn(conn IConn)
+	//GetSequence get inc id
+	GetSequence() uint32
+	//OnClose agent close and clear
+	OnClose()
 }
 
 //AgentCreateFunc create agent func
-type AgentCreateFunc func(IConn) IAgent
+type AgentCreateFunc func(conn IConn, token string) IAgent
+
+//AgentCloseFunc close agent func
+type AgentCloseFunc func(IAgent)
 
 var instance *AgentManager
 var once sync.Once

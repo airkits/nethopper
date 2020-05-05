@@ -64,7 +64,7 @@ func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (st
 	defer server.TraceCost("LoginHandler")()
 	opt, err := strconv.Atoi(uid)
 
-	password, err := server.Call(server.ModuleIDGRPCClient, common.CallIDGetUserInfoCmd, int32(opt), uid)
+	password, err := server.Call(server.ModuleIDGRPCClient, common.CallIDGetUserInfoCmd, int32(opt), uid, pwd)
 	if err != nil {
 		return "", err
 	}

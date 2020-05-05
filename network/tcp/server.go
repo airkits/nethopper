@@ -10,12 +10,14 @@ import (
 )
 
 //NewServer create tcp server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc) network.IServer {
+func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	s.NewAgent = agentFunc
+	s.CloseAgent = agentCloseFunc
+
 	return s
 }
 
@@ -24,11 +26,10 @@ type Server struct {
 	Config
 	NewAgent    network.AgentCreateFunc
 	tcpListener *net.TCPListener
-
-	conns ConnSet
-
-	mutexConns sync.Mutex
-	wg         sync.WaitGroup
+	CloseAgent  network.AgentCloseFunc
+	conns       ConnSet
+	mutexConns  sync.Mutex
+	wg          sync.WaitGroup
 }
 
 // ReadConfig config map
@@ -123,9 +124,7 @@ func (s *Server) Transport(conn net.Conn) error {
 
 	var agent network.IAgent
 	c := NewConn(conn, s.RWQueueSize, s.MaxMessageSize, s.ReadDeadline)
-	agent = s.NewAgent(c)
-	agent.SetToken("token")
-	network.GetInstance().AddAgent(agent)
+	agent = s.NewAgent(c, "")
 	agent.Run()
 
 	// cleanup
@@ -133,6 +132,7 @@ func (s *Server) Transport(conn net.Conn) error {
 	// s.mutexConns.Lock()
 	// delete(s.conns, stream)
 	// s.mutexConns.Unlock()
+	s.CloseAgent(agent)
 	agent.OnClose()
 	return nil
 }

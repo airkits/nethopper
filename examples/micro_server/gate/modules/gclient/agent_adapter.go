@@ -30,8 +30,8 @@ package gclient
 import (
 	"errors"
 
+	"github.com/gonethopper/nethopper/base/skiplist"
 	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 
@@ -42,12 +42,14 @@ import (
 func NewAgentAdapter(conn network.IConn) network.IAgentAdapter {
 	a := new(AgentAdapter)
 	a.Setup(conn, codec.PBCodec)
+	a.Cache = skiplist.New()
 	return a
 }
 
 //AgentAdapter do agent hander
 type AgentAdapter struct {
 	network.AgentAdapter
+	Cache *skiplist.SkipList
 }
 
 // func (a *AgentAdapter) decodePBBody(m transport.IMessage) error {
@@ -91,16 +93,49 @@ func (a *AgentAdapter) processRequestMessage(m *ss.Message) error {
 
 }
 func (a *AgentAdapter) processResponseMessage(m *ss.Message) error {
-	switch m.Cmd {
-	case common.SSLoginCmd:
-		return LoginResponse(a, m)
-	default:
-		return errors.New("unknown message")
+	v := a.Cache.Remove(float64(m.GetID()))
+	if v != nil {
+		obj := v.Value().(*server.CallObject)
+		obj.ChanRet <- server.RetObject{
+			Ret: m,
+			Err: nil,
+		}
+		return nil
 	}
+	return errors.New("cant find request object")
 }
 func (a *AgentAdapter) processNotifyMessage(m *ss.Message) error {
 	return errors.New("unknown message")
 }
 func (a *AgentAdapter) processBroadcastMessage(m *ss.Message) error {
 	return errors.New("unknown message")
+}
+
+//RPCCall remote call
+func (a *AgentAdapter) RPCCall(msg *ss.Message) (*ss.Message, error) {
+	var obj = server.NewCallObject(msg.GetCmd(), 0, msg)
+	a.Cache.Set(float64(msg.GetID()), obj)
+	a.WriteMessage(msg)
+	result := <-obj.ChanRet
+	return (result.Ret).(*ss.Message), result.Err
+}
+
+//WriteMessage to connection
+func (a *AgentAdapter) WriteMessage(payload interface{}) error {
+	if err := a.Conn().WriteMessage(payload); err != nil {
+		server.Error("write message %x error: %v", payload, err)
+		return err
+	}
+	return nil
+}
+
+//ReadMessage goroutine not safe
+func (a *AgentAdapter) ReadMessage() (interface{}, error) {
+	b, err := a.Conn().ReadMessage()
+	return b, err
+}
+
+//OnClose agent close and clear
+func (a *AgentAdapter) OnClose() {
+
 }

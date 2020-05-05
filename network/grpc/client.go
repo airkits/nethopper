@@ -11,16 +11,18 @@ import (
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 // NewClient create websocket client
-func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc) *Client {
+func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
 	c.headers = make(http.Header)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	c.NewAgent = agentFunc
+	c.CloseAgent = agentCloseFunc
 	return c
 }
 
@@ -35,6 +37,7 @@ type Client struct {
 	HandshakeTimeout time.Duration
 	AutoReconnect    bool
 	NewAgent         network.AgentCreateFunc
+	CloseAgent       network.AgentCloseFunc
 	conns            ConnSet
 	wg               sync.WaitGroup
 	headers          http.Header
@@ -90,6 +93,9 @@ func (c *Client) ReadConfig(m map[string]interface{}) error {
 	}
 	c.headers.Set("token", c.Token)
 
+	if err := server.ParseConfigValue(m, "autoReconnect", true, &c.AutoReconnect); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -105,32 +111,43 @@ func (c *Client) init() {
 	}
 
 	c.conns = make(ConnSet)
-
 }
 
 func (c *Client) connect() {
 	defer c.wg.Done()
 
 reconnect:
-	conn, err := grpc.Dial(c.Address, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(c.Address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
-		server.Fatal("did not connect: %v", err)
+		server.Fatal("grpc client connect failed, reason: %v", err)
+		if c.AutoReconnect {
+			time.Sleep(c.ConnectInterval)
+			server.Warning("grpc client try reconnect")
+			goto reconnect
+		}
 	}
 
 	client := ss.NewRPCClient(conn)
-
-	ctx, cancel := context.WithCancel(context.Background()) // context.WithTimeout(context.Background(), 10*time.Second)
+	md := metadata.New(map[string]string{"token": c.Token})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx, cancel := context.WithCancel(ctx) // context.WithTimeout(context.Background(), 10*time.Second)
 	stream, err := client.Transport(ctx)
 	if err != nil {
-		server.Info("transport %v", err.Error())
+		server.Info("grpc client transport failed, reason %v", err.Error())
+		if c.AutoReconnect {
+			time.Sleep(c.ConnectInterval)
+			server.Warning("grpc client try reconnect")
+			goto reconnect
+		}
 	}
-
+	server.Info("grpc client create new connection.")
 	c.Lock()
 	c.conns[stream] = struct{}{}
 	c.Unlock()
 
 	grpcConn := NewConn(stream, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(grpcConn)
+	agent := c.NewAgent(grpcConn, c.Token)
+
 	agent.Run()
 
 	// cleanup
@@ -139,10 +156,12 @@ reconnect:
 	c.Lock()
 	delete(c.conns, stream)
 	c.Unlock()
+	c.CloseAgent(agent)
 	agent.OnClose()
 
 	if c.AutoReconnect {
 		time.Sleep(c.ConnectInterval)
+		server.Warning("grpc client reconnect")
 		goto reconnect
 	}
 }

@@ -56,19 +56,22 @@ func (s *Module) UserData() int32 {
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
+//  "grpcAddress":14000,
 // }
 func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}
-	s.RegisterHandler(common.SSLoginCmd, NotifyLogin)
+	s.RegisterHandler(common.CallIDGetUserInfoCmd, RequestGetUserInfo)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.grpcClient = grpc.NewClient(m, func(conn network.IConn) network.IAgent {
+	s.grpcClient = grpc.NewClient(m, func(conn network.IConn, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn))
 		a.SetToken("user")
 		network.GetInstance().AddAgent(a)
 		return a
+	}, func(agent network.IAgent) {
+		network.GetInstance().RemoveAgent(agent)
 	})
 	s.grpcClient.Run()
 

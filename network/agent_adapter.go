@@ -28,6 +28,8 @@
 package network
 
 import (
+	"sync/atomic"
+
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/server"
 )
@@ -36,12 +38,14 @@ import (
 type AgentAdapter struct {
 	codec codec.Codec
 	conn  IConn
+	seq   uint32
 }
 
 //Setup AgentAdapter
 func (a *AgentAdapter) Setup(conn IConn, codec codec.Codec) {
 	a.conn = conn
 	a.codec = codec
+	a.seq = 0
 }
 
 //WriteMessage to connection
@@ -77,4 +81,9 @@ func (a *AgentAdapter) Conn() IConn {
 // SetConn set conn
 func (a *AgentAdapter) SetConn(conn IConn) {
 	a.conn = conn
+}
+
+//GetSequence get inc id
+func (a *AgentAdapter) GetSequence() uint32 {
+	return atomic.AddUint32(&a.seq, 1)
 }

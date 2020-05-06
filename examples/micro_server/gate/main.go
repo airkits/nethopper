@@ -57,16 +57,16 @@ func main() {
 
 	//runtime.GOMAXPROCS(1)
 	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       DEBUG,
-		"maxSize":     5000,
-		"maxLines":    10000000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
-		"driver":      "mysql",
-		"dsn":         "root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
-		"grpcAddress": ":14000",
+		"filename":       "logs/server.log",
+		"level":          DEBUG,
+		"maxSize":        5000,
+		"maxLines":       10000000,
+		"hourEnabled":    false,
+		"dailyEnable":    true,
+		"queueSize":      1000,
+		"grpcServerID_0": 0,
+		"grpcAddress_0":  ":14000",
+		"grpcName_0":     "grpcclient_0",
 	}
 	RegisterModule("log", log.LogModuleCreate)
 	RegisterModule("logic", logic.ModuleCreate)

@@ -67,7 +67,7 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 
 	s.grpcClient = grpc.NewClient(m, func(conn network.IConn, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn))
-		a.SetToken("user")
+		a.SetToken("logic1")
 		network.GetInstance().AddAgent(a)
 		return a
 	}, func(agent network.IAgent) {

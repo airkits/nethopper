@@ -94,7 +94,7 @@ func (s *Server) ListenAndServe() {
 	s.gs.Serve(lis)
 }
 
-//Close websocket server
+//Close grpc server
 func (s *Server) Close() {
 	s.listener.Close()
 

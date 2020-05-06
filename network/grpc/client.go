@@ -2,8 +2,8 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"net/http"
 	"sync"
 	"time"
 
@@ -14,22 +14,30 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-// NewClient create websocket client
+// NewClient create grpc client
 func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
-	c.headers = make(http.Header)
+	c.GClientInfo = make([]*ClientInfo, 0)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
 	c.NewAgent = agentFunc
 	c.CloseAgent = agentCloseFunc
+
 	return c
 }
 
-//Client websocket client
+// ClientInfo grpc client info
+type ClientInfo struct {
+	ServerID int
+	Name     string
+	Address  string
+}
+
+//Client grpc client
 type Client struct {
 	sync.Mutex
-	Address          string
+	GClientInfo      []*ClientInfo
 	ConnNum          int
 	ConnectInterval  time.Duration
 	RWQueueSize      int
@@ -40,22 +48,24 @@ type Client struct {
 	CloseAgent       network.AgentCloseFunc
 	conns            ConnSet
 	wg               sync.WaitGroup
-	headers          http.Header
-	Token            string
 }
 
 // Run client start run
 func (c *Client) Run() {
 	c.init()
-	for i := 0; i < c.ConnNum; i++ {
-		c.wg.Add(1)
-		go c.connect()
+	for _, info := range c.GClientInfo {
+		for i := 0; i < c.ConnNum; i++ {
+			c.wg.Add(1)
+			go c.connect(info.ServerID, info.Name, info.Address)
+		}
 	}
 }
 
 // ReadConfig config map
 // m := map[string]interface{}{
-//  "grpcAddress":":14000",
+//  "grpcServerID_0":0,
+//  "grpcAddress_0":":14000",
+//  "grpcName_0":"grpcclient_0",
 //	"connNum":1,
 //  "socketQueueSize":100,
 //  "maxMessageSize":4096
@@ -65,8 +75,22 @@ func (c *Client) Run() {
 // }
 func (c *Client) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "grpcAddress", "127.0.0.1:14000", &c.Address); err != nil {
-		return err
+	for i := 0; i < 16; i++ {
+
+		if !server.HasConfigKey(m, fmt.Sprintf("grpcServerID_%d", i)) {
+			break
+		}
+		info := new(ClientInfo)
+		if err := server.ParseConfigValue(m, fmt.Sprintf("grpcServerID_%d", i), i, &info.ServerID); err != nil {
+			return err
+		}
+		if err := server.ParseConfigValue(m, fmt.Sprintf("grpcAddress_%d", i), "127.0.0.1:14000", &info.Address); err != nil {
+			return err
+		}
+		if err := server.ParseConfigValue(m, fmt.Sprintf("grpcName_%d", i), fmt.Sprintf("grpcName_%d", i), &info.Name); err != nil {
+			return err
+		}
+		c.GClientInfo = append(c.GClientInfo, info)
 	}
 
 	if err := server.ParseConfigValue(m, "connNum", 1, &c.ConnNum); err != nil {
@@ -88,11 +112,6 @@ func (c *Client) ReadConfig(m map[string]interface{}) error {
 	}
 	c.HandshakeTimeout = c.HandshakeTimeout * time.Second
 
-	if err := server.ParseConfigValue(m, "token", "12345678", &c.Token); err != nil {
-		return err
-	}
-	c.headers.Set("token", c.Token)
-
 	if err := server.ParseConfigValue(m, "autoReconnect", true, &c.AutoReconnect); err != nil {
 		return err
 	}
@@ -113,40 +132,40 @@ func (c *Client) init() {
 	c.conns = make(ConnSet)
 }
 
-func (c *Client) connect() {
+func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	conn, err := grpc.Dial(c.Address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
-		server.Fatal("grpc client connect failed, reason: %v", err)
+		server.Fatal("grpc client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.AutoReconnect {
 			time.Sleep(c.ConnectInterval)
-			server.Warning("grpc client try reconnect")
+			server.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
 
 	client := ss.NewRPCClient(conn)
-	md := metadata.New(map[string]string{"token": c.Token})
+	md := metadata.New(map[string]string{"token": name})
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 	ctx, cancel := context.WithCancel(ctx) // context.WithTimeout(context.Background(), 10*time.Second)
 	stream, err := client.Transport(ctx)
 	if err != nil {
-		server.Info("grpc client transport failed, reason %v", err.Error())
+		server.Info("grpc client connect to id:[%d] %s %s transport failed, reason %v", serverID, name, address, err.Error())
 		if c.AutoReconnect {
 			time.Sleep(c.ConnectInterval)
-			server.Warning("grpc client try reconnect")
+			server.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
-	server.Info("grpc client create new connection.")
+	server.Info("grpc client create new connection to id:[%d] %s %s.", serverID, name, address)
 	c.Lock()
 	c.conns[stream] = struct{}{}
 	c.Unlock()
 
 	grpcConn := NewConn(stream, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(grpcConn, c.Token)
+	agent := c.NewAgent(grpcConn, name)
 
 	agent.Run()
 
@@ -161,7 +180,7 @@ reconnect:
 
 	if c.AutoReconnect {
 		time.Sleep(c.ConnectInterval)
-		server.Warning("grpc client reconnect")
+		server.Warning("grpc client try reconnect to %s %s", name, address)
 		goto reconnect
 	}
 }

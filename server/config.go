@@ -32,6 +32,15 @@ import (
 	"reflect"
 )
 
+//HasConfigKey check config key,if exist return true, else return false
+func HasConfigKey(m map[string]interface{}, key string) bool {
+	_, ok := m[key]
+	if !ok {
+		return false
+	}
+	return true
+}
+
 // ParseConfigValue read config from map,if not exist return default value,support string,int,bool
 func ParseConfigValue(m map[string]interface{}, key string, opt interface{}, result interface{}) error {
 	rv := reflect.ValueOf(result)

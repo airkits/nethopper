@@ -17,7 +17,7 @@ import (
 // RequestGetUserInfo user to login
 func RequestGetUserInfo(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
-	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
+	if agent, ok := network.GetInstance().GetAuthAgent("gamedb1"); ok {
 
 		req := &s2s.LoginReq{
 			Uid:    uid,

@@ -48,3 +48,37 @@ func TimeYMDH() string {
 func TimeYMD() string {
 	return time.Now().Format("20060102")
 }
+
+//LocalMilliscond 当前毫秒
+func LocalMilliscond() int64 {
+	return time.Now().UnixNano() / 1e6
+}
+
+//LocalTimestamp 当前时间戳秒
+func LocalTimestamp() int64 {
+	return time.Now().Unix()
+}
+
+//GetTodayTime 获取当天开始时间
+func GetTodayTime() time.Time {
+	t := time.Now()
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+}
+
+//GetTodayHourTime 获取当天整点时间
+func GetTodayHourTime(hour int) time.Time {
+	t := time.Now()
+	return time.Date(t.Year(), t.Month(), t.Day(), hour, 0, 0, 0, t.Location())
+}
+
+//GetEmptyTime 获取空时间结构
+func GetEmptyTime() time.Time {
+	return time.Date(0, 0, 0, 0, 0, 0, 0, time.Local)
+}
+
+//GetTomorrowTime 获取明天的开始时间
+func GetTomorrowTime() time.Time {
+	t := time.Now()
+	tm1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	return tm1.Add(24 * time.Hour)
+}

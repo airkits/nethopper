@@ -28,7 +28,6 @@
 package gclient
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/model/common"
@@ -68,18 +67,12 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	s.RegisterHandler(common.CallIDGetUserInfoCmd, RequestGetUserInfo)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	s.Clients = skiplist.New()
-	s.grpcClient = grpc.NewClient(m, func(conn network.IConn, uid uint64, serverID string) network.IAgent {
-		a := network.NewAgent(NewAgentAdapter(conn), uid, serverID)
-		if sid, err := strconv.Atoi(serverID); err == nil {
-			a.SetToken(serverID)
-			s.Clients.Set(float64(sid), a)
-		}
+	s.grpcClient = grpc.NewClient(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
+		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
+		s.Clients.Set(float64(uid), a)
 		return a
 	}, func(agent network.IAgent) {
-		if sid, err := strconv.Atoi(agent.Token()); err == nil {
-			s.Clients.Remove(float64(sid))
-		}
-
+		s.Clients.Remove(float64(agent.UID()))
 	})
 	s.grpcClient.Run()
 

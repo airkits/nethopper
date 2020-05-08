@@ -1,11 +1,13 @@
 package ws
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/websocket"
 	"github.com/prometheus/common/log"
@@ -14,7 +16,8 @@ import (
 // NewClient create websocket client
 func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
-	c.headers = make(http.Header)
+
+	c.WSClientInfo = make([]*common.ClientInfo, 0)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
@@ -27,7 +30,7 @@ func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 //Client websocket client
 type Client struct {
 	sync.Mutex
-	Address          string
+	WSClientInfo     []*common.ClientInfo
 	ConnNum          int
 	ConnectInterval  time.Duration
 	RWQueueSize      int
@@ -40,17 +43,19 @@ type Client struct {
 	conns            ConnSet
 	wg               sync.WaitGroup
 	closeFlag        bool
-	headers          http.Header
-	Token            string
-	UID              uint64
+
+	Token string
+	UID   uint64
 }
 
 // Run client start run
 func (c *Client) Run() {
 	c.init()
-	for i := 0; i < c.ConnNum; i++ {
-		c.wg.Add(1)
-		go c.connect()
+	for _, info := range c.WSClientInfo {
+		for i := 0; i < c.ConnNum; i++ {
+			c.wg.Add(1)
+			go c.connect(info.ServerID, info.Name, info.Address)
+		}
 	}
 }
 
@@ -66,8 +71,22 @@ func (c *Client) Run() {
 // }
 func (c *Client) ReadConfig(m map[string]interface{}) error {
 
-	if err := server.ParseConfigValue(m, "address", "ws://127.0.0.1:12080", &c.Address); err != nil {
-		return err
+	for i := 0; i < 16; i++ {
+
+		if !server.HasConfigKey(m, fmt.Sprintf("wsServerID_%d", i)) {
+			break
+		}
+		info := new(common.ClientInfo)
+		if err := server.ParseConfigValue(m, fmt.Sprintf("wsServerID_%d", i), i, &info.ServerID); err != nil {
+			return err
+		}
+		if err := server.ParseConfigValue(m, fmt.Sprintf("wsAddress_%d", i), "ws://127.0.0.1:12080", &info.Address); err != nil {
+			return err
+		}
+		if err := server.ParseConfigValue(m, fmt.Sprintf("wsName_%d", i), fmt.Sprintf("grpcName_%d", i), &info.Name); err != nil {
+			return err
+		}
+		c.WSClientInfo = append(c.WSClientInfo, info)
 	}
 
 	if err := server.ParseConfigValue(m, "connNum", 1, &c.ConnNum); err != nil {
@@ -92,7 +111,6 @@ func (c *Client) ReadConfig(m map[string]interface{}) error {
 	if err := server.ParseConfigValue(m, "token", "12345678", &c.Token); err != nil {
 		return err
 	}
-	c.headers.Set("token", c.Token)
 
 	return nil
 }
@@ -116,24 +134,27 @@ func (c *Client) init() {
 
 }
 
-func (c *Client) dial() *websocket.Conn {
+func (c *Client) dial(serverID int, address string) *websocket.Conn {
+	headers := make(http.Header)
+	headers.Set(common.HeaderToken, c.Token)
+	headers.Set(common.HeaderUID, fmt.Sprintf("%d", serverID))
 	for {
-		conn, _, err := c.dialer.Dial(c.Address, c.headers)
+		conn, _, err := c.dialer.Dial(address, headers)
 		if err == nil || c.closeFlag {
 			return conn
 		}
 
-		server.Warning("connect to %v error: %v", c.Address, err)
+		server.Warning("connect to %v error: %v", address, err)
 		time.Sleep(c.ConnectInterval)
 		continue
 	}
 }
 
-func (c *Client) connect() {
+func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	conn := c.dial()
+	conn := c.dial(serverID, address)
 	if conn == nil {
 		return
 	}
@@ -149,7 +170,7 @@ reconnect:
 	c.Unlock()
 
 	wsConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(wsConn, c.UID, c.Token)
+	agent := c.NewAgent(wsConn, uint64(serverID), c.Token)
 	agent.Run()
 
 	// cleanup

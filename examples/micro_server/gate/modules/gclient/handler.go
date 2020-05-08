@@ -35,6 +35,7 @@ func RequestGetUserInfo(s *Module, obj *server.CallObject, uid string, pwd strin
 
 		m := &ss.Message{
 			ID:      agent.GetAdapter().GetSequence(),
+			UID:     uint64(uidInt),
 			Cmd:     common.SSLoginCmd,
 			MsgType: server.MTRequest,
 			Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},

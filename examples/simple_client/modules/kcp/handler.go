@@ -32,6 +32,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 
 			m := &raw.Message{
 				ID:      1,
+				UID:     id,
 				Cmd:     common.SSLoginCmd,
 				MsgType: server.MTRequest,
 				Seq:     0,

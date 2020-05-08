@@ -67,7 +67,7 @@ func (a *Agent) GetAdapter() IAgentAdapter {
 
 //IsAuth if set token return true else return false
 func (a *Agent) IsAuth() bool {
-	return len(a.token) > 0
+	return a.UID() > 0
 }
 
 //SetToken set token

@@ -1,6 +1,8 @@
 package wspb
 
 import (
+	"errors"
+	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -10,42 +12,44 @@ import (
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport/pb/cs"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
 )
 
 // NotifyLogin user to login
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
-	if id, err := utils.Str2Uint64(uid); err == nil {
-		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
-
-			req := &c2s.LoginReq{
-				Uid:    uid,
-				Passwd: pwd,
-			}
-
-			var body []byte
-			var err error
-			if body, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
-				return "", err
-			}
-			msg := &cs.Message{
-				ID:      1,
-				Cmd:     common.CSLoginCmd,
-				MsgType: server.MTRequest,
-				Body:    &any.Any{TypeUrl: "./c2s.LoginReq", Value: body},
-			}
-			var payload []byte
-			if payload, err = agent.GetAdapter().Codec().Marshal(msg); err != nil {
-				return "", err
-			}
-			if err := agent.SendMessage(payload); err != nil {
-				server.Error("Notify login send failed %s ", err.Error())
-				time.Sleep(1 * time.Second)
-			} else {
-				server.Info("Notify login send success")
-			}
+	uidInt, err := strconv.Atoi(uid)
+	if err != nil {
+		return "", errors.New("convert uid failed")
+	}
+	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
+		req := &c2s.LoginReq{
+			Uid:    uid,
+			Passwd: pwd,
 		}
+
+		var body []byte
+		var err error
+		if body, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
+			return "", err
+		}
+		msg := &cs.Message{
+			ID:      1,
+			UID:     uint64(uidInt),
+			Cmd:     common.CSLoginCmd,
+			MsgType: server.MTRequest,
+			Body:    &any.Any{TypeUrl: "./c2s.LoginReq", Value: body},
+		}
+		var payload []byte
+		if payload, err = agent.GetAdapter().Codec().Marshal(msg); err != nil {
+			return "", err
+		}
+		if err := agent.SendMessage(payload); err != nil {
+			server.Error("Notify login send failed %s ", err.Error())
+			time.Sleep(1 * time.Second)
+		} else {
+			server.Info("Notify login send success")
+		}
+
 	}
 	return "ok", nil
 }

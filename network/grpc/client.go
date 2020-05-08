@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/network"
+	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 	"google.golang.org/grpc"
@@ -18,7 +19,7 @@ import (
 // NewClient create grpc client
 func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
-	c.GClientInfo = make([]*ClientInfo, 0)
+	c.GClientInfo = make([]*common.ClientInfo, 0)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
@@ -28,17 +29,10 @@ func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 	return c
 }
 
-// ClientInfo grpc client info
-type ClientInfo struct {
-	ServerID int
-	Name     string
-	Address  string
-}
-
 //Client grpc client
 type Client struct {
 	sync.Mutex
-	GClientInfo      []*ClientInfo
+	GClientInfo      []*common.ClientInfo
 	ConnNum          int
 	ConnectInterval  time.Duration
 	RWQueueSize      int
@@ -81,7 +75,7 @@ func (c *Client) ReadConfig(m map[string]interface{}) error {
 		if !server.HasConfigKey(m, fmt.Sprintf("grpcServerID_%d", i)) {
 			break
 		}
-		info := new(ClientInfo)
+		info := new(common.ClientInfo)
 		if err := server.ParseConfigValue(m, fmt.Sprintf("grpcServerID_%d", i), i, &info.ServerID); err != nil {
 			return err
 		}
@@ -148,7 +142,7 @@ reconnect:
 	}
 
 	client := ss.NewRPCClient(conn)
-	md := metadata.New(map[string]string{"token": name})
+	md := metadata.New(map[string]string{"token": name, "UID": strconv.Itoa(serverID)})
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 	ctx, cancel := context.WithCancel(ctx) // context.WithTimeout(context.Background(), 10*time.Second)
 	stream, err := client.Transport(ctx)
@@ -166,7 +160,7 @@ reconnect:
 	c.Unlock()
 
 	grpcConn := NewConn(stream, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(grpcConn, uint64(serverID), strconv.Itoa(serverID))
+	agent := c.NewAgent(grpcConn, uint64(serverID), name)
 
 	agent.Run()
 

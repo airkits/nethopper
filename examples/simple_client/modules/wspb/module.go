@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/libs/skiplist"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/ws"
 	"github.com/gonethopper/nethopper/server"
@@ -48,6 +49,7 @@ func ModuleCreate() (server.Module, error) {
 type Module struct {
 	server.BaseContext
 	wsClient *ws.Client
+	Clients  *skiplist.SkipList
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
@@ -66,18 +68,26 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	}
 	s.RegisterHandler(common.CSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
-
+	s.Clients = skiplist.New()
 	s.wsClient = ws.NewClient(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
-		a.SetToken("user")
-		network.GetInstance().AddAgent(a)
+		s.Clients.Set(float64(uid), a)
 		return a
 	}, func(agent network.IAgent) {
-		network.GetInstance().RemoveAgent(agent)
+		s.Clients.Remove(float64(agent.UID()))
 	})
 	s.wsClient.Run()
 
 	return s, nil
+}
+
+//GetAgent get agent by option
+func (s *Module) GetAgent(option uint32) network.IAgent {
+	v := s.Clients.Get(float64(0))
+	if v != nil {
+		return v.Value().(network.IAgent)
+	}
+	return nil
 }
 
 // ReadConfig config map

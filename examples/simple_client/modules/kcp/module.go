@@ -66,7 +66,6 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 
 	s.kcpClient = kcp.NewClient(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
-		a.SetToken("user")
 		network.GetInstance().AddAgent(a)
 		return a
 	}, func(agent network.IAgent) {

@@ -115,11 +115,17 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 	s.wg.Add(1)
 	defer s.wg.Done()
 	token := ""
+	uid := uint64(0)
 	// get context from stream
 	if md, ok := metadata.FromIncomingContext(stream.Context()); ok {
 		if md.Get("token") != nil {
 			token = md.Get("token")[0]
 			server.Info("token from header: %s", token)
+		}
+		if md.Get("UID") != nil {
+			uidStr := md.Get("UID")[0]
+			uid, _ = utils.Str2Uint64(uidStr)
+			server.Info("UID from header: %ld", uid)
 		}
 	}
 
@@ -130,7 +136,6 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 
 	var agent network.IAgent
 	conn := NewConn(stream, s.RWQueueSize, s.MaxMessageSize)
-	uid, _ := utils.Str2Uint64(token)
 	agent = s.NewAgent(conn, uid, token)
 
 	agent.Run()

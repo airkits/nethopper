@@ -1,7 +1,9 @@
 package grpc
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -13,40 +15,42 @@ import (
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
 )
 
 // NotifyLogin user to login
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
-	if id, err := utils.Str2Uint64(uid); err == nil {
-		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
-
-			req := &s2s.LoginReq{
-				Uid:    uid,
-				Passwd: pwd,
-			}
-
-			body, err := proto.Marshal(req)
-			if err != nil {
-				server.Error("Notify login send failed")
-				return "error", nil
-			}
-
-			m := &ss.Message{
-				ID:      agent.GetAdapter().GetSequence(),
-				Cmd:     common.SSLoginCmd,
-				MsgType: server.MTRequest,
-				Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},
-			}
-
-			if err := agent.GetAdapter().WriteMessage(m); err != nil {
-				server.Error("Notify login send failed %s ", err.Error())
-				time.Sleep(1 * time.Second)
-			} else {
-				server.Info("Notify login send success")
-			}
+	uidInt, err := strconv.Atoi(uid)
+	if err != nil {
+		return "", errors.New("convert uid failed")
+	}
+	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
+		req := &s2s.LoginReq{
+			Uid:    uid,
+			Passwd: pwd,
 		}
+
+		body, err := proto.Marshal(req)
+		if err != nil {
+			server.Error("Notify login send failed")
+			return "error", nil
+		}
+
+		m := &ss.Message{
+			ID:      agent.GetAdapter().GetSequence(),
+			UID:     uint64(uidInt),
+			Cmd:     common.SSLoginCmd,
+			MsgType: server.MTRequest,
+			Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},
+		}
+
+		if err := agent.GetAdapter().WriteMessage(m); err != nil {
+			server.Error("Notify login send failed %s ", err.Error())
+			time.Sleep(1 * time.Second)
+		} else {
+			server.Info("Notify login send success")
+		}
+
 	}
 	return "ok", nil
 }

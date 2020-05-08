@@ -37,13 +37,16 @@ import (
 func main() {
 
 	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       DEBUG,
-		"maxSize":     5000,
-		"maxLines":    10000000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
+		"filename":     "logs/server.log",
+		"level":        DEBUG,
+		"maxSize":      5000,
+		"maxLines":     10000000,
+		"hourEnabled":  false,
+		"dailyEnable":  true,
+		"queueSize":    1000,
+		"wsServerID_0": 0,
+		"wsAddress_0":  "ws://127.0.0.1:12080",
+		"wsName_0":     "wsclient_0",
 	}
 	RegisterModule("log", log.LogModuleCreate)
 	RegisterModule("logic", logic.ModuleCreate)

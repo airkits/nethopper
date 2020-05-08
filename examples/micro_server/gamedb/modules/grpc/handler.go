@@ -76,6 +76,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 
 	respMsg := &ss.Message{
 		ID:      message.GetID(),
+		UID:     uint64(userID),
 		Cmd:     message.GetCmd(),
 		MsgType: server.MTResponse,
 		Body:    &any.Any{TypeUrl: "./s2s.LoginResp", Value: body},

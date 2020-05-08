@@ -1,6 +1,8 @@
 package wsjson
 
 import (
+	"errors"
+	"strconv"
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/model/common"
@@ -9,42 +11,44 @@ import (
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/json"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
 )
 
 // NotifyLogin user to login
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
+	uidInt, err := strconv.Atoi(uid)
+	if err != nil {
+		return "", errors.New("convert uid failed")
+	}
+	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 
-	if id, err := utils.Str2Uint64(uid); err == nil {
-		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
-
-			req := &csjson.LoginReq{
-				UID:    uid,
-				Passwd: pwd,
-			}
-
-			var payload []byte
-			var err error
-			if payload, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
-				return "", err
-			}
-			m := &json.Message{
-				ID:      1,
-				Cmd:     common.CSLoginCmd,
-				MsgType: server.MTRequest,
-				Body:    string(payload),
-			}
-			if payload, err = agent.GetAdapter().Codec().Marshal(m); err != nil {
-				return "", err
-			}
-
-			if err := agent.SendMessage(payload); err != nil {
-				server.Error("Notify login send failed %s ", err.Error())
-				time.Sleep(1 * time.Second)
-			} else {
-				server.Info("Notify login send success")
-			}
+		req := &csjson.LoginReq{
+			UID:    uid,
+			Passwd: pwd,
 		}
+
+		var payload []byte
+		var err error
+		if payload, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
+			return "", err
+		}
+		m := &json.Message{
+			ID:      1,
+			UID:     uint64(uidInt),
+			Cmd:     common.CSLoginCmd,
+			MsgType: server.MTRequest,
+			Body:    string(payload),
+		}
+		if payload, err = agent.GetAdapter().Codec().Marshal(m); err != nil {
+			return "", err
+		}
+
+		if err := agent.SendMessage(payload); err != nil {
+			server.Error("Notify login send failed %s ", err.Error())
+			time.Sleep(1 * time.Second)
+		} else {
+			server.Info("Notify login send success")
+		}
+
 	}
 	return "ok", nil
 }

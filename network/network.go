@@ -29,11 +29,11 @@ package network
 
 import (
 	"net"
-	"reflect"
 	"sync"
 
 	"github.com/gonethopper/nethopper/base/set"
 	"github.com/gonethopper/nethopper/codec"
+	"github.com/gonethopper/nethopper/libs/skiplist"
 )
 
 // IClient network client interface
@@ -74,6 +74,8 @@ type IAgent interface {
 	RemoteAddr() net.Addr
 	Close()
 	Destroy()
+	UID() uint64
+	SetUID(uint64)
 	Token() string
 	SetToken(string)
 	IsAuth() bool
@@ -107,7 +109,7 @@ type IAgentAdapter interface {
 }
 
 //AgentCreateFunc create agent func
-type AgentCreateFunc func(conn IConn, token string) IAgent
+type AgentCreateFunc func(conn IConn, uid uint64, token string) IAgent
 
 //AgentCloseFunc close agent func
 type AgentCloseFunc func(IAgent)
@@ -120,7 +122,7 @@ func GetInstance() *AgentManager {
 	once.Do(func() {
 		instance = &AgentManager{
 			agents:     set.NewHashSet(),
-			authAgents: make(map[string]IAgent),
+			authAgents: skiplist.New(),
 		}
 	})
 	return instance
@@ -129,35 +131,36 @@ func GetInstance() *AgentManager {
 //AgentManager manager agent
 type AgentManager struct {
 	agents     *set.HashSet
-	authAgents map[string]IAgent
+	authAgents *skiplist.SkipList
 }
 
 //AddAgent add agent to manager
 func (am *AgentManager) AddAgent(a IAgent) {
 	if a.IsAuth() {
-		_, ok := am.authAgents[a.Token()]
-		if !ok {
-			am.authAgents[a.Token()] = a
+		v := am.authAgents.Get(float64(a.UID()))
+		if v != nil {
+			am.authAgents.Set(float64(a.UID()), a)
 		}
+
 	} else {
 		am.agents.Add(a)
 	}
 }
 
 //GetAuthAgent get auth agent,if exist return agent and true,else return false
-func (am *AgentManager) GetAuthAgent(token string) (IAgent, bool) {
-	agent, ok := am.authAgents[token]
-	return agent, ok
+func (am *AgentManager) GetAuthAgent(uid uint64) (IAgent, bool) {
+	v := am.authAgents.Get(float64(uid))
+	if v != nil {
+		return v.Value().(IAgent), true
+	}
+	return nil, false
 }
 
 //RemoveAgent remove agent from manager
 func (am *AgentManager) RemoveAgent(a IAgent) {
 	a.OnClose()
 	if a.IsAuth() {
-		storeAgent, ok := am.authAgents[a.Token()]
-		if ok && reflect.DeepEqual(a, storeAgent) {
-			delete(am.authAgents, a.Token())
-		}
+		am.authAgents.Remove(float64(a.UID()))
 	} else {
 		am.agents.Remove(a)
 	}

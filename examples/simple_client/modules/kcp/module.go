@@ -64,8 +64,8 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	s.RegisterHandler(common.SSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.kcpClient = kcp.NewClient(m, func(conn network.IConn, token string) network.IAgent {
-		a := network.NewAgent(NewAgentAdapter(conn))
+	s.kcpClient = kcp.NewClient(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
+		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		a.SetToken("user")
 		network.GetInstance().AddAgent(a)
 		return a

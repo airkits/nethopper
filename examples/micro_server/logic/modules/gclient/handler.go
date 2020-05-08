@@ -3,21 +3,24 @@ package gclient
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
-	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
 )
 
 // RequestGetUserInfo user to login
 func RequestGetUserInfo(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
-
-	if agent, ok := network.GetInstance().GetAuthAgent("gamedb1"); ok {
+	uidInt, err := strconv.Atoi(uid)
+	if err != nil {
+		return "", errors.New("convert uid failed")
+	}
+	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 
 		req := &s2s.LoginReq{
 			Uid:    uid,

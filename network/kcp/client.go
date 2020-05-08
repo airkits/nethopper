@@ -37,6 +37,7 @@ type Client struct {
 	conns               ConnSet
 	wg                  sync.WaitGroup
 	Token               string
+	UID                 uint64
 	UDPSocketBufferSize int //UDP listener socket buffer
 	dscp                int //set DSCP(6bit)
 	sndwnd              int //per connection UDP send window
@@ -174,7 +175,7 @@ reconnect:
 	c.conns[conn] = struct{}{}
 	c.Unlock()
 	kcpConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize, c.ReadDeadline)
-	agent := c.NewAgent(kcpConn, c.Token)
+	agent := c.NewAgent(kcpConn, c.UID, c.Token)
 	agent.Run()
 
 	// cleanup

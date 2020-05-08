@@ -151,7 +151,7 @@ func (s *Server) Transport(sess quic.Session, stream quic.Stream) error {
 
 	var agent network.IAgent
 	c := NewConn(sess, stream, s.RWQueueSize, s.MaxMessageSize, s.ReadDeadline)
-	agent = s.NewAgent(c, "")
+	agent = s.NewAgent(c, 0, "")
 	agent.Run()
 
 	// cleanup

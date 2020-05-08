@@ -71,7 +71,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var agent network.IAgent
 
 	wsConn := NewConn(conn, s.RWQueueSize, s.MaxMessageSize)
-	agent = s.NewAgent(wsConn, token)
+	agent = s.NewAgent(wsConn, 0, token)
 
 	agent.Run()
 

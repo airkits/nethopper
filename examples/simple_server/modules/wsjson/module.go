@@ -72,14 +72,14 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 		panic(err)
 	}
 
-	s.wsServer = ws.NewServer(m, func(conn network.IConn, token string) network.IAgent {
+	s.wsServer = ws.NewServer(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		if len(token) > 0 {
-			agent, ok := network.GetInstance().GetAuthAgent(token)
+			agent, ok := network.GetInstance().GetAuthAgent(uid)
 			if ok { //exist agent,kick out old connection
 				network.GetInstance().RemoveAgent(agent)
 			}
 		}
-		a := network.NewAgent(NewAgentAdapter(conn))
+		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		network.GetInstance().AddAgent(a)
 		return a
 	}, func(agent network.IAgent) {

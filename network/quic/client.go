@@ -40,6 +40,7 @@ type Client struct {
 	conns            ConnSet
 	wg               sync.WaitGroup
 	Token            string
+	UID              uint64
 	ReadBufferSize   int
 	WriteBufferSize  int
 	ReadDeadline     time.Duration
@@ -159,7 +160,7 @@ reconnect:
 	}
 
 	quicConn := NewConn(sess, stream, c.RWQueueSize, c.MaxMessageSize, c.ReadDeadline)
-	agent := c.NewAgent(quicConn, c.Token)
+	agent := c.NewAgent(quicConn, c.UID, c.Token)
 	agent.Run()
 
 	// cleanup

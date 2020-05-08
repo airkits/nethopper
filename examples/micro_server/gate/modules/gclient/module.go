@@ -28,9 +28,11 @@
 package gclient
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/libs/skiplist"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/grpc"
 	"github.com/gonethopper/nethopper/server"
@@ -45,6 +47,7 @@ func ModuleCreate() (server.Module, error) {
 type Module struct {
 	server.BaseContext
 	grpcClient *grpc.Client
+	Clients    *skiplist.SkipList
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
@@ -65,17 +68,32 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	s.RegisterHandler(common.CallIDGetUserInfoCmd, RequestGetUserInfo)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.grpcClient = grpc.NewClient(m, func(conn network.IConn, token string) network.IAgent {
-		a := network.NewAgent(NewAgentAdapter(conn))
-		a.SetToken("logic1")
-		network.GetInstance().AddAgent(a)
+	s.Clients = skiplist.New()
+	s.grpcClient = grpc.NewClient(m, func(conn network.IConn, uid uint64, serverID string) network.IAgent {
+		a := network.NewAgent(NewAgentAdapter(conn), uid, serverID)
+		if sid, err := strconv.Atoi(serverID); err == nil {
+			a.SetToken(serverID)
+			s.Clients.Set(float64(sid), a)
+		}
 		return a
 	}, func(agent network.IAgent) {
-		network.GetInstance().RemoveAgent(agent)
+		if sid, err := strconv.Atoi(agent.Token()); err == nil {
+			s.Clients.Remove(float64(sid))
+		}
+
 	})
 	s.grpcClient.Run()
 
 	return s, nil
+}
+
+//GetAgent get agent by option
+func (s *Module) GetAgent(option uint32) network.IAgent {
+	v := s.Clients.Get(float64(0))
+	if v != nil {
+		return v.Value().(network.IAgent)
+	}
+	return nil
 }
 
 // ReadConfig config map

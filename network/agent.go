@@ -34,14 +34,25 @@ import (
 )
 
 //NewAgent create new agent
-func NewAgent(adapter IAgentAdapter) IAgent {
-	return &Agent{adapter: adapter}
+func NewAgent(adapter IAgentAdapter, uid uint64, token string) IAgent {
+	return &Agent{adapter: adapter, uid: uid, token: token}
 }
 
 //Agent base agent struct
 type Agent struct {
 	adapter IAgentAdapter
+	uid     uint64
 	token   string
+}
+
+//UID get agent id
+func (a *Agent) UID() uint64 {
+	return a.uid
+}
+
+//SetUID set agent id
+func (a *Agent) SetUID(uid uint64) {
+	a.uid = uid
 }
 
 //Token get token

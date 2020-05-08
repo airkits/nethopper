@@ -38,6 +38,7 @@ type Client struct {
 	conns            ConnSet
 	wg               sync.WaitGroup
 	Token            string
+	UID              uint64
 	ReadBufferSize   int
 	WriteBufferSize  int
 	ReadDeadline     time.Duration
@@ -149,7 +150,7 @@ reconnect:
 	c.Unlock()
 
 	tcpConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize, c.ReadDeadline)
-	agent := c.NewAgent(tcpConn, c.Token)
+	agent := c.NewAgent(tcpConn, c.UID, c.Token)
 	agent.Run()
 
 	// cleanup

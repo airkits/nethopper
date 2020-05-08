@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -165,7 +166,7 @@ reconnect:
 	c.Unlock()
 
 	grpcConn := NewConn(stream, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(grpcConn, name)
+	agent := c.NewAgent(grpcConn, uint64(serverID), strconv.Itoa(serverID))
 
 	agent.Run()
 
@@ -180,7 +181,7 @@ reconnect:
 
 	if c.AutoReconnect {
 		time.Sleep(c.ConnectInterval)
-		server.Warning("grpc client try reconnect to %s %s", name, address)
+		server.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

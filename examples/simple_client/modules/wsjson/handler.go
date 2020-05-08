@@ -9,38 +9,41 @@ import (
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/json"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 )
 
 // NotifyLogin user to login
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
-	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
+	if id, err := utils.Str2Uint64(uid); err == nil {
+		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
 
-		req := &csjson.LoginReq{
-			UID:    uid,
-			Passwd: pwd,
-		}
+			req := &csjson.LoginReq{
+				UID:    uid,
+				Passwd: pwd,
+			}
 
-		var payload []byte
-		var err error
-		if payload, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
-			return "", err
-		}
-		m := &json.Message{
-			ID:      1,
-			Cmd:     common.CSLoginCmd,
-			MsgType: server.MTRequest,
-			Body:    string(payload),
-		}
-		if payload, err = agent.GetAdapter().Codec().Marshal(m); err != nil {
-			return "", err
-		}
+			var payload []byte
+			var err error
+			if payload, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
+				return "", err
+			}
+			m := &json.Message{
+				ID:      1,
+				Cmd:     common.CSLoginCmd,
+				MsgType: server.MTRequest,
+				Body:    string(payload),
+			}
+			if payload, err = agent.GetAdapter().Codec().Marshal(m); err != nil {
+				return "", err
+			}
 
-		if err := agent.SendMessage(payload); err != nil {
-			server.Error("Notify login send failed %s ", err.Error())
-			time.Sleep(1 * time.Second)
-		} else {
-			server.Info("Notify login send success")
+			if err := agent.SendMessage(payload); err != nil {
+				server.Error("Notify login send failed %s ", err.Error())
+				time.Sleep(1 * time.Second)
+			} else {
+				server.Info("Notify login send success")
+			}
 		}
 	}
 	return "ok", nil

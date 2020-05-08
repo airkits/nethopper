@@ -6,10 +6,11 @@ import "google/protobuf/any.proto";
 
 message Message{
   uint32 ID = 1;
-  string cmd = 2;
-  uint32 msgType = 3;
-  uint32 seq = 4;
-  map<string,  bytes> options =  5;
+  uint64 UID = 2;
+  string cmd = 3;
+  uint32 msgType = 4;
+  uint32 seq = 5;
+  map<string,  bytes> options =  6;
   google.protobuf.Any body = 11;
 }
 

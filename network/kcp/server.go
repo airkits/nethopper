@@ -148,7 +148,7 @@ func (s *Server) Transport(conn net.Conn) error {
 
 	var agent network.IAgent
 	c := NewConn(conn, s.RWQueueSize, s.MaxMessageSize, s.ReadDeadline)
-	agent = s.NewAgent(c, "")
+	agent = s.NewAgent(c, 0, "")
 	agent.Run()
 
 	// cleanup

@@ -8,6 +8,7 @@ import (
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -129,8 +130,8 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 
 	var agent network.IAgent
 	conn := NewConn(stream, s.RWQueueSize, s.MaxMessageSize)
-
-	agent = s.NewAgent(conn, token)
+	uid, _ := utils.Str2Uint64(token)
+	agent = s.NewAgent(conn, uid, token)
 
 	agent.Run()
 

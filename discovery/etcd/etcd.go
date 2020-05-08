@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
-	log "github.com/gonethopper/libs/logs"
+	"github.com/gonethopper/nethopper/server"
 )
 
 type Options struct {
@@ -51,7 +51,7 @@ func NewEtcd(options *Options) error {
 
 	client, err := clientv3.New(conf)
 	if err != nil {
-		log.Error("ETCD:create etcd client failed,error(%v)", err)
+		server.Error("ETCD:create etcd client failed,error(%v)", err)
 		return err
 	}
 

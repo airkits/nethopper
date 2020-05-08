@@ -11,36 +11,38 @@ import (
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/raw"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 )
 
 // NotifyLogin user to login
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
+	if id, err := utils.Str2Uint64(uid); err == nil {
+		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
 
-	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
+			req := &s2s.LoginReq{
+				Uid:    uid,
+				Passwd: pwd,
+			}
 
-		req := &s2s.LoginReq{
-			Uid:    uid,
-			Passwd: pwd,
-		}
+			body, err := codec.PBCodec.Marshal(req)
+			if err != nil {
+				server.Error("Notify login send failed")
+				return "error", nil
+			}
 
-		body, err := codec.PBCodec.Marshal(req)
-		if err != nil {
-			server.Error("Notify login send failed")
-			return "error", nil
-		}
-
-		m := &raw.Message{
-			ID:      1,
-			Cmd:     common.SSLoginCmd,
-			MsgType: server.MTRequest,
-			Seq:     0,
-			Body:    body,
-		}
-		if err := agent.GetAdapter().WriteMessage(m); err != nil {
-			server.Error("Notify login send failed %s ", err.Error())
-			time.Sleep(1 * time.Second)
-		} else {
-			server.Info("Notify login send success")
+			m := &raw.Message{
+				ID:      1,
+				Cmd:     common.SSLoginCmd,
+				MsgType: server.MTRequest,
+				Seq:     0,
+				Body:    body,
+			}
+			if err := agent.GetAdapter().WriteMessage(m); err != nil {
+				server.Error("Notify login send failed %s ", err.Error())
+				time.Sleep(1 * time.Second)
+			} else {
+				server.Info("Notify login send success")
+			}
 		}
 	}
 	return "ok", nil

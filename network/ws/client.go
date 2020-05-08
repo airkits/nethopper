@@ -42,6 +42,7 @@ type Client struct {
 	closeFlag        bool
 	headers          http.Header
 	Token            string
+	UID              uint64
 }
 
 // Run client start run
@@ -148,7 +149,7 @@ reconnect:
 	c.Unlock()
 
 	wsConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(wsConn, c.Token)
+	agent := c.NewAgent(wsConn, c.UID, c.Token)
 	agent.Run()
 
 	// cleanup

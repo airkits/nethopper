@@ -6,7 +6,7 @@ import (
 
 	"github.com/coreos/etcd/auth/authpb"
 	"github.com/coreos/etcd/clientv3"
-	log "github.com/gonethopper/libs/logs"
+	"github.com/gonethopper/nethopper/server"
 )
 
 var (
@@ -36,7 +36,7 @@ func CreateRoleWithPermission(role string, perms []*Permission) (err error) {
 	}
 	resp, err := authClient.RoleAdd(context.TODO(), role)
 	if err != nil {
-		log.Error("etcd:auth add role error[%v][%q]", err, resp)
+		server.Error("etcd:auth add role error[%v][%q]", err, resp)
 		return err
 	}
 

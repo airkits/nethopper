@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/coreos/etcd/clientv3"
-	log "github.com/gonethopper/libs/logs"
+	"github.com/gonethopper/nethopper/server"
 )
 
 func GetWithPrefix(serviceKey string) (err error, vals []string) {
@@ -35,7 +35,7 @@ func Set(key, val string) error {
 	putResp, err := etcdClient.Put(context.Background(), key, val)
 	if err != nil {
 
-		log.Error("etcd:KV put failed[%v],key[%s],resp[%q]", err, key, putResp)
+		server.Error("etcd:KV put failed[%v],key[%s],resp[%q]", err, key, putResp)
 		return err
 	}
 	return nil

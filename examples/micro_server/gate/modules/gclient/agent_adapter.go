@@ -30,8 +30,8 @@ package gclient
 import (
 	"errors"
 
-	"github.com/gonethopper/nethopper/base/skiplist"
 	"github.com/gonethopper/nethopper/codec"
+	"github.com/gonethopper/nethopper/libs/skiplist"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 

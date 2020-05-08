@@ -13,36 +13,39 @@ import (
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 )
 
 // NotifyLogin user to login
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 
-	if agent, ok := network.GetInstance().GetAuthAgent("user"); ok {
+	if id, err := utils.Str2Uint64(uid); err == nil {
+		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
 
-		req := &s2s.LoginReq{
-			Uid:    uid,
-			Passwd: pwd,
-		}
+			req := &s2s.LoginReq{
+				Uid:    uid,
+				Passwd: pwd,
+			}
 
-		body, err := proto.Marshal(req)
-		if err != nil {
-			server.Error("Notify login send failed")
-			return "error", nil
-		}
+			body, err := proto.Marshal(req)
+			if err != nil {
+				server.Error("Notify login send failed")
+				return "error", nil
+			}
 
-		m := &ss.Message{
-			ID:      agent.GetAdapter().GetSequence(),
-			Cmd:     common.SSLoginCmd,
-			MsgType: server.MTRequest,
-			Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},
-		}
+			m := &ss.Message{
+				ID:      agent.GetAdapter().GetSequence(),
+				Cmd:     common.SSLoginCmd,
+				MsgType: server.MTRequest,
+				Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},
+			}
 
-		if err := agent.GetAdapter().WriteMessage(m); err != nil {
-			server.Error("Notify login send failed %s ", err.Error())
-			time.Sleep(1 * time.Second)
-		} else {
-			server.Info("Notify login send success")
+			if err := agent.GetAdapter().WriteMessage(m); err != nil {
+				server.Error("Notify login send failed %s ", err.Error())
+				time.Sleep(1 * time.Second)
+			} else {
+				server.Info("Notify login send success")
+			}
 		}
 	}
 	return "ok", nil

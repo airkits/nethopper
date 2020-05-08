@@ -14,6 +14,7 @@ const (
 //IMessage message interface
 type IMessage interface {
 	GetID() uint32
+	GetUID() uint64
 	GetCmd() string
 	GetMsgType() uint32
 	GetSeq() uint32

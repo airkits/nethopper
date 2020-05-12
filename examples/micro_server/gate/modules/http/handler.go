@@ -34,11 +34,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gonethopper/libs/logs"
-	"github.com/gonethopper/libs/utils"
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 )
 
 const TIMEOUT = time.Second * 15
@@ -92,7 +91,7 @@ func NewHTTPSession(c *gin.Context) *HTTPSession {
 	sess.Context = c
 
 	if sess.SessionID = utils.GenUUID(); sess.SessionID == "" {
-		logs.Error("gen uuid failed")
+		server.Error("gen uuid failed")
 		return nil
 	}
 
@@ -114,7 +113,7 @@ func ResponseError(session *HTTPSession, code int, msg error) {
 			Msg:  msg.Error(),
 			Data: nil,
 		})
-		logs.Error("request [%s] response error. client address:[%s] errCode:[%d] msg:[%s]", session.Context.Request.URL.Path, session.Context.ClientIP(), code, msg)
+		server.Error("request [%s] response error. client address:[%s] errCode:[%d] msg:[%s]", session.Context.Request.URL.Path, session.Context.ClientIP(), code, msg)
 	}
 
 }
@@ -128,7 +127,7 @@ func ResponseSuccess(session *HTTPSession, data interface{}) {
 			Msg:  "ok",
 			Data: data,
 		})
-		logs.Error("request [%s] response success. client address:[%s] ", session.Context.Request.URL.Path, session.Context.ClientIP())
+		server.Error("request [%s] response success. client address:[%s] ", session.Context.Request.URL.Path, session.Context.ClientIP())
 
 	}
 

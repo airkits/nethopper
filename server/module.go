@@ -439,7 +439,7 @@ func GetModuleByID(moduleID int32) (Module, error) {
 	if ok {
 		return se.(Module), nil
 	}
-	return nil, fmt.Errorf("cant get module ID")
+	return nil, fmt.Errorf("cant get module ID %d", moduleID)
 }
 
 // NewNamedModule create named module

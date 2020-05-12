@@ -3,8 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/gonethopper/libs/etcd"
-	"github.com/gonethopper/libs/signal"
+	"github.com/gonethopper/nethopper/discovery/etcd"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -30,7 +29,7 @@ func main() {
 	go etcd.Register("/abdib/kal", "168.2.3.1:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
 	go etcd.Watcher("/abdib/kal", watchBack)
 
-	signal.InitSignal()
+	server.InitSignal()
 }
 
 func watchBack(action string, key, val []byte) {

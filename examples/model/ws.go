@@ -4,7 +4,7 @@ package model
 // 	"errors"
 // 	"reflect"
 
-// 	"github.com/gogo/protobuf/proto"
+// 	"github.com/golang/protobuf/proto"
 // 	"github.com/gonethopper/nethopper/codec"
 // 	"github.com/gonethopper/nethopper/codec/common"
 // 	"github.com/gonethopper/nethopper/examples/model/json"

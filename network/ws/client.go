@@ -10,7 +10,6 @@ import (
 	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/websocket"
-	"github.com/prometheus/common/log"
 )
 
 // NewClient create websocket client
@@ -120,10 +119,10 @@ func (c *Client) init() {
 	defer c.Unlock()
 
 	if c.NewAgent == nil {
-		log.Fatal("NewAgent must not be nil")
+		server.Fatal("NewAgent must not be nil")
 	}
 	if c.conns != nil {
-		log.Fatal("client is running")
+		server.Fatal("client is running")
 	}
 
 	c.conns = make(ConnSet)

@@ -33,6 +33,7 @@ import (
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/db"
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/logic"
+	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/redis"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -70,6 +71,7 @@ func main() {
 	RegisterModule("mysql", db.ModuleCreate)
 	RegisterModule("logic", logic.ModuleCreate)
 	RegisterModule("grpc", grpc.ModuleCreate)
+	RegisterModule("redis", redis.ModuleCreate)
 	NewNamedModule(ModuleIDLog, "log", nil, m)
 	NewNamedModule(ModuleIDDB, "mysql", nil, m)
 	NewNamedModule(ModuleIDRedis, "redis", nil, m)

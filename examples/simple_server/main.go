@@ -28,8 +28,11 @@
 package main
 
 import (
+	"github.com/gonethopper/nethopper/config"
 
 	//"github.com/gonethopper/nethopper/cache/redis"
+	"flag"
+
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
@@ -42,6 +45,25 @@ import (
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
+
+// Config server config
+type Config struct {
+	Env string
+}
+
+var cfg Config
+
+//GetViper get config
+func GetViper() *Config {
+	return &cfg
+}
+
+func init() {
+
+	flag.StringVar(&cfg.Env, "env", "", "the environment and config that used")
+	flag.Parse()
+	config.ReadConfig("simple_server", "./conf", cfg.Env)
+}
 
 // @title Nethopper Simple Server
 // @version 1.0.2

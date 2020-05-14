@@ -56,7 +56,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 
 //LoginResponse request login
 func LoginResponse(agent network.IAgentAdapter, m *cs.Message) error {
-	server.Info("LoginResponse get result %v", *m)
+	server.Info("LoginResponse get result %v", m)
 	resp := &c2s.LoginResp{}
 	if err := ptypes.UnmarshalAny(m.Body, resp); err != nil {
 		return nil

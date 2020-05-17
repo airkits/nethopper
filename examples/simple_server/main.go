@@ -62,7 +62,7 @@ func init() {
 
 	flag.StringVar(&cfg.Env, "env", "", "the environment and config that used")
 	flag.Parse()
-	config.ReadConfig("simple_server", "./conf", cfg.Env)
+	config.InitViper("simple_server", "./conf", cfg.Env, &cfg, false)
 }
 
 // @title Nethopper Simple Server

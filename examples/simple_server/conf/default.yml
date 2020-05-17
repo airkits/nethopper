@@ -1,0 +1,95 @@
+server:
+  name: simple_server
+
+log:
+  filename: server.log
+  level: 7
+  max_size: 1024
+  max_lines: 100000
+  hour_enabled: false
+  daily_enabled: true
+
+http:
+  address: :11080
+
+tcp:
+  address: :15000
+  max_conn_num: 1024
+  socket_queue_size: 100
+  max_message_size: 4096
+  read_buffer_size: 32767
+  write_buffer_size: 32767
+  network: tcp4
+  read_dead_line: 15
+  worker_pool_capacity: 128
+
+kcp:
+  address: :14000
+  max_conn_num: 1024
+  socket_queue_size: 100
+  max_message_size: 4096
+  udp_socket_buffer: 4194304
+  udp_snd_wnd: 32
+  udp_recv_wnd: 32
+  udp_mtu: 1280
+  dscp: 46
+  nodelay: 1
+  interval: 20
+  resend: 1
+  nc: 1
+  read_dead_line: 15
+  worker_pool_capacity: 128
+
+quic:
+  address: :16000
+  max_conn_num: 1024
+  socket_queue_size: 100
+  max_message_size: 4096
+  read_buffer_size: 32767
+  write_buffer_size: 32767
+  network: quic4
+  read_dead_line: 15
+  worker_pool_capacity: 128
+
+wsjson:
+  address: :12080
+  max_conn_num: 1024
+  socket_queue_size: 100
+  max_message_size: 4096
+  http_timeout: 10
+  cert_file: 
+  key_file: 
+  worker_pool_capacity: 128
+
+wspb:
+  address: :12080
+  max_conn_num: 1024
+  socket_queue_size: 100
+  max_message_size: 4096
+  http_timeout: 10
+  cert_file: 
+  key_file: 
+  worker_pool_capacity: 128
+
+grpc:
+  address: :14000
+  maxConnNum: 1024
+  socketQueueSize: 100
+  maxMessageSize: 4096
+  worker_pool_capacity: 128
+
+mysql:
+  driver: mysql
+  dsn: root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai
+  worker_pool_capacity: 128
+
+redis:
+  max_idle: 8
+  max_active: 10
+  idle_timeout: 300
+  address: 127.0.0.1:6379
+  password: ""
+  worker_pool_capacity: 128
+  
+logic:
+  worker_pool_capacity: 128

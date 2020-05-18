@@ -19,7 +19,7 @@ import (
 // NewClient create grpc client
 func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
-	c.GClientInfo = make([]*common.ClientInfo, 0)
+	c.Nodes = make([]*common.NodeInfo, 0)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
@@ -32,7 +32,7 @@ func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 //Client grpc client
 type Client struct {
 	sync.Mutex
-	GClientInfo      []*common.ClientInfo
+	Nodes            []*common.NodeInfo
 	ConnNum          int
 	ConnectInterval  time.Duration
 	RWQueueSize      int
@@ -48,10 +48,10 @@ type Client struct {
 // Run client start run
 func (c *Client) Run() {
 	c.init()
-	for _, info := range c.GClientInfo {
+	for _, info := range c.Nodes {
 		for i := 0; i < c.ConnNum; i++ {
 			c.wg.Add(1)
-			go c.connect(info.ServerID, info.Name, info.Address)
+			go c.connect(info.ID, info.Name, info.Address)
 		}
 	}
 }
@@ -75,8 +75,8 @@ func (c *Client) ReadConfig(m map[string]interface{}) error {
 		if !server.HasConfigKey(m, fmt.Sprintf("grpcServerID_%d", i)) {
 			break
 		}
-		info := new(common.ClientInfo)
-		if err := server.ParseConfigValue(m, fmt.Sprintf("grpcServerID_%d", i), i, &info.ServerID); err != nil {
+		info := new(common.NodeInfo)
+		if err := server.ParseConfigValue(m, fmt.Sprintf("grpcServerID_%d", i), i, &info.ID); err != nil {
 			return err
 		}
 		if err := server.ParseConfigValue(m, fmt.Sprintf("grpcAddress_%d", i), "127.0.0.1:14000", &info.Address); err != nil {
@@ -85,7 +85,7 @@ func (c *Client) ReadConfig(m map[string]interface{}) error {
 		if err := server.ParseConfigValue(m, fmt.Sprintf("grpcName_%d", i), fmt.Sprintf("grpcName_%d", i), &info.Name); err != nil {
 			return err
 		}
-		c.GClientInfo = append(c.GClientInfo, info)
+		c.Nodes = append(c.Nodes, info)
 	}
 
 	if err := server.ParseConfigValue(m, "connNum", 1, &c.ConnNum); err != nil {

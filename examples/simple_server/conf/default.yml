@@ -57,8 +57,8 @@ wsjson:
   socket_queue_size: 100
   max_message_size: 4096
   http_timeout: 10
-  cert_file: 
-  key_file: 
+  cert_file:
+  key_file:
   worker_pool_capacity: 128
 
 wspb:
@@ -67,16 +67,26 @@ wspb:
   socket_queue_size: 100
   max_message_size: 4096
   http_timeout: 10
-  cert_file: 
-  key_file: 
+  cert_file:
+  key_file:
   worker_pool_capacity: 128
 
 grpc:
   address: :14000
-  maxConnNum: 1024
-  socketQueueSize: 100
-  maxMessageSize: 4096
+  max_conn_num: 1024
+  socket_queue_size: 100
+  max_message_size: 4096
   worker_pool_capacity: 128
+
+grpc_client:
+  conn_num: 1
+  connect_interval: 3
+  handshake_timeout: 10
+  auto_reconnect: true
+  max_message_size: 4096
+  socket_queue_size: 100
+  nodes:
+    - { id: 0, name: game1, address: :14000 }
 
 mysql:
   driver: mysql
@@ -90,6 +100,6 @@ redis:
   address: 127.0.0.1:6379
   password: ""
   worker_pool_capacity: 128
-  
+
 logic:
   worker_pool_capacity: 128

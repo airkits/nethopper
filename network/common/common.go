@@ -12,9 +12,9 @@ const (
 	PackageLengthSize = 2
 )
 
-// ClientInfo grpc client info
-type ClientInfo struct {
-	ServerID int
-	Name     string
-	Address  string
+//NodeInfo server node info
+type NodeInfo struct {
+	ID      int    `yarm:"id"`
+	Name    string `yarm:"name"`
+	Address string `yarm:"address"`
 }

@@ -16,7 +16,7 @@ import (
 func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
 
-	c.WSClientInfo = make([]*common.ClientInfo, 0)
+	c.Nodes = make([]*common.NodeInfo, 0)
 	if err := c.ReadConfig(m); err != nil {
 		panic(err)
 	}
@@ -29,7 +29,7 @@ func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 //Client websocket client
 type Client struct {
 	sync.Mutex
-	WSClientInfo     []*common.ClientInfo
+	Nodes            []*common.NodeInfo
 	ConnNum          int
 	ConnectInterval  time.Duration
 	RWQueueSize      int
@@ -50,10 +50,10 @@ type Client struct {
 // Run client start run
 func (c *Client) Run() {
 	c.init()
-	for _, info := range c.WSClientInfo {
+	for _, info := range c.Nodes {
 		for i := 0; i < c.ConnNum; i++ {
 			c.wg.Add(1)
-			go c.connect(info.ServerID, info.Name, info.Address)
+			go c.connect(info.ID, info.Name, info.Address)
 		}
 	}
 }
@@ -75,8 +75,8 @@ func (c *Client) ReadConfig(m map[string]interface{}) error {
 		if !server.HasConfigKey(m, fmt.Sprintf("wsServerID_%d", i)) {
 			break
 		}
-		info := new(common.ClientInfo)
-		if err := server.ParseConfigValue(m, fmt.Sprintf("wsServerID_%d", i), i, &info.ServerID); err != nil {
+		info := new(common.NodeInfo)
+		if err := server.ParseConfigValue(m, fmt.Sprintf("wsServerID_%d", i), i, &info.ID); err != nil {
 			return err
 		}
 		if err := server.ParseConfigValue(m, fmt.Sprintf("wsAddress_%d", i), "ws://127.0.0.1:12080", &info.Address); err != nil {
@@ -85,7 +85,7 @@ func (c *Client) ReadConfig(m map[string]interface{}) error {
 		if err := server.ParseConfigValue(m, fmt.Sprintf("wsName_%d", i), fmt.Sprintf("grpcName_%d", i), &info.Name); err != nil {
 			return err
 		}
-		c.WSClientInfo = append(c.WSClientInfo, info)
+		c.Nodes = append(c.Nodes, info)
 	}
 
 	if err := server.ParseConfigValue(m, "connNum", 1, &c.ConnNum); err != nil {

@@ -35,7 +35,7 @@ func InitViperDefault(app string, path string, pack bool) error {
 		if err := v.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 				// 配置文件未找到错误；如果需要可以忽略
-				panic(server.Error("Fatal error config file: %s \n", err))
+				panic(fmt.Sprintf("Fatal error config file: %s \n", err))
 			} else {
 				// 配置文件被找到，但产生了另外的错误
 				return err
@@ -78,14 +78,14 @@ func InitViper(app string, path string, env string, config interface{}, pack boo
 		if err := viper.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 				// 配置文件未找到错误；如果需要可以忽略
-				panic(server.Error("Fatal error config file: %s \n", err))
+				panic(fmt.Sprintf("Fatal error config file: %s \n", err))
 			} else {
 				// 配置文件被找到，但产生了另外的错误
 				return err
 			}
 		}
 	}
-	server.Info("running on environment :", env)
+	fmt.Println("running on environment :", env)
 
 	viper.WatchConfig() // Watch for changes to the configuration file and recompile
 	// viper.OnConfigChange(func(e fsnotify.Event) {
@@ -107,7 +107,7 @@ func ReadRemoteConfig(address string, key string) {
 	if err := viper.ReadRemoteConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// 配置文件未找到错误；如果需要可以忽略
-			panic(server.Error("Fatal error config file: %s \n", err))
+			panic(fmt.Sprintf("Fatal error config file: %s \n", err))
 		} else {
 			// 配置文件被找到，但产生了另外的错误
 		}

@@ -53,9 +53,6 @@ type Server struct {
 //	"maxConnNum":1024,
 //  "socketQueueSize":100,
 //  "maxMessageSize":4096
-// //tls support
-//  "certFile":"",
-//  "keyFile":"",
 // }
 func (s *Server) ReadConfig(m map[string]interface{}) error {
 

@@ -1,0 +1,54 @@
+server:
+  name: simple_client
+
+log:
+  filename: server.log
+  level: 7
+  max_size: 1024
+  max_lines: 100000
+  hour_enabled: false
+  daily_enabled: true
+
+grpc_client:
+  conn_num: 1
+  connect_interval: 3
+  handshake_timeout: 10
+  auto_reconnect: true
+  max_message_size: 4096
+  socket_queue_size: 100
+  nodes:
+    - { id: 0, name: game1, address: :14000 }
+
+ws_client:
+  conn_num: 1
+  connect_interval: 3
+  handshake_timeout: 10
+  auto_reconnect: true
+  max_message_size: 4096
+  socket_queue_size: 100
+  token: 12345678
+  nodes:
+    - { id: 0, name: game1, address: ws://127.0.0.1:12080 }
+
+tcp_client:
+  conn_num: 1
+  connect_interval: 3
+  handshake_timeout: 10
+  auto_reconnect: true
+  max_message_size: 4096
+  socket_queue_size: 100
+  network: tcp4
+  token: 12345678
+  uid: 1
+  read_buffer_size: 32767
+  write_buffer_size: 32767
+  read_dead_line: 15
+  nodes:
+    - { id: 0, name: game1, address: 127.0.0.1:12080 }
+
+quic:
+
+kcp:
+
+logic:
+  worker_pool_capacity: 128

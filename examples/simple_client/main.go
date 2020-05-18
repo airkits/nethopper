@@ -28,11 +28,46 @@
 package main
 
 import (
+	"flag"
+
+	"github.com/gonethopper/nethopper/config"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/network/grpc"
+	"github.com/gonethopper/nethopper/network/kcp"
+	"github.com/gonethopper/nethopper/network/quic"
+	"github.com/gonethopper/nethopper/network/tcp"
+	"github.com/gonethopper/nethopper/network/ws"
 	. "github.com/gonethopper/nethopper/server"
 )
+
+// Config server config
+type Config struct {
+	Env  string            `default:"env"`
+	Log  log.Config        `yarm:"log"`
+	GPRC grpc.ClientConfig `yarm:"grpc_client"`
+	KCP  kcp.ClientConfig  `yarm:"kcp_client"`
+	QUIC quic.ClientConfig `yarm:"quic_client"`
+	TCP  tcp.ClientConfig  `yarm:"tcp_client"`
+	WS   ws.ClientConfig   `yarm:"ws_client"`
+}
+
+var cfg Config
+
+//GetViper get config
+func GetViper() *Config {
+	return &cfg
+}
+
+func init() {
+
+	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
+	flag.Parse()
+	if err := config.InitViper("simple_client", "./conf", cfg.Env, &cfg, false); err != nil {
+		panic(err.Error())
+	}
+}
 
 func main() {
 

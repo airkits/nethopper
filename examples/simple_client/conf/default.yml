@@ -2,7 +2,7 @@ server:
   name: simple_client
 
 log:
-  filename: server.log
+  filename: server2.log
   level: 7
   max_size: 1024
   max_lines: 100000
@@ -17,7 +17,10 @@ grpc_client:
   max_message_size: 4096
   socket_queue_size: 100
   nodes:
-    - { id: 0, name: game1, address: :14000 }
+    -
+      id: 0
+      name: game1
+      address: :14000
 
 ws_client:
   conn_num: 1
@@ -28,7 +31,10 @@ ws_client:
   socket_queue_size: 100
   token: 12345678
   nodes:
-    - { id: 0, name: game1, address: ws://127.0.0.1:12080 }
+    - 
+      id: 0
+      name: game1
+      address: ws://127.0.0.1:12080
 
 tcp_client:
   conn_num: 1
@@ -44,11 +50,54 @@ tcp_client:
   write_buffer_size: 32767
   read_dead_line: 15
   nodes:
-    - { id: 0, name: game1, address: 127.0.0.1:12080 }
+    - 
+      id: 0
+      name: game1
+      address: 127.0.0.1:12080
 
-quic:
-
-kcp:
-
+quic_client:
+  conn_num: 1
+  connect_interval: 3
+  handshake_timeout: 10
+  auto_reconnect: true
+  max_message_size: 4096
+  socket_queue_size: 100
+  network: tcp4
+  token: 12345678
+  uid: 1
+  read_buffer_size: 32767
+  write_buffer_size: 32767
+  read_dead_line: 15
+  nodes:
+    - 
+      id: 0
+      name: game1
+      address: 127.0.0.1:12080
+  
+kcp_client:
+  conn_num: 1
+  connect_interval: 3
+  handshake_timeout: 10
+  auto_reconnect: true
+  max_message_size: 4096
+  socket_queue_size: 100
+  udp_socket_buffer_size: 4194304
+  dscp: 46
+  sndwnd: 32
+  rcvwnd: 32
+  mtu: 1280
+  nodelay: 1 
+  interval: 20
+  resend: 1
+  nc: 1
+  read_dead_line: 15
+  token: 12345678
+  uid: 1
+  nodes:
+    - 
+      id: 0
+      name: game1
+      address: 127.0.0.1:12080
+  
 logic:
   worker_pool_capacity: 128

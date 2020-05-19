@@ -2,10 +2,10 @@ server:
   name: simple_client
 
 log:
-  filename: server2.log
+  filename: client.log
   level: 7
-  max_size: 1024
-  max_lines: 100000
+  max_size: 5000
+  max_lines: 10000000
   hour_enabled: false
   daily_enabled: true
 
@@ -17,8 +17,7 @@ grpc_client:
   max_message_size: 4096
   socket_queue_size: 100
   nodes:
-    -
-      id: 0
+    - id: 0
       name: game1
       address: :14000
 
@@ -31,8 +30,7 @@ ws_client:
   socket_queue_size: 100
   token: 12345678
   nodes:
-    - 
-      id: 0
+    - id: 0
       name: game1
       address: ws://127.0.0.1:12080
 
@@ -50,8 +48,7 @@ tcp_client:
   write_buffer_size: 32767
   read_dead_line: 15
   nodes:
-    - 
-      id: 0
+    - id: 0
       name: game1
       address: 127.0.0.1:12080
 
@@ -69,11 +66,10 @@ quic_client:
   write_buffer_size: 32767
   read_dead_line: 15
   nodes:
-    - 
-      id: 0
+    - id: 0
       name: game1
       address: 127.0.0.1:12080
-  
+
 kcp_client:
   conn_num: 1
   connect_interval: 3
@@ -86,7 +82,7 @@ kcp_client:
   sndwnd: 32
   rcvwnd: 32
   mtu: 1280
-  nodelay: 1 
+  nodelay: 1
   interval: 20
   resend: 1
   nc: 1
@@ -94,10 +90,9 @@ kcp_client:
   token: 12345678
   uid: 1
   nodes:
-    - 
-      id: 0
+    - id: 0
       name: game1
       address: 127.0.0.1:12080
-  
+
 logic:
   worker_pool_capacity: 128

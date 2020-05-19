@@ -8,29 +8,29 @@ import (
 
 //ClientConfig tcp client config
 type ClientConfig struct {
-	Nodes            []common.NodeInfo `yarm:"nodes"`
-	ConnNum          int               `yarm:"conn_num"`
-	ConnectInterval  time.Duration     `yarm:"connect_interval"`
-	SocketQueueSize  int               `yarm:"socket_queue_size"`
-	MaxMessageSize   uint32            `yarm:"max_message_size"`
-	HandshakeTimeout time.Duration     `yarm:"handshake_timeout"`
-	AutoReconnect    bool              `yarm:"auto_reconnect"`
-	Network          string            `yarm:"network"`
-	Token            string            `yarm:"token"`
-	UID              uint64            `yarm:"uid"`
-	ReadBufferSize   int               `yarm:"read_buffer_size"`
-	WriteBufferSize  int               `yarm:"write_buffer_size"`
-	ReadDeadline     time.Duration     `yarm:"read_dead_line"`
+	Nodes            []common.NodeInfo `mapstructure:"nodes"`
+	ConnNum          int               `mapstructure:"conn_num"`
+	ConnectInterval  time.Duration     `mapstructure:"connect_interval"`
+	SocketQueueSize  int               `mapstructure:"socket_queue_size"`
+	MaxMessageSize   uint32            `mapstructure:"max_message_size"`
+	HandshakeTimeout time.Duration     `mapstructure:"handshake_timeout"`
+	AutoReconnect    bool              `mapstructure:"auto_reconnect"`
+	Network          string            `mapstructure:"network"`
+	Token            string            `mapstructure:"token"`
+	UID              uint64            `mapstructure:"uid"`
+	ReadBufferSize   int               `mapstructure:"read_buffer_size"`
+	WriteBufferSize  int               `mapstructure:"write_buffer_size"`
+	ReadDeadline     time.Duration     `mapstructure:"read_dead_line"`
 }
 
 //ServerConfig tcp server config
 type ServerConfig struct {
-	Address         string        `yaml:"address"`
-	Network         string        `yaml:"network"`
-	MaxConnNum      int           `yaml:"max_conn_num"`
-	SocketQueueSize int           `yaml:"socket_queue_size"`
-	MaxMessageSize  uint32        `yaml:"max_message_size"`
-	ReadBufferSize  int           `yaml:"read_buffer_size"`
-	WriteBufferSize int           `yaml:"write_buffer_size"`
-	ReadDeadline    time.Duration `yaml:"max_conn_num"`
+	Address         string        `mapstructure:"address"`
+	Network         string        `mapstructure:"network"`
+	MaxConnNum      int           `mapstructure:"max_conn_num"`
+	SocketQueueSize int           `mapstructure:"socket_queue_size"`
+	MaxMessageSize  uint32        `mapstructure:"max_message_size"`
+	ReadBufferSize  int           `mapstructure:"read_buffer_size"`
+	WriteBufferSize int           `mapstructure:"write_buffer_size"`
+	ReadDeadline    time.Duration `mapstructure:"max_conn_num"`
 }

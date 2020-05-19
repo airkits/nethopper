@@ -8,11 +8,11 @@ import (
 
 //ClientConfig http client config
 type ClientConfig struct {
-	Nodes   []common.NodeInfo `yarm:"nodes"`
-	Timeout time.Duration     `yarm:"timeout"`
+	Nodes   []common.NodeInfo `mapstructure:"nodes"`
+	Timeout time.Duration     `mapstructure:"timeout"`
 }
 
 //ServerConfig http server config
 type ServerConfig struct {
-	Address string `yaml:"address"`
+	Address string `mapstructure:"address"`
 }

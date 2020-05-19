@@ -45,12 +45,12 @@ import (
 // Config server config
 type Config struct {
 	Env  string            `default:"env"`
-	Log  log.Config        `yarm:"log"`
-	GPRC grpc.ClientConfig `yarm:"grpc_client"`
-	KCP  kcp.ClientConfig  `yarm:"kcp_client"`
-	QUIC quic.ClientConfig `yarm:"quic_client"`
-	TCP  tcp.ClientConfig  `yarm:"tcp_client"`
-	WS   ws.ClientConfig   `yarm:"ws_client"`
+	Log  log.Config        `mapstructure:"log"`
+	GPRC grpc.ClientConfig `mapstructure:"grpc_client"`
+	KCP  kcp.ClientConfig  `mapstructure:"kcp_client"`
+	QUIC quic.ClientConfig `mapstructure:"quic_client"`
+	TCP  tcp.ClientConfig  `mapstructure:"tcp_client"`
+	WS   ws.ClientConfig   `mapstructure:"ws_client"`
 }
 
 var cfg Config

@@ -21,6 +21,12 @@ type ClientConfig struct {
 	ReadBufferSize   int               `mapstructure:"read_buffer_size"`
 	WriteBufferSize  int               `mapstructure:"write_buffer_size"`
 	ReadDeadline     time.Duration     `mapstructure:"read_dead_line"`
+	QueueSize        int               `mapstructure:"queue_size"`
+}
+
+//GetQueueSize get module queue size
+func (c *ClientConfig) GetQueueSize() int {
+	return c.QueueSize
 }
 
 //ServerConfig grpc server config
@@ -33,4 +39,10 @@ type ServerConfig struct {
 	WriteBufferSize int           `mapstructure:"write_buffer_size"`
 	ReadDeadline    time.Duration `mapstructure:"read_dead_line"`
 	Network         string        `mapstructure:"network"`
+	QueueSize       int           `mapstructure:"queue_size"`
+}
+
+//GetQueueSize get module queue size
+func (s *ServerConfig) GetQueueSize() int {
+	return s.QueueSize
 }

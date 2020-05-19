@@ -50,10 +50,10 @@ const (
 
 // Log Interface
 type Log interface {
-	// ParseConfig read config from map[string]interface{}
-	ParseConfig(v map[string]interface{}) error
+	// ParseConfig read config from conf object
+	ParseConfig(conf IConfig) error
 	// InitLogger init logger
-	InitLogger() error
+	InitLogger(conf IConfig) error
 	// SetLevel atomic set level value
 	SetLevel(level int32) error
 	// GetLevel atomic get level value

@@ -13,11 +13,9 @@ import (
 )
 
 // NewClient create quic client
-func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
+func NewClient(conf *ClientConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
-	if err := c.ReadConfig(m); err != nil {
-		panic(err)
-	}
+	c.Conf = conf
 	c.NewAgent = agentFunc
 	c.CloseAgent = agentCloseFunc
 
@@ -27,87 +25,22 @@ func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 //Client quic client
 type Client struct {
 	sync.Mutex
-	Address          string
-	Network          string
-	ConnNum          int
-	ConnectInterval  time.Duration
-	RWQueueSize      int
-	MaxMessageSize   uint32
-	HandshakeTimeout time.Duration
-	AutoReconnect    bool
-	NewAgent         network.AgentCreateFunc
-	CloseAgent       network.AgentCloseFunc
-	conns            ConnSet
-	wg               sync.WaitGroup
-	Token            string
-	UID              uint64
-	ReadBufferSize   int
-	WriteBufferSize  int
-	ReadDeadline     time.Duration
+	Conf       *ClientConfig
+	NewAgent   network.AgentCreateFunc
+	CloseAgent network.AgentCloseFunc
+	conns      ConnSet
+	wg         sync.WaitGroup
 }
 
 // Run client start run
 func (c *Client) Run() {
 	c.init()
-	for i := 0; i < c.ConnNum; i++ {
-		c.wg.Add(1)
-		go c.connect()
+	for _, info := range c.Conf.Nodes {
+		for i := 0; i < c.Conf.ConnNum; i++ {
+			c.wg.Add(1)
+			go c.connect(info.ID, info.Name, info.Address)
+		}
 	}
-}
-
-// ReadConfig config map
-// m := map[string]interface{}{
-//  "address":":16000",
-//	"connNum":1,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-//  "connectInterval":3,
-//  "handshakeTimeout":10,
-//  "token":"12345678",
-// }
-func (c *Client) ReadConfig(m map[string]interface{}) error {
-
-	if err := server.ParseConfigValue(m, "address", "127.0.0.1:16000", &c.Address); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "connNum", 1, &c.ConnNum); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &c.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &c.MaxMessageSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "connectInterval", 3, &c.ConnectInterval); err != nil {
-		return err
-	}
-	c.ConnectInterval = c.ConnectInterval * time.Second
-	if err := server.ParseConfigValue(m, "handshakeTimeout", 10, &c.HandshakeTimeout); err != nil {
-		return err
-	}
-	c.HandshakeTimeout = c.HandshakeTimeout * time.Second
-
-	if err := server.ParseConfigValue(m, "readBufferSize", 32767, &c.ReadBufferSize); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "writeBufferSize", 32767, &c.WriteBufferSize); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "network", "quic4", &c.Network); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "readDeadline", 15, &c.ReadDeadline); err != nil {
-		return err
-	}
-	c.ReadDeadline = c.ReadDeadline * time.Second
-
-	return nil
 }
 
 func (c *Client) init() {
@@ -122,31 +55,30 @@ func (c *Client) init() {
 	}
 
 	c.conns = make(ConnSet)
-
 }
 
-func (c *Client) dial() quic.Session {
+func (c *Client) dial(serverID int, address string) quic.Session {
 	for {
 		tlsConf := &tls.Config{
 			InsecureSkipVerify: true,
 			NextProtos:         []string{"quic-echo-example"},
 		}
-		session, err := quic.DialAddr(c.Address, tlsConf, nil)
+		session, err := quic.DialAddr(address, tlsConf, nil)
 		if err == nil {
 			return session
 		}
 
-		server.Warning("connect to %v error: %v", c.Address, err)
-		time.Sleep(c.ConnectInterval)
+		server.Warning("connect to %v error: %v", address, err)
+		time.Sleep(c.Conf.ConnectInterval)
 		continue
 	}
 }
 
-func (c *Client) connect() {
+func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	sess := c.dial()
+	sess := c.dial(serverID, address)
 	if sess == nil {
 		return
 	}
@@ -159,8 +91,8 @@ reconnect:
 		return
 	}
 
-	quicConn := NewConn(sess, stream, c.RWQueueSize, c.MaxMessageSize, c.ReadDeadline)
-	agent := c.NewAgent(quicConn, c.UID, c.Token)
+	quicConn := NewConn(sess, stream, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize, c.Conf.ReadDeadline)
+	agent := c.NewAgent(quicConn, c.Conf.UID, c.Conf.Token)
 	agent.Run()
 
 	// cleanup
@@ -171,8 +103,8 @@ reconnect:
 	c.CloseAgent(agent)
 	agent.OnClose()
 
-	if c.AutoReconnect {
-		time.Sleep(c.ConnectInterval)
+	if c.Conf.AutoReconnect {
+		time.Sleep(c.Conf.ConnectInterval)
 		goto reconnect
 	}
 }

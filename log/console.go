@@ -37,12 +37,12 @@ import (
 )
 
 // NewConsoleLogger create FileLog instance
-func NewConsoleLogger(m map[string]interface{}) (server.Log, error) {
+func NewConsoleLogger(conf *Config) (server.Log, error) {
 	logger := &ConsoleLog{}
-	if err := logger.ParseConfig(m); err != nil {
+	if err := logger.ParseConfig(conf); err != nil {
 		return nil, err
 	}
-	if err := logger.InitLogger(); err != nil {
+	if err := logger.InitLogger(conf); err != nil {
 		return nil, err
 	}
 	return logger, nil
@@ -53,24 +53,20 @@ type ConsoleLog struct {
 	//set level and  atomic incr CurrentSize and CurrentLines
 	level  int32
 	writer io.Writer
+	Conf   *Config
 }
 
 // ParseConfig read config from map[string]interface{}
 // config key map
 // level default 7
-func (c *ConsoleLog) ParseConfig(m map[string]interface{}) error {
-	if err := server.ParseConfigValue(m, "level", 7, &c.level); err != nil {
-		return err
-	}
-	// if err := server.ParseConfigValue(m, "level", 7, &c.level); err != nil {
-	// 	return err
-	// }
+func (c *ConsoleLog) ParseConfig(conf server.IConfig) error {
 
 	return nil
 }
 
 // InitLogger init logger
-func (c *ConsoleLog) InitLogger() error {
+func (c *ConsoleLog) InitLogger(conf server.IConfig) error {
+	c.Conf = conf.(*Config)
 	c.writer = os.Stdout
 	return nil
 }

@@ -57,14 +57,14 @@ func (s *Module) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
-	if err := s.ReadConfig(m); err != nil {
+func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+	if err := s.ReadConfig(conf); err != nil {
 		panic(err)
 	}
 	s.RegisterHandler(common.SSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.kcpClient = kcp.NewClient(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	s.kcpClient = kcp.NewClient(conf.(*kcp.ClientConfig), func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		network.GetInstance().AddAgent(a)
 		return a
@@ -78,12 +78,12 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 
 // ReadConfig config map
 // address default :80
-func (s *Module) ReadConfig(m map[string]interface{}) error {
+func (s *Module) ReadConfig(conf server.IConfig) error {
 	return nil
 }
 
 //Reload reload config
-func (s *Module) Reload(m map[string]interface{}) error {
+func (s *Module) Reload(conf server.IConfig) error {
 	return nil
 }
 

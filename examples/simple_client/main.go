@@ -31,9 +31,16 @@ import (
 	"flag"
 
 	"github.com/gonethopper/nethopper/config"
+	grpc_client "github.com/gonethopper/nethopper/examples/simple_client/modules/grpc"
+	kcp_client "github.com/gonethopper/nethopper/examples/simple_client/modules/kcp"
+	quic_client "github.com/gonethopper/nethopper/examples/simple_client/modules/quic"
+	tcp_client "github.com/gonethopper/nethopper/examples/simple_client/modules/tcp"
+
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/wsjson"
+
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/network/grpc"
 	"github.com/gonethopper/nethopper/network/kcp"
 	"github.com/gonethopper/nethopper/network/quic"
@@ -44,13 +51,14 @@ import (
 
 // Config server config
 type Config struct {
-	Env  string            `default:"env"`
-	Log  log.Config        `mapstructure:"log"`
-	GPRC grpc.ClientConfig `mapstructure:"grpc_client"`
-	KCP  kcp.ClientConfig  `mapstructure:"kcp_client"`
-	QUIC quic.ClientConfig `mapstructure:"quic_client"`
-	TCP  tcp.ClientConfig  `mapstructure:"tcp_client"`
-	WS   ws.ClientConfig   `mapstructure:"ws_client"`
+	Env   string             `default:"env"`
+	Log   log.Config         `mapstructure:"log"`
+	GPRC  grpc.ClientConfig  `mapstructure:"grpc_client"`
+	KCP   kcp.ClientConfig   `mapstructure:"kcp_client"`
+	QUIC  quic.ClientConfig  `mapstructure:"quic_client"`
+	TCP   tcp.ClientConfig   `mapstructure:"tcp_client"`
+	WS    ws.ClientConfig    `mapstructure:"ws_client"`
+	Logic common.LogicConfig `mapstructure:"logic"`
 }
 
 var cfg Config
@@ -71,34 +79,14 @@ func init() {
 
 func main() {
 
-	m := map[string]interface{}{
-		"filename":     "logs/server.log",
-		"level":        DEBUG,
-		"maxSize":      5000,
-		"maxLines":     10000000,
-		"hourEnabled":  false,
-		"dailyEnable":  true,
-		"queueSize":    1000,
-		"wsServerID_0": 0,
-		"wsAddress_0":  "ws://127.0.0.1:12080",
-		"wsName_0":     "wsclient_0",
-	}
-	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("logic", logic.ModuleCreate)
-	RegisterModule("wsjson", wsjson.ModuleCreate)
-	//RegisterModule("grpc", grpc.ModuleCreate)
-	//RegisterModule("wspb", wspb.ModuleCreate)
-	//RegisterModule("tcp", tcp.ModuleCreate)
-	//RegisterModule("kcp", kcp.ModuleCreate)
-	//RegisterModule("quic", quic.ModuleCreate)
-	NewNamedModule(ModuleIDLog, "log", nil, m)
-	NewNamedModule(ModuleIDLogic, "logic", nil, m)
-	//NewNamedModule(ModuleIDWSClient, "wspb", nil, m)
-	NewNamedModule(ModuleIDWSClient, "wsjson", nil, m)
-	//	NewNamedModule(ModuleIDGRPCClient, "grpc", nil, m)
-	//	NewNamedModule(ModuleIDTCPClient, "tcp", nil, m)
-	//NewNamedModule(ModuleIDKCPClient, "kcp", nil, m)
-	//NewNamedModule(ModuleIDQUICClient, "quic", nil, m)
+	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	//NewNamedModule(ModuleIDWSClient, "wspb",wspb.ModuleCreate, nil, &cfg.WS)
+	NewNamedModule(ModuleIDWSClient, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
+	NewNamedModule(ModuleIDGRPCClient, "grpc", grpc_client.ModuleCreate, nil, &cfg.GPRC)
+	NewNamedModule(ModuleIDTCPClient, "tcp", tcp_client.ModuleCreate, nil, &cfg.TCP)
+	NewNamedModule(ModuleIDKCPClient, "kcp", kcp_client.ModuleCreate, nil, &cfg.KCP)
+	NewNamedModule(ModuleIDQUICClient, "quic", quic_client.ModuleCreate, nil, &cfg.QUIC)
 	InitSignal()
 	//GracefulExit()
 }

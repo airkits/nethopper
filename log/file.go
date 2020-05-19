@@ -41,12 +41,12 @@ import (
 )
 
 // NewFileLogger create FileLog instance
-func NewFileLogger(m map[string]interface{}) (server.Log, error) {
+func NewFileLogger(conf *Config) (server.Log, error) {
 	logger := &FileLog{}
-	if err := logger.ParseConfig(m); err != nil {
+	if err := logger.ParseConfig(conf); err != nil {
 		return nil, err
 	}
-	if err := logger.InitLogger(); err != nil {
+	if err := logger.InitLogger(conf); err != nil {
 		return nil, err
 	}
 	return logger, nil
@@ -63,25 +63,20 @@ func NewFileLogger(m map[string]interface{}) (server.Log, error) {
 type FileLog struct {
 	//set level and  atomic incr CurrentSize and CurrentLines
 	//write log one by one
-	level         int32
-	fileName      string //real filename
 	currentTime   string //gen date ymd / ymd-h
 	suffix        string //filename suffix,like .log .txt
 	prefix        string //filename prefix, like server
-	maxSize       int32  //filesize limit
 	currentSize   int32
-	maxLines      int32 //lines limit
 	currentLines  int32
 	currentNum    int32 //current file nums
-	hourEnabled   bool  //time frequency
-	dailyEnabled  bool
+	Conf          *Config
 	currentWriter *os.File //current File Writer
 	buffer        bytes.Buffer
 }
 
 // InitLogger init logger
-func (l *FileLog) InitLogger() error {
-
+func (l *FileLog) InitLogger(conf server.IConfig) error {
+	l.Conf = conf.(*Config)
 	return l.createNewFile()
 }
 
@@ -103,7 +98,7 @@ func (l *FileLog) WriteLog(msg []byte, count int32) error {
 
 // CanLog check log status
 func (l *FileLog) CanLog(msgSize int32, count int32) bool {
-	if (msgSize+l.currentSize) >= l.maxSize || (count+l.currentLines) >= l.maxLines {
+	if (msgSize+l.currentSize) >= l.Conf.MaxSize || (count+l.currentLines) >= l.Conf.MaxLines {
 		return false
 	}
 	return true
@@ -115,7 +110,7 @@ func (l *FileLog) SetLevel(level int32) error {
 	if level < server.FATAL || level > server.DEBUG {
 		return fmt.Errorf("log level:[%d] invalid", level)
 	}
-	atomic.StoreInt32(&l.level, level)
+	atomic.StoreInt32(&l.Conf.Level, level)
 	return nil
 }
 
@@ -127,46 +122,24 @@ func (l *FileLog) SetLevel(level int32) error {
 // maxLines default 100000
 // hourEnabled default false
 // dailyEnabled default true
-func (l *FileLog) ParseConfig(m map[string]interface{}) error {
-
-	var filename string
-	if err := server.ParseConfigValue(m, "filename", "server.log", &filename); err != nil {
-
-		return err
-	}
-	filename = utils.GetAbsFilePath(filename)
-	dir := utils.GetAbsDirectory(filename)
+func (l *FileLog) ParseConfig(conf server.IConfig) error {
+	c := conf.(*Config)
+	c.Filename = utils.GetAbsFilePath(c.Filename)
+	dir := utils.GetAbsDirectory(c.Filename)
 	fmt.Printf("Current Log Dir %s\n", dir)
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 		return err
 	}
-	l.suffix = filepath.Ext(filename)
-	l.prefix = strings.TrimSuffix(filename, l.suffix)
-	if err := server.ParseConfigValue(m, "level", 7, &l.level); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "maxSize", 1024, &l.maxSize); err != nil {
-		return err
-	}
-	l.maxSize = l.maxSize * 1024 * 1024
-	if err := server.ParseConfigValue(m, "maxLines", 100000, &l.maxLines); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "hourEnabled", false, &l.hourEnabled); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "dailyEnabled", true, &l.dailyEnabled); err != nil {
-		return err
-	}
-
+	l.suffix = filepath.Ext(c.Filename)
+	l.prefix = strings.TrimSuffix(c.Filename, l.suffix)
+	c.MaxSize = c.MaxSize * 1024 * 1024
 	return nil
 }
 func (l *FileLog) genCurrentTime() string {
 	currentTime := ""
-	if l.hourEnabled {
+	if l.Conf.HourEnabled {
 		currentTime = utils.TimeYMDH()
-	} else if l.dailyEnabled {
+	} else if l.Conf.DailyEnabled {
 		currentTime = utils.TimeYMD()
 	}
 	return currentTime
@@ -213,7 +186,7 @@ func (l *FileLog) fileCutTest() bool {
 	if strings.Compare(l.currentTime, timestr) != 0 {
 		return true
 	}
-	if l.currentSize >= l.maxSize || l.currentLines >= l.maxLines {
+	if l.currentSize >= l.Conf.MaxSize || l.currentLines >= l.Conf.MaxLines {
 		return true
 	}
 	return false
@@ -238,9 +211,9 @@ func (l *FileLog) moveFile() error {
 	l.currentWriter.Close()
 	l.currentWriter = nil
 	filename := l.genFilename(l.currentTime, num)
-	err := os.Rename(l.fileName, filename)
+	err := os.Rename(l.Conf.Filename, filename)
 	if err != nil {
-		return fmt.Errorf("file rename Error %s", l.fileName)
+		return fmt.Errorf("file rename Error %s", l.Conf.Filename)
 	}
 	return nil
 }
@@ -248,10 +221,10 @@ func (l *FileLog) moveFile() error {
 // createNewFile if file exist,then check current lines and filesize
 func (l *FileLog) createNewFile() error {
 	l.currentTime = l.genCurrentTime()
-	l.fileName = l.genFilename(l.currentTime, 0)
-	flag := utils.FileIsExist(l.fileName)
+	l.Conf.Filename = l.genFilename(l.currentTime, 0)
+	flag := utils.FileIsExist(l.Conf.Filename)
 	if flag { //exist file
-		lines, err := utils.FileLines(l.fileName)
+		lines, err := utils.FileLines(l.Conf.Filename)
 		if err != nil {
 			return err
 		}
@@ -259,7 +232,7 @@ func (l *FileLog) createNewFile() error {
 	} else {
 		l.currentLines = 0
 	}
-	fd, err := os.OpenFile(l.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0664)
+	fd, err := os.OpenFile(l.Conf.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0664)
 	if err != nil {
 		return err
 	}
@@ -278,7 +251,7 @@ func (l *FileLog) createNewFile() error {
 
 // PushLog push log to queue
 func (l *FileLog) PushLog(level int32, v ...interface{}) error {
-	if level > l.level {
+	if level > l.Conf.Level {
 		return nil
 	}
 	msg := server.FormatLog(level, v...)
@@ -288,7 +261,7 @@ func (l *FileLog) PushLog(level int32, v ...interface{}) error {
 
 //GetLevel get current log level
 func (l *FileLog) GetLevel() int32 {
-	level := atomic.LoadInt32(&l.level)
+	level := atomic.LoadInt32(&l.Conf.Level)
 	return level
 }
 

@@ -15,6 +15,12 @@ type ClientConfig struct {
 	MaxMessageSize   uint32            `mapstructure:"max_message_size"`
 	HandshakeTimeout time.Duration     `mapstructure:"handshake_timeout"`
 	AutoReconnect    bool              `mapstructure:"auto_reconnect"`
+	QueueSize        int               `mapstructure:"queue_size"`
+}
+
+//GetQueueSize get module queue size
+func (c *ClientConfig) GetQueueSize() int {
+	return c.QueueSize
 }
 
 //ServerConfig grpc server config
@@ -23,4 +29,10 @@ type ServerConfig struct {
 	MaxConnNum      int    `mapstructure:"max_conn_num"`
 	SocketQueueSize int    `mapstructure:"socket_queue_size"`
 	MaxMessageSize  uint32 `mapstructure:"max_message_size"`
+	QueueSize       int    `mapstructure:"queue_size"`
+}
+
+//GetQueueSize get module queue size
+func (s *ServerConfig) GetQueueSize() int {
+	return s.QueueSize
 }

@@ -32,6 +32,12 @@ import (
 	"reflect"
 )
 
+//IConfig config interface
+type IConfig interface {
+	//GetQueueSize get module queue size
+	GetQueueSize() int
+}
+
 //HasConfigKey check config key,if exist return true, else return false
 func HasConfigKey(m map[string]interface{}, key string) bool {
 	_, ok := m[key]

@@ -11,11 +11,9 @@ import (
 )
 
 // NewClient create kcp client
-func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
+func NewClient(conf *ClientConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
-	if err := c.ReadConfig(m); err != nil {
-		panic(err)
-	}
+	c.Conf = conf
 	c.NewAgent = agentFunc
 	c.CloseAgent = agentCloseFunc
 
@@ -25,108 +23,22 @@ func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 //Client kcp client
 type Client struct {
 	sync.Mutex
-	Address             string
-	ConnNum             int
-	ConnectInterval     time.Duration
-	RWQueueSize         int
-	MaxMessageSize      uint32
-	HandshakeTimeout    time.Duration
-	AutoReconnect       bool
-	NewAgent            network.AgentCreateFunc
-	CloseAgent          network.AgentCloseFunc
-	conns               ConnSet
-	wg                  sync.WaitGroup
-	Token               string
-	UID                 uint64
-	UDPSocketBufferSize int //UDP listener socket buffer
-	dscp                int //set DSCP(6bit)
-	sndwnd              int //per connection UDP send window
-	rcvwnd              int //per connection UDP recv window
-	mtu                 int //MTU of UDP packets, without IP(20) + UDP(8)
-	nodelay             int //ikcp_nodelay()
-	interval            int //ikcp_nodelay()
-	resend              int //ikcp_nodelay()
-	nc                  int //ikcp_nodelay()
-	ReadDeadline        time.Duration
+	Conf       *ClientConfig
+	NewAgent   network.AgentCreateFunc
+	CloseAgent network.AgentCloseFunc
+	conns      ConnSet
+	wg         sync.WaitGroup
 }
 
 // Run client start run
 func (c *Client) Run() {
 	c.init()
-	for i := 0; i < c.ConnNum; i++ {
-		c.wg.Add(1)
-		go c.connect()
+	for _, info := range c.Conf.Nodes {
+		for i := 0; i < c.Conf.ConnNum; i++ {
+			c.wg.Add(1)
+			go c.connect(info.ID, info.Name, info.Address)
+		}
 	}
-}
-
-// ReadConfig config map
-// m := map[string]interface{}{
-//  "address":":14000",
-//	"connNum":1,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-//  "connectInterval":3,
-//  "handshakeTimeout":10,
-//  "token":"12345678",
-// }
-func (c *Client) ReadConfig(m map[string]interface{}) error {
-
-	if err := server.ParseConfigValue(m, "address", "127.0.0.1:14000", &c.Address); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "connNum", 1, &c.ConnNum); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &c.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &c.MaxMessageSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "connectInterval", 3, &c.ConnectInterval); err != nil {
-		return err
-	}
-	c.ConnectInterval = c.ConnectInterval * time.Second
-	if err := server.ParseConfigValue(m, "handshakeTimeout", 10, &c.HandshakeTimeout); err != nil {
-		return err
-	}
-	c.HandshakeTimeout = c.HandshakeTimeout * time.Second
-
-	if err := server.ParseConfigValue(m, "udpSocketBuf", 4194304, &c.UDPSocketBufferSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "udpSndWnd", 32, &c.sndwnd); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "udpRcvWnd", 32, &c.rcvwnd); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "udpMtu", 1280, &c.mtu); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "dscp", 46, &c.dscp); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "nodelay", 1, &c.nodelay); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "interval", 20, &c.interval); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "resend", 1, &c.resend); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "nc", 1, &c.nc); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "readDeadline", 15, &c.ReadDeadline); err != nil {
-		return err
-	}
-	c.ReadDeadline = c.ReadDeadline * time.Second
-
-	return nil
 }
 
 func (c *Client) init() {
@@ -144,38 +56,39 @@ func (c *Client) init() {
 
 }
 
-func (c *Client) dial() *kcp.UDPSession {
+func (c *Client) dial(serverID int, address string) *kcp.UDPSession {
 	for {
-		conn, err := kcp.DialWithOptions(c.Address, nil, 0, 0)
+		conn, err := kcp.DialWithOptions(address, nil, 0, 0)
 		if err == nil {
 			return conn
 		}
 
-		server.Warning("connect to %v error: %v", c.Address, err)
-		time.Sleep(c.ConnectInterval)
+		server.Warning("connect to %v error: %v", address, err)
+		time.Sleep(c.Conf.ConnectInterval)
 		continue
 	}
 }
 
-func (c *Client) connect() {
+func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	conn := c.dial()
+	conn := c.dial(serverID, address)
 	if conn == nil {
 		return
 	}
-	conn.SetDSCP(c.dscp)
-	conn.SetWindowSize(c.sndwnd, c.rcvwnd)
-	conn.SetNoDelay(c.nodelay, c.interval, c.resend, c.nc)
+
+	conn.SetDSCP(c.Conf.Dscp)
+	conn.SetWindowSize(c.Conf.Sndwnd, c.Conf.Rcvwnd)
+	conn.SetNoDelay(c.Conf.Nodelay, c.Conf.Interval, c.Conf.Resend, c.Conf.Nc)
 	conn.SetStreamMode(true)
-	conn.SetMtu(c.mtu)
+	conn.SetMtu(c.Conf.Mtu)
 
 	c.Lock()
 	c.conns[conn] = struct{}{}
 	c.Unlock()
-	kcpConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize, c.ReadDeadline)
-	agent := c.NewAgent(kcpConn, c.UID, c.Token)
+	kcpConn := NewConn(conn, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize, c.Conf.ReadDeadline)
+	agent := c.NewAgent(kcpConn, c.Conf.UID, c.Conf.Token)
 	agent.Run()
 
 	// cleanup
@@ -186,8 +99,8 @@ reconnect:
 	c.CloseAgent(agent)
 	agent.OnClose()
 
-	if c.AutoReconnect {
-		time.Sleep(c.ConnectInterval)
+	if c.Conf.AutoReconnect {
+		time.Sleep(c.Conf.ConnectInterval)
 		goto reconnect
 	}
 }

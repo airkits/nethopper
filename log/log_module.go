@@ -61,14 +61,14 @@ func LogModuleCreate() (server.Module, error) {
 // 	"dailyEnable": true,
 //  "queueSize":1000,
 // }
-func (s *LogModule) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *LogModule) Setup(conf server.IConfig) (server.Module, error) {
 
-	logger, err := NewFileLogger(m)
+	logger, err := NewFileLogger(conf.(*Config))
 	if err != nil {
 		return nil, err
 	}
 	s.logger = logger
-	console, err := NewConsoleLogger(m)
+	console, err := NewConsoleLogger(conf.(*Config))
 	if err != nil {
 		return nil, err
 	}
@@ -77,12 +77,9 @@ func (s *LogModule) Setup(m map[string]interface{}) (server.Module, error) {
 }
 
 // Reload reload config from map
-func (s *LogModule) Reload(m map[string]interface{}) error {
-	var level int32
-	if err := server.ParseConfigValue(m, "level", 7, &level); err != nil {
-		return err
-	}
-	return s.logger.SetLevel(level)
+func (s *LogModule) Reload(conf server.IConfig) error {
+
+	return s.logger.SetLevel(conf.(*Config).Level)
 
 }
 

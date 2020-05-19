@@ -13,13 +13,9 @@ import (
 )
 
 // NewClient create websocket client
-func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
+func NewClient(conf *ClientConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
-
-	c.Nodes = make([]*common.NodeInfo, 0)
-	if err := c.ReadConfig(m); err != nil {
-		panic(err)
-	}
+	c.Conf = conf
 	c.NewAgent = agentFunc
 	c.CloseAgent = agentCloseFunc
 
@@ -29,89 +25,24 @@ func NewClient(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 //Client websocket client
 type Client struct {
 	sync.Mutex
-	Nodes            []*common.NodeInfo
-	ConnNum          int
-	ConnectInterval  time.Duration
-	RWQueueSize      int
-	MaxMessageSize   uint32
-	HandshakeTimeout time.Duration
-	AutoReconnect    bool
-	NewAgent         network.AgentCreateFunc
-	CloseAgent       network.AgentCloseFunc
-	dialer           websocket.Dialer
-	conns            ConnSet
-	wg               sync.WaitGroup
-	closeFlag        bool
-
-	Token string
-	UID   uint64
+	Conf       *ClientConfig
+	NewAgent   network.AgentCreateFunc
+	CloseAgent network.AgentCloseFunc
+	dialer     websocket.Dialer
+	conns      ConnSet
+	wg         sync.WaitGroup
+	closeFlag  bool
 }
 
 // Run client start run
 func (c *Client) Run() {
 	c.init()
-	for _, info := range c.Nodes {
-		for i := 0; i < c.ConnNum; i++ {
+	for _, info := range c.Conf.Nodes {
+		for i := 0; i < c.Conf.ConnNum; i++ {
 			c.wg.Add(1)
 			go c.connect(info.ID, info.Name, info.Address)
 		}
 	}
-}
-
-// ReadConfig config map
-// m := map[string]interface{}{
-//  "address":":12080",
-//	"connNum":1,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-//  "connectInterval":3,
-//  "handshakeTimeout":10,
-//  "token":"12345678",
-// }
-func (c *Client) ReadConfig(m map[string]interface{}) error {
-
-	for i := 0; i < 16; i++ {
-
-		if !server.HasConfigKey(m, fmt.Sprintf("wsServerID_%d", i)) {
-			break
-		}
-		info := new(common.NodeInfo)
-		if err := server.ParseConfigValue(m, fmt.Sprintf("wsServerID_%d", i), i, &info.ID); err != nil {
-			return err
-		}
-		if err := server.ParseConfigValue(m, fmt.Sprintf("wsAddress_%d", i), "ws://127.0.0.1:12080", &info.Address); err != nil {
-			return err
-		}
-		if err := server.ParseConfigValue(m, fmt.Sprintf("wsName_%d", i), fmt.Sprintf("grpcName_%d", i), &info.Name); err != nil {
-			return err
-		}
-		c.Nodes = append(c.Nodes, info)
-	}
-
-	if err := server.ParseConfigValue(m, "connNum", 1, &c.ConnNum); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &c.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &c.MaxMessageSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "connectInterval", 3, &c.ConnectInterval); err != nil {
-		return err
-	}
-	c.ConnectInterval = c.ConnectInterval * time.Second
-	if err := server.ParseConfigValue(m, "handshakeTimeout", 10, &c.HandshakeTimeout); err != nil {
-		return err
-	}
-	c.HandshakeTimeout = c.HandshakeTimeout * time.Second
-
-	if err := server.ParseConfigValue(m, "token", "12345678", &c.Token); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *Client) init() {
@@ -128,14 +59,14 @@ func (c *Client) init() {
 	c.conns = make(ConnSet)
 	c.closeFlag = false
 	c.dialer = websocket.Dialer{
-		HandshakeTimeout: c.HandshakeTimeout,
+		HandshakeTimeout: c.Conf.HandshakeTimeout,
 	}
 
 }
 
 func (c *Client) dial(serverID int, address string) *websocket.Conn {
 	headers := make(http.Header)
-	headers.Set(common.HeaderToken, c.Token)
+	headers.Set(common.HeaderToken, c.Conf.Token)
 	headers.Set(common.HeaderUID, fmt.Sprintf("%d", serverID))
 	for {
 		conn, _, err := c.dialer.Dial(address, headers)
@@ -144,7 +75,7 @@ func (c *Client) dial(serverID int, address string) *websocket.Conn {
 		}
 
 		server.Warning("connect to %v error: %v", address, err)
-		time.Sleep(c.ConnectInterval)
+		time.Sleep(c.Conf.ConnectInterval)
 		continue
 	}
 }
@@ -157,7 +88,7 @@ reconnect:
 	if conn == nil {
 		return
 	}
-	conn.SetReadLimit(int64(c.MaxMessageSize))
+	conn.SetReadLimit(int64(c.Conf.MaxMessageSize))
 
 	c.Lock()
 	if c.closeFlag {
@@ -168,8 +99,8 @@ reconnect:
 	c.conns[conn] = struct{}{}
 	c.Unlock()
 
-	wsConn := NewConn(conn, c.RWQueueSize, c.MaxMessageSize)
-	agent := c.NewAgent(wsConn, uint64(serverID), c.Token)
+	wsConn := NewConn(conn, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
+	agent := c.NewAgent(wsConn, uint64(serverID), c.Conf.Token)
 	agent.Run()
 
 	// cleanup
@@ -180,8 +111,8 @@ reconnect:
 	c.CloseAgent(agent)
 	agent.OnClose()
 
-	if c.AutoReconnect {
-		time.Sleep(c.ConnectInterval)
+	if c.Conf.AutoReconnect {
+		time.Sleep(c.Conf.ConnectInterval)
 		goto reconnect
 	}
 }

@@ -16,6 +16,12 @@ type ClientConfig struct {
 	HandshakeTimeout time.Duration     `mapstructure:"handshake_timeout"`
 	AutoReconnect    bool              `mapstructure:"auto_reconnect"`
 	Token            string            `mapstructure:"token"`
+	QueueSize        int               `mapstructure:"queue_size"`
+}
+
+//GetQueueSize get module queue size
+func (c *ClientConfig) GetQueueSize() int {
+	return c.QueueSize
 }
 
 //ServerConfig websocket server config
@@ -27,4 +33,10 @@ type ServerConfig struct {
 	HTTPTimeout     time.Duration `mapstructure:"http_timeout"`
 	CertFile        string        `mapstructure:"cert_file"`
 	KeyFile         string        `mapstructure:"key_file"`
+	QueueSize       int           `mapstructure:"queue_size"`
+}
+
+//GetQueueSize get module queue size
+func (s *ServerConfig) GetQueueSize() int {
+	return s.QueueSize
 }

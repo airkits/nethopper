@@ -8,6 +8,7 @@ log:
   max_lines: 10000000
   hour_enabled: false
   daily_enabled: true
+  queue_size: 1000
 
 grpc_client:
   conn_num: 1
@@ -16,6 +17,7 @@ grpc_client:
   auto_reconnect: true
   max_message_size: 4096
   socket_queue_size: 100
+  queue_size: 1000
   nodes:
     - id: 0
       name: game1
@@ -29,6 +31,7 @@ ws_client:
   max_message_size: 4096
   socket_queue_size: 100
   token: 12345678
+  queue_size: 1000
   nodes:
     - id: 0
       name: game1
@@ -47,6 +50,7 @@ tcp_client:
   read_buffer_size: 32767
   write_buffer_size: 32767
   read_dead_line: 15
+  queue_size: 1000
   nodes:
     - id: 0
       name: game1
@@ -65,6 +69,7 @@ quic_client:
   read_buffer_size: 32767
   write_buffer_size: 32767
   read_dead_line: 15
+  queue_size: 1000
   nodes:
     - id: 0
       name: game1
@@ -89,6 +94,7 @@ kcp_client:
   read_dead_line: 15
   token: 12345678
   uid: 1
+  queue_size: 1000
   nodes:
     - id: 0
       name: game1
@@ -96,3 +102,5 @@ kcp_client:
 
 logic:
   worker_pool_capacity: 128
+  queue_size: 1000
+

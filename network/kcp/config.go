@@ -27,6 +27,12 @@ type ClientConfig struct {
 	Resend              int               `mapstructure:"resend"`                 //ikcp_nodelay()
 	Nc                  int               `mapstructure:"nc"`                     //ikcp_nodelay()
 	ReadDeadline        time.Duration     `mapstructure:"read_dead_line"`
+	QueueSize           int               `mapstructure:"queue_size"`
+}
+
+//GetQueueSize get module queue size
+func (c *ClientConfig) GetQueueSize() int {
+	return c.QueueSize
 }
 
 //ServerConfig grpc server config
@@ -45,4 +51,10 @@ type ServerConfig struct {
 	Interval            int           `mapstructure:"interval"` //ikcp_nodelay()
 	Resend              int           `mapstructure:"resend"`   //ikcp_nodelay()
 	Nc                  int           `mapstructure:"nc"`       //ikcp_nodelay()
+	QueueSize           int           `mapstructure:"queue_size"`
+}
+
+//GetQueueSize get module queue size
+func (s *ServerConfig) GetQueueSize() int {
+	return s.QueueSize
 }

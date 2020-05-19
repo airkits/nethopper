@@ -119,9 +119,9 @@ type Module interface {
 	// UserData module custom option, can you store you data and you must keep goruntine safe
 	UserData() int32
 	// Setup init custom module and pass config map to module
-	Setup(m map[string]interface{}) (Module, error)
+	Setup(conf IConfig) (Module, error)
 	//Reload reload config
-	Reload(m map[string]interface{}) error
+	Reload(conf IConfig) error
 	// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 	OnRun(dt time.Duration)
 	// Stop goruntine
@@ -399,12 +399,12 @@ func (a *BaseContext) UserData() int32 {
 // ReadConfig config map
 // m := map[string]interface{}{
 // }
-func (a *BaseContext) ReadConfig(m map[string]interface{}) error {
+func (a *BaseContext) ReadConfig(conf IConfig) error {
 	return nil
 }
 
 //Reload reload config
-func (a *BaseContext) Reload(m map[string]interface{}) error {
+func (a *BaseContext) Reload(conf IConfig) error {
 	return nil
 }
 
@@ -418,11 +418,19 @@ func (a *BaseContext) Stop() error {
 
 // RegisterModule register module name to create function mapping
 func RegisterModule(name string, createFunc func() (Module, error)) error {
-	if _, ok := relModules[name]; ok {
+	if IsModuleRegistered(name) {
 		return fmt.Errorf("Already register Module %s", name)
 	}
 	relModules[name] = createFunc
 	return nil
+}
+
+//IsModuleRegistered check module is registered
+func IsModuleRegistered(name string) bool {
+	if _, ok := relModules[name]; ok {
+		return true
+	}
+	return false
 }
 
 // CreateModule create module by name
@@ -443,21 +451,22 @@ func GetModuleByID(moduleID int32) (Module, error) {
 }
 
 // NewNamedModule create named module
-func NewNamedModule(moduleID int32, name string, parent Module, m map[string]interface{}) (Module, error) {
-	return createModuleByID(moduleID, name, parent, m)
+func NewNamedModule(moduleID int32, name string, createFunc func() (Module, error), parent Module, conf IConfig) (Module, error) {
+	if !IsModuleRegistered(name) {
+		if err := RegisterModule(name, createFunc); err != nil {
+			panic(err)
+		}
+	}
+	return createModuleByID(moduleID, name, parent, conf)
 }
-func createModuleByID(moduleID int32, name string, parent Module, m map[string]interface{}) (Module, error) {
+func createModuleByID(moduleID int32, name string, parent Module, conf IConfig) (Module, error) {
 	se, err := CreateModule(name)
 	if err != nil {
 		return nil, err
 	}
-	queueSize, ok := m["queueSize"]
-	if !ok {
-		return nil, errors.New("params queueSize needed")
-	}
-	se.MakeContext(nil, int32(queueSize.(int)))
+	se.MakeContext(nil, int32(conf.GetQueueSize()))
 	se.SetName(ModuleName(se))
-	se.Setup(m)
+	se.Setup(conf)
 	se.SetID(moduleID)
 	App.Modules.Store(moduleID, se)
 	if moduleID == ModuleIDLog {
@@ -468,10 +477,10 @@ func createModuleByID(moduleID int32, name string, parent Module, m map[string]i
 }
 
 // NewModule create anonymous module
-func NewModule(name string, parent Module, m map[string]interface{}) (Module, error) {
+func NewModule(name string, parent Module, conf IConfig) (Module, error) {
 	//Inc AnonymousModuleID count = count +1
 	moduleID := atomic.AddInt32(&AnonymousModuleID, 1)
-	return createModuleByID(moduleID, name, parent, m)
+	return createModuleByID(moduleID, name, parent, conf)
 }
 
 // Call get info from modules

@@ -86,20 +86,31 @@ grpc_client:
   max_message_size: 4096
   socket_queue_size: 100
   nodes:
-    - { id: 0, name: game1, address: :14000 }
+    - id: 0
+      name: game1
+      address: :14000
 
 mysql:
-  driver: mysql
-  dsn: root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai
   worker_pool_capacity: 128
+  nodes:
+  - id: 0
+    driver: mysql
+    dsn: root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai
+
 
 redis:
   max_idle: 8
   max_active: 10
   idle_timeout: 300
-  address: 127.0.0.1:6379
-  password: ""
   worker_pool_capacity: 128
+  connect_interval: 3
+  auto_reconnect: true
+  queue_size: 1000
+  nodes:
+    - id: 0
+      password: 
+      address: 127.0.0.1:6379
+      db: 0
 
 logic:
   worker_pool_capacity: 128

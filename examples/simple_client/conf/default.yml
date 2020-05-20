@@ -1,5 +1,4 @@
-server:
-  name: simple_client
+name: simple_client
 
 log:
   filename: logs/client.log

@@ -53,12 +53,12 @@ func (s *RedisModule) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *RedisModule) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *RedisModule) Setup(conf server.IConfig) (server.Module, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *RedisModule) Reload(m map[string]interface{}) error {
+func (s *RedisModule) Reload(conf server.IConfig) error {
 	return nil
 }
 

@@ -32,23 +32,23 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/cache"
 	"github.com/pkg/errors"
 )
 
 // NewRedisCache create redis cache instance
-func NewRedisCache(m map[string]interface{}) (*RedisCache, error) {
+func NewRedisCache(conf *cache.Config) (*RedisCache, error) {
 	cache := &RedisCache{}
-	return cache.Setup(m)
+	return cache.Setup(conf)
 
 }
 
 // NewRedisPool create redis pool by address(ip:port) and pwd
-func NewRedisPool(addr string, pwd string, db int, maxIdle int, maxActive int, idleTimeout int) *redis.Pool {
+func NewRedisPool(addr string, pwd string, db int, maxIdle int, maxActive int, idleTimeout time.Duration) *redis.Pool {
 	pool := &redis.Pool{
 		MaxIdle:     maxIdle,   // 最大链接 default 8
 		MaxActive:   maxActive, //0：表示最大空闲连接个数
-		IdleTimeout: time.Duration(idleTimeout) * time.Second,
+		IdleTimeout: idleTimeout * time.Second,
 		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", addr)
@@ -80,60 +80,28 @@ func NewRedisPool(addr string, pwd string, db int, maxIdle int, maxActive int, i
 
 // RedisCache use redis as cache
 type RedisCache struct {
-	Address     string
-	Password    string
-	maxIdle     int
-	maxActive   int
-	idleTimeout int
-	db          int
-	pool        *redis.Pool
+	Conf  *cache.Config
+	pools []*redis.Pool
 }
 
 // Setup init cache with config
-func (c *RedisCache) Setup(m map[string]interface{}) (*RedisCache, error) {
-	if err := c.ReadConfig(m); err != nil {
-		return nil, err
+func (c *RedisCache) Setup(conf *cache.Config) (*RedisCache, error) {
+	c.Conf = conf
+	c.pools = make([]*redis.Pool, len(c.Conf.Nodes))
+	for index, info := range c.Conf.Nodes {
+		pool := NewRedisPool(info.Address, info.Password, info.DB, c.Conf.MaxIdle, c.Conf.MaxActive, c.Conf.IdleTimeout)
+		c.pools[index] = pool
 	}
-	c.pool = NewRedisPool(c.Address, c.Password, c.db, c.maxIdle, c.maxActive, c.idleTimeout)
 
 	return c, nil
 }
-
-// ReadConfig config map
-// maxIdle default 8
-// maxActive default 10
-// idleTimeout default 300
-// address default 127.0.0.1:6379
-// password default ""
-func (c *RedisCache) ReadConfig(m map[string]interface{}) error {
-	if err := server.ParseConfigValue(m, "maxIdle", 8, &c.maxIdle); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "maxActive", 10, &c.maxActive); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "idleTimeout", 300, &c.idleTimeout); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "redis", "127.0.0.1:6379", &c.Address); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "password", "", &c.Password); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "db", 0, &c.db); err != nil {
-		return err
-	}
-
-	return nil
+func (c *RedisCache) pool() *redis.Pool {
+	return c.pools[0]
 }
 
 // Version cache version
 func (c *RedisCache) Version() string {
-	conn := c.pool.Get()
+	conn := c.pool().Get()
 	r, e := redis.String(conn.Do("INFO"))
 	if e != nil && e != redis.ErrNil {
 		return e.Error()
@@ -268,7 +236,7 @@ func (c *RedisCache) Decr(ctx context.Context, key string) (int64, error) {
 // Do command to exec custom command
 // if redis return redis.ErrNil should convert to value null and err null
 func (c *RedisCache) Do(ctx context.Context, commandName string, args ...interface{}) (reply interface{}, err error) {
-	conn, err := c.pool.GetContext(ctx)
+	conn, err := c.pool().GetContext(ctx)
 	if err != nil {
 		return nil, err
 	}

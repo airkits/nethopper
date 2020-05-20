@@ -25,17 +25,16 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-07-16 22:00:24
 
-package database
+package orm
+
+import "github.com/gonethopper/nethopper/database"
 
 // Database use redis as cache
 type Database struct {
-	Address  string
-	Password string
-	dbName   string
 }
 
 // Setup init cache with config
-func (c *Database) Setup(m map[string]interface{}) (*Database, error) {
+func (c *Database) Setup(conf *database.Config) (*Database, error) {
 
 	return c, nil
 }

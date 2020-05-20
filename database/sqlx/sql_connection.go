@@ -30,73 +30,70 @@ package sqlx
 import (
 	"database/sql"
 
+	"github.com/gonethopper/nethopper/database"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/jmoiron/sqlx"
 )
 
 // NewSQLConnection create redis cache instance
-func NewSQLConnection(m map[string]interface{}) (*SQLConnection, error) {
+func NewSQLConnection(conf *database.Config) (*SQLConnection, error) {
 	conn := &SQLConnection{}
-	return conn.Setup(m)
+	return conn.Setup(conf)
 
 }
 
 // SQLConnection connect to db by dsn
 type SQLConnection struct {
-	db     *sqlx.DB
-	Driver string
-	DSN    string
+	pools []*sqlx.DB
+	Conf  *database.Config
 }
 
 // Setup init cache with config
-func (s *SQLConnection) Setup(m map[string]interface{}) (*SQLConnection, error) {
-	if err := s.ReadConfig(m); err != nil {
-		return nil, err
-	}
+func (s *SQLConnection) Setup(conf *database.Config) (*SQLConnection, error) {
+	s.Conf = conf
+	s.pools = make([]*sqlx.DB, len(s.Conf.Nodes))
 	return s, nil
-}
-
-// ReadConfig config map
-// driver default mysql
-// dsn default "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
-func (s *SQLConnection) ReadConfig(m map[string]interface{}) error {
-
-	if err := server.ParseConfigValue(m, "driver", "mysql", &s.Driver); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "dsn", "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai", &s.DSN); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 //Open connect and ping
 func (s *SQLConnection) Open() error {
-	var err error
-	if s.db, err = sqlx.Connect(s.Driver, s.DSN); err != nil {
-		panic(err.Error())
+	for index, info := range s.Conf.Nodes {
+		db, err := sqlx.Connect(info.Driver, info.DSN)
+		if err != nil {
+			panic(err.Error())
+		}
+		s.pools[index] = db
 	}
+
 	return s.Ping()
 }
 
 //Ping test SQLConnection
 func (s *SQLConnection) Ping() error {
 	// force a SQLConnection and test ping
-	err := s.db.Ping()
-	if err != nil {
-		server.Error("couldn't connect to database: %s %s", s.Driver, s.DSN)
-		panic(err.Error())
+	for index, db := range s.pools {
+		err := db.Ping()
+		if err != nil {
+			server.Error("couldn't connect to database: %s %s", s.Conf.Nodes[index].Driver, s.Conf.Nodes[index].DSN)
+			panic(err.Error())
+		}
+		return err
 	}
-	return err
+	return nil
 }
 
 //Close close SQLConnection
 func (s *SQLConnection) Close() {
-	if s.db != nil {
-		s.db.Close()
+	for index, db := range s.pools {
+		if db != nil {
+			db.Close()
+			server.Info("close db connection: %s %s", s.Conf.Nodes[index].Driver, s.Conf.Nodes[index].DSN)
+		}
 	}
+
+}
+func (s *SQLConnection) db() *sqlx.DB {
+	return s.pools[0]
 }
 
 //IsErrNoRows 判断是否有数据
@@ -106,12 +103,12 @@ func (s *SQLConnection) IsErrNoRows(err error) bool {
 
 //Select select operate
 func (s *SQLConnection) Select(dest interface{}, query string, args ...interface{}) error {
-	return s.db.Select(dest, query, args...)
+	return s.db().Select(dest, query, args...)
 }
 
 //Exec process sql and get result
 func (s *SQLConnection) Exec(query string, args ...interface{}) (sql.Result, error) {
-	result, err := s.db.Exec(query, args...)
+	result, err := s.db().Exec(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -121,10 +118,10 @@ func (s *SQLConnection) Exec(query string, args ...interface{}) (sql.Result, err
 
 //QueryRow by sql
 func (s *SQLConnection) QueryRow(query string, args ...interface{}) *sqlx.Row {
-	return s.db.QueryRowx(query, args...)
+	return s.db().QueryRowx(query, args...)
 }
 
 //Query sql and return rows
 func (s *SQLConnection) Query(query string, args ...interface{}) (*sqlx.Rows, error) {
-	return s.db.Queryx(query, args...)
+	return s.db().Queryx(query, args...)
 }

@@ -15,11 +15,9 @@ import (
 )
 
 //NewServer create ws server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf *ServerConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
-	if err := s.ReadConfig(m); err != nil {
-		panic(err)
-	}
+	s.Conf = conf
 	s.NewAgent = agentFunc
 	s.CloseAgent = agentCloseFunc
 
@@ -28,7 +26,7 @@ func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 
 // Server websocket server define
 type Server struct {
-	Config
+	Conf       *ServerConfig
 	NewAgent   network.AgentCreateFunc
 	ln         net.Listener
 	upgrader   websocket.Upgrader
@@ -49,7 +47,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		server.Debug("upgrade error: %v", err)
 		return
 	}
-	conn.SetReadLimit(int64(s.MaxMessageSize))
+	conn.SetReadLimit(int64(s.Conf.MaxMessageSize))
 
 	s.wg.Add(1)
 	defer s.wg.Done()
@@ -60,7 +58,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 		return
 	}
-	if len(s.conns) >= s.MaxConnNum {
+	if len(s.conns) >= s.Conf.MaxConnNum {
 		s.mutexConns.Unlock()
 		conn.Close()
 		server.Debug("too many connections")
@@ -73,7 +71,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	userID, _ := utils.Str2Uint64(uid)
 	var agent network.IAgent
 
-	wsConn := NewConn(conn, s.RWQueueSize, s.MaxMessageSize)
+	wsConn := NewConn(conn, s.Conf.SocketQueueSize, s.Conf.MaxMessageSize)
 	agent = s.NewAgent(wsConn, userID, token)
 
 	agent.Run()
@@ -88,60 +86,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// ReadConfig config map
-// m := map[string]interface{}{
-//  "address":":12080",
-//	"maxConnNum":1024,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-// //tls support
-//  "certFile":"",
-//  "keyFile":"",
-// }
-func (s *Server) ReadConfig(m map[string]interface{}) error {
-
-	if err := server.ParseConfigValue(m, "address", ":12080", &s.Address); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &s.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &s.MaxMessageSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "httpTimeout", 10, &s.HTTPTimeout); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "certFile", "", &s.CertFile); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "keyFile", "", &s.KeyFile); err != nil {
-		return err
-	}
-	return nil
-}
-
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
 	if s.NewAgent == nil {
 		server.Fatal("NewAgent must not be nil")
 	}
 	s.conns = make(ConnSet)
-	ln, err := net.Listen("tcp", s.Address)
+	ln, err := net.Listen("tcp", s.Conf.Address)
 	if err != nil {
 		server.Fatal("%v", err)
 	}
-	server.Info("websocket start listen:%s", s.Address)
-	if s.CertFile != "" || s.KeyFile != "" {
+	server.Info("websocket start listen:%s", s.Conf.Address)
+	if s.Conf.CertFile != "" || s.Conf.KeyFile != "" {
 		config := &tls.Config{}
 		config.NextProtos = []string{"http/1.1"}
 
 		var err error
 		config.Certificates = make([]tls.Certificate, 1)
-		config.Certificates[0], err = tls.LoadX509KeyPair(s.CertFile, s.KeyFile)
+		config.Certificates[0], err = tls.LoadX509KeyPair(s.Conf.CertFile, s.Conf.KeyFile)
 		if err != nil {
 			server.Fatal("%v", err)
 		}
@@ -152,17 +114,17 @@ func (s *Server) ListenAndServe() {
 	s.ln = ln
 
 	s.upgrader = websocket.Upgrader{
-		HandshakeTimeout: time.Duration(s.HTTPTimeout) * time.Second,
+		HandshakeTimeout: time.Duration(s.Conf.HTTPTimeout) * time.Second,
 		CheckOrigin: func(r *http.Request) bool {
 			server.Info("connection header:%v", r.Header)
 			return true
 		}}
 
 	s.httpServer = &http.Server{
-		Addr:           s.Address,
+		Addr:           s.Conf.Address,
 		Handler:        s,
-		ReadTimeout:    time.Duration(s.HTTPTimeout) * time.Second,
-		WriteTimeout:   time.Duration(s.HTTPTimeout) * time.Second,
+		ReadTimeout:    time.Duration(s.Conf.HTTPTimeout) * time.Second,
+		WriteTimeout:   time.Duration(s.Conf.HTTPTimeout) * time.Second,
 		MaxHeaderBytes: 1024,
 	}
 	s.httpServer.Serve(s.ln)

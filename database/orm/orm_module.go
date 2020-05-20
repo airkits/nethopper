@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package database
+package orm
 
 import (
 	"time"
@@ -53,12 +53,12 @@ func (s *OrmModule) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *OrmModule) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *OrmModule) Setup(conf server.IConfig) (server.Module, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *OrmModule) Reload(m map[string]interface{}) error {
+func (s *OrmModule) Reload(conf server.IConfig) error {
 	return nil
 }
 

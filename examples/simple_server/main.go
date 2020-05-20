@@ -29,6 +29,10 @@ package main
 
 import (
 	"github.com/gonethopper/nethopper/config"
+	"github.com/gonethopper/nethopper/network/common"
+	"github.com/gonethopper/nethopper/network/kcp"
+	"github.com/gonethopper/nethopper/network/tcp"
+	"github.com/gonethopper/nethopper/network/ws"
 
 	//"github.com/gonethopper/nethopper/cache/redis"
 	"flag"
@@ -48,7 +52,14 @@ import (
 
 // Config server config
 type Config struct {
-	Env string
+	Env   string             `default:"env"`
+	Log   log.Config         `mapstructure:"log"`
+	GPRC  grpc.ServerConfig  `mapstructure:"grpc"`
+	KCP   kcp.ServerConfig   `mapstructure:"kcp"`
+	QUIC  quic.ServerConfig  `mapstructure:"quic"`
+	TCP   tcp.ServerConfig   `mapstructure:"tcp"`
+	WS    ws.ServerConfig    `mapstructure:"ws"`
+	Logic common.LogicConfig `mapstructure:"logic"`
 }
 
 var cfg Config
@@ -60,9 +71,11 @@ func GetViper() *Config {
 
 func init() {
 
-	flag.StringVar(&cfg.Env, "env", "", "the environment and config that used")
+	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
 	flag.Parse()
-	config.InitViper("simple_server", "./conf", cfg.Env, &cfg, false)
+	if err := config.InitViper("simple_client", "./conf", cfg.Env, &cfg, false); err != nil {
+		panic(err.Error())
+	}
 }
 
 // @title Nethopper Simple Server
@@ -82,41 +95,18 @@ func init() {
 func main() {
 
 	//runtime.GOMAXPROCS(1)
-	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       DEBUG,
-		"maxSize":     5000,
-		"maxLines":    10000000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
-		"driver":      "mysql",
-		"dsn":         "root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
-	}
-	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("mysql", db.ModuleCreate)
-	//	RegisterModule("tcp", tcp.SocketModuleCreate)
-	RegisterModule("logic", logic.ModuleCreate)
-	RegisterModule("http", http.ModuleCreate)
-	RegisterModule("redis", redis.ModuleCreate)
-	RegisterModule("wsjson", wsjson.ModuleCreate)
-	//RegisterModule("tcp", tcp.ModuleCreate)
-	//RegisterModule("kcp", kcp.ModuleCreate)
-	RegisterModule("quic", quic.ModuleCreate)
-	//RegisterModule("wspb", wspb.ModuleCreate)
-	RegisterModule("grpc", grpc.ModuleCreate)
-	//	RegisterModule("redis", redis.RedisModuleCreate)
-	NewNamedModule(ModuleIDLog, "log", nil, m)
-	NewNamedModule(ModuleIDDB, "mysql", nil, m)
-	NewNamedModule(ModuleIDRedis, "redis", nil, m)
-	//NewNamedModule(ModuleIDTCP, "tcp", nil, m)
-	NewNamedModule(ModuleIDLogic, "logic", nil, m)
-	NewNamedModule(ModuleIDHTTP, "http", nil, m)
-	NewNamedModule(ModuleIDWSServer, "wsjson", nil, m)
-	NewNamedModule(ModuleIDGRPCServer, "grpc", nil, m)
-	//NewNamedModule(ModuleIDTCP, "tcp", nil, m)
-	//NewNamedModule(ModuleIDKCP, "kcp", nil, m)
-	NewNamedModule(ModuleIDQUIC, "quic", nil, m)
+
+	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, m)
+	NewNamedModule(ModuleIDRedis, "redis", redis.ModuleCreate, nil, m)
+	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, m)
+	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, m)
+	NewNamedModule(ModuleIDWSServer, "wsjson", wsjson.ModuleCreate, nil, m)
+	//NewNamedModule(ModuleIDWSServer, "wspb", wspb.ModuleCreate, nil, m)
+	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc.ModuleCreate, nil, m)
+	//NewNamedModule(ModuleIDTCP, "tcp",tcp.ModuleCreate, nil, m)
+	//NewNamedModule(ModuleIDKCP, "kcp",kcp.ModuleCreate, nil, m)
+	//NewNamedModule(ModuleIDQUIC, "quic", quic.ModuleCreate, nil, m)
 	InitSignal()
 	//GracefulExit()
 }

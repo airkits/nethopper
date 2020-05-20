@@ -64,29 +64,30 @@ func (c *Client) init() {
 
 }
 
-func (c *Client) dial(serverID int, address string) *websocket.Conn {
+func (c *Client) dial(serverID int, address string) (*websocket.Conn, error) {
 	headers := make(http.Header)
 	headers.Set(common.HeaderToken, c.Conf.Token)
 	headers.Set(common.HeaderUID, fmt.Sprintf("%d", serverID))
-	for {
-		conn, _, err := c.dialer.Dial(address, headers)
-		if err == nil || c.closeFlag {
-			return conn
-		}
 
-		server.Warning("connect to %v error: %v", address, err)
-		time.Sleep(c.Conf.ConnectInterval)
-		continue
+	conn, _, err := c.dialer.Dial(address, headers)
+	if err == nil || c.closeFlag {
+		return conn, nil
 	}
+	return nil, err
 }
 
 func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	conn := c.dial(serverID, address)
-	if conn == nil {
-		return
+	conn, err := c.dial(serverID, address)
+	if err != nil {
+		server.Fatal("websocket client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		if c.Conf.AutoReconnect {
+			time.Sleep(c.Conf.ConnectInterval * time.Second)
+			server.Warning("websocket client try reconnect to id:[%d] %s %s", serverID, name, address)
+			goto reconnect
+		}
 	}
 	conn.SetReadLimit(int64(c.Conf.MaxMessageSize))
 
@@ -112,7 +113,8 @@ reconnect:
 	agent.OnClose()
 
 	if c.Conf.AutoReconnect {
-		time.Sleep(c.Conf.ConnectInterval)
+		time.Sleep(c.Conf.ConnectInterval * time.Second)
+		server.Warning("websocket client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

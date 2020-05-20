@@ -2,7 +2,7 @@ server:
   name: simple_client
 
 log:
-  filename: client.log
+  filename: logs/client.log
   level: 7
   max_size: 5000
   max_lines: 10000000
@@ -103,4 +103,3 @@ kcp_client:
 logic:
   worker_pool_capacity: 128
   queue_size: 1000
-

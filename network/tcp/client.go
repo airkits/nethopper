@@ -56,27 +56,19 @@ func (c *Client) init() {
 
 }
 
-func (c *Client) dial(serverID int, address string) net.Conn {
-	for {
-		//conn, err := net.DialTimeout(c.Network, c.Address, time.Second*30)
-		conn, err := net.Dial(c.Conf.Network, address)
-		if err == nil {
-			return conn
-		}
-
-		server.Warning("connect to %v error: %v", address, err)
-		time.Sleep(c.Conf.ConnectInterval)
-		continue
-	}
-}
-
 func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	conn := c.dial(serverID, address)
-	if conn == nil {
-		return
+	//conn, err := net.DialTimeout(c.Network, c.Address, time.Second*30)
+	conn, err := net.Dial(c.Conf.Network, address)
+	if err != nil {
+		server.Fatal("tcp client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		if c.Conf.AutoReconnect {
+			time.Sleep(c.Conf.ConnectInterval * time.Second)
+			server.Warning("tcp client try reconnect to id:[%d] %s %s", serverID, name, address)
+			goto reconnect
+		}
 	}
 	c.Lock()
 	c.conns[conn] = struct{}{}
@@ -95,7 +87,8 @@ reconnect:
 	agent.OnClose()
 
 	if c.Conf.AutoReconnect {
-		time.Sleep(c.Conf.ConnectInterval)
+		time.Sleep(c.Conf.ConnectInterval * time.Second)
+		server.Warning("tcp client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

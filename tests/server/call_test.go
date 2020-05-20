@@ -58,17 +58,16 @@ func (g *Factory) CallStructNameArgs(v ...interface{}) int {
 	return v[0].(int)
 }
 func initServer() error {
-	RegisterModule("log", log.LogModuleCreate)
-	m := map[string]interface{}{
-		"filename":    "logs/server_call.log",
-		"level":       4,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
+	conf := log.Config{
+		Filename:     "logs/server_log.log",
+		Level:        7,
+		MaxLines:     1000,
+		MaxSize:      50,
+		HourEnabled:  true,
+		DailyEnabled: true,
+		QueueSize:    1000,
 	}
-	NewNamedModule(ModuleIDLog, "log", nil, m)
+	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &conf)
 
 	return nil
 }

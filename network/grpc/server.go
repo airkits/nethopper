@@ -13,20 +13,10 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-//Config grpc conn config
-type Config struct {
-	Address        string
-	MaxConnNum     int
-	RWQueueSize    int
-	MaxMessageSize uint32
-}
-
 //NewServer create grpc server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf *ServerConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
-	if err := s.ReadConfig(m); err != nil {
-		panic(err)
-	}
+	s.Conf = conf
 	s.NewAgent = agentFunc
 	s.CloseAgent = agentCloseFunc
 
@@ -36,7 +26,7 @@ func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 // Server grpc server define
 type Server struct {
 	ss.UnimplementedRPCServer
-	Config
+	Conf       *ServerConfig
 	NewAgent   network.AgentCreateFunc
 	CloseAgent network.AgentCloseFunc
 	gs         *grpc.Server
@@ -45,30 +35,6 @@ type Server struct {
 	mutexConns sync.Mutex
 	wg         sync.WaitGroup
 	q          queue.Queue
-}
-
-// ReadConfig config map
-// m := map[string]interface{}{
-//  "address":":14000",
-//	"maxConnNum":1024,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-// }
-func (s *Server) ReadConfig(m map[string]interface{}) error {
-
-	if err := server.ParseConfigValue(m, "address", ":14000", &s.Address); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &s.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &s.MaxMessageSize); err != nil {
-		return err
-	}
-	return nil
 }
 
 //ListenAndServe start serve
@@ -81,13 +47,13 @@ func (s *Server) ListenAndServe() {
 	s.gs = grpc.NewServer()
 	ss.RegisterRPCServer(s.gs, s)
 
-	lis, err := net.Listen("tcp", s.Address)
+	lis, err := net.Listen("tcp", s.Conf.Address)
 
 	if err != nil {
 		server.Error("failed to listen: %v", err)
 		return
 	}
-	server.Info("grpc start listen:%s", s.Address)
+	server.Info("grpc start listen:%s", s.Conf.Address)
 	s.listener = lis
 	s.gs.Serve(lis)
 }
@@ -132,7 +98,7 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 	s.mutexConns.Unlock()
 
 	var agent network.IAgent
-	conn := NewConn(stream, s.RWQueueSize, s.MaxMessageSize)
+	conn := NewConn(stream, s.Conf.SocketQueueSize, s.Conf.MaxMessageSize)
 	agent = s.NewAgent(conn, uid, token)
 
 	agent.Run()

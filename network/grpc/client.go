@@ -67,7 +67,7 @@ reconnect:
 	if err != nil {
 		server.Fatal("grpc client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.Conf.AutoReconnect {
-			time.Sleep(c.Conf.ConnectInterval)
+			time.Sleep(c.Conf.ConnectInterval * time.Second)
 			server.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
@@ -81,7 +81,7 @@ reconnect:
 	if err != nil {
 		server.Info("grpc client connect to id:[%d] %s %s transport failed, reason %v", serverID, name, address, err.Error())
 		if c.Conf.AutoReconnect {
-			time.Sleep(c.Conf.ConnectInterval)
+			time.Sleep(c.Conf.ConnectInterval * time.Second)
 			server.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
@@ -106,7 +106,7 @@ reconnect:
 	agent.OnClose()
 
 	if c.Conf.AutoReconnect {
-		time.Sleep(c.Conf.ConnectInterval)
+		time.Sleep(c.Conf.ConnectInterval * time.Second)
 		server.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}

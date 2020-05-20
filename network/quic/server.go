@@ -17,11 +17,9 @@ import (
 )
 
 //NewServer create quic server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf *ServerConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
-	if err := s.ReadConfig(m); err != nil {
-		panic(err)
-	}
+	s.Conf = conf
 	s.NewAgent = agentFunc
 	s.CloseAgent = agentCloseFunc
 
@@ -30,61 +28,13 @@ func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 
 // Server quic server define
 type Server struct {
-	Config
+	Conf       *ServerConfig
 	NewAgent   network.AgentCreateFunc
 	listener   quic.Listener
 	CloseAgent network.AgentCloseFunc
 	conns      ConnSet
 	mutexConns sync.Mutex
 	wg         sync.WaitGroup
-}
-
-// ReadConfig config map
-// m := map[string]interface{}{
-// readBufferSize default 32767
-// writeBufferSize default 32767
-// address default :16000
-// network default "quic4"  use "quic4/quic6"
-// readDeadline default 15
-//	"maxConnNum":1024,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096
-// //tls support
-//  "certFile":"",
-//  "keyFile":"",
-// }
-func (s *Server) ReadConfig(m map[string]interface{}) error {
-
-	if err := server.ParseConfigValue(m, "address", ":16000", &s.Address); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &s.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &s.MaxMessageSize); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "readBufferSize", 32767, &s.ReadBufferSize); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "writeBufferSize", 32767, &s.WriteBufferSize); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "network", "quic4", &s.Network); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "readDeadline", 15, &s.ReadDeadline); err != nil {
-		return err
-	}
-	s.ReadDeadline = s.ReadDeadline * time.Second
-	return nil
 }
 
 // Setup a bare-bones TLS config for the server
@@ -114,13 +64,13 @@ func (s *Server) generateTLSConfig() *tls.Config {
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
 
-	listener, err := quic.ListenAddr(s.Address, s.generateTLSConfig(), nil)
+	listener, err := quic.ListenAddr(s.Conf.Address, s.generateTLSConfig(), nil)
 	if err != nil {
 		panic(err)
 	}
 	s.listener = listener
 
-	server.Info("listening on: %s %s", s.Network, listener.Addr())
+	server.Info("listening on: %s %s", s.Conf.Network, listener.Addr())
 
 	// loop accepting
 	for {
@@ -150,7 +100,7 @@ func (s *Server) Transport(sess quic.Session, stream quic.Stream) error {
 	// s.mutexConns.Unlock()
 
 	var agent network.IAgent
-	c := NewConn(sess, stream, s.RWQueueSize, s.MaxMessageSize, s.ReadDeadline)
+	c := NewConn(sess, stream, s.Conf.SocketQueueSize, s.Conf.MaxMessageSize, s.Conf.ReadDeadline*time.Second)
 	agent = s.NewAgent(c, 0, "")
 	agent.Run()
 

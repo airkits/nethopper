@@ -56,28 +56,27 @@ func (c *Client) init() {
 
 }
 
-func (c *Client) dial(serverID int, address string) *kcp.UDPSession {
-	for {
-		conn, err := kcp.DialWithOptions(address, nil, 0, 0)
-		if err == nil {
-			return conn
-		}
-
-		server.Warning("connect to %v error: %v", address, err)
-		time.Sleep(c.Conf.ConnectInterval)
-		continue
+func (c *Client) dial(serverID int, address string) (*kcp.UDPSession, error) {
+	conn, err := kcp.DialWithOptions(address, nil, 0, 0)
+	if err == nil {
+		return conn, nil
 	}
+	return nil, err
 }
 
 func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	conn := c.dial(serverID, address)
-	if conn == nil {
-		return
+	conn, err := c.dial(serverID, address)
+	if err != nil {
+		server.Fatal("kcp client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		if c.Conf.AutoReconnect {
+			time.Sleep(c.Conf.ConnectInterval * time.Second)
+			server.Warning("kcp client try reconnect to id:[%d] %s %s", serverID, name, address)
+			goto reconnect
+		}
 	}
-
 	conn.SetDSCP(c.Conf.Dscp)
 	conn.SetWindowSize(c.Conf.Sndwnd, c.Conf.Rcvwnd)
 	conn.SetNoDelay(c.Conf.Nodelay, c.Conf.Interval, c.Conf.Resend, c.Conf.Nc)
@@ -87,7 +86,7 @@ reconnect:
 	c.Lock()
 	c.conns[conn] = struct{}{}
 	c.Unlock()
-	kcpConn := NewConn(conn, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize, c.Conf.ReadDeadline)
+	kcpConn := NewConn(conn, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize, c.Conf.ReadDeadline*time.Second)
 	agent := c.NewAgent(kcpConn, c.Conf.UID, c.Conf.Token)
 	agent.Run()
 
@@ -100,7 +99,8 @@ reconnect:
 	agent.OnClose()
 
 	if c.Conf.AutoReconnect {
-		time.Sleep(c.Conf.ConnectInterval)
+		time.Sleep(c.Conf.ConnectInterval * time.Second)
+		server.Warning("kcp client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

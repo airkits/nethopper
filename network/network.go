@@ -38,14 +38,12 @@ import (
 
 // IClient network client interface
 type IClient interface {
-	ReadConfig(m map[string]interface{}) error
 	Run()
 	Close()
 }
 
 //IServer network server interface
 type IServer interface {
-	ReadConfig(m map[string]interface{}) error
 	ListenAndServe()
 	Close()
 }

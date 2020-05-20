@@ -57,41 +57,48 @@ func (c *Client) init() {
 	c.conns = make(ConnSet)
 }
 
-func (c *Client) dial(serverID int, address string) quic.Session {
-	for {
-		tlsConf := &tls.Config{
-			InsecureSkipVerify: true,
-			NextProtos:         []string{"quic-echo-example"},
-		}
-		session, err := quic.DialAddr(address, tlsConf, nil)
-		if err == nil {
-			return session
-		}
-
-		server.Warning("connect to %v error: %v", address, err)
-		time.Sleep(c.Conf.ConnectInterval)
-		continue
+func (c *Client) dial(serverID int, address string) (quic.Session, error) {
+	tlsConf := &tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"quic-echo-example"},
 	}
+	session, err := quic.DialAddr(address, tlsConf, nil)
+	if err == nil {
+		return session, nil
+	}
+	return nil, err
+
 }
 
 func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	sess := c.dial(serverID, address)
-	if sess == nil {
-		return
+	sess, err := c.dial(serverID, address)
+	if err != nil {
+		server.Fatal("quic client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		if c.Conf.AutoReconnect {
+			time.Sleep(c.Conf.ConnectInterval * time.Second)
+			server.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
+			goto reconnect
+		}
 	}
+
+	stream, err := sess.OpenStreamSync(context.Background())
+	if err != nil {
+		server.Info("quic client connect to id:[%d] %s %s transport failed, reason %v", serverID, name, address, err.Error())
+		if c.Conf.AutoReconnect {
+			time.Sleep(c.Conf.ConnectInterval * time.Second)
+			server.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
+			goto reconnect
+		}
+	}
+	server.Info("quic client create new connection to id:[%d] %s %s.", serverID, name, address)
 	c.Lock()
 	c.conns[sess] = struct{}{}
 	c.Unlock()
 
-	stream, err := sess.OpenStreamSync(context.Background())
-	if err != nil {
-		return
-	}
-
-	quicConn := NewConn(sess, stream, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize, c.Conf.ReadDeadline)
+	quicConn := NewConn(sess, stream, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize, c.Conf.ReadDeadline*time.Second)
 	agent := c.NewAgent(quicConn, c.Conf.UID, c.Conf.Token)
 	agent.Run()
 
@@ -104,7 +111,8 @@ reconnect:
 	agent.OnClose()
 
 	if c.Conf.AutoReconnect {
-		time.Sleep(c.Conf.ConnectInterval)
+		time.Sleep(c.Conf.ConnectInterval * time.Second)
+		server.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

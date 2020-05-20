@@ -31,10 +31,10 @@ import (
 	"flag"
 
 	"github.com/gonethopper/nethopper/config"
-	grpc_client "github.com/gonethopper/nethopper/examples/simple_client/modules/grpc"
-	kcp_client "github.com/gonethopper/nethopper/examples/simple_client/modules/kcp"
-	quic_client "github.com/gonethopper/nethopper/examples/simple_client/modules/quic"
-	tcp_client "github.com/gonethopper/nethopper/examples/simple_client/modules/tcp"
+	// grpc_client "github.com/gonethopper/nethopper/examples/simple_client/modules/grpc"
+	// kcp_client "github.com/gonethopper/nethopper/examples/simple_client/modules/kcp"
+	// quic_client "github.com/gonethopper/nethopper/examples/simple_client/modules/quic"
+	// tcp_client "github.com/gonethopper/nethopper/examples/simple_client/modules/tcp"
 
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/wsjson"
@@ -83,10 +83,10 @@ func main() {
 	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
 	//NewNamedModule(ModuleIDWSClient, "wspb",wspb.ModuleCreate, nil, &cfg.WS)
 	NewNamedModule(ModuleIDWSClient, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
-	NewNamedModule(ModuleIDGRPCClient, "grpc", grpc_client.ModuleCreate, nil, &cfg.GPRC)
-	NewNamedModule(ModuleIDTCPClient, "tcp", tcp_client.ModuleCreate, nil, &cfg.TCP)
-	NewNamedModule(ModuleIDKCPClient, "kcp", kcp_client.ModuleCreate, nil, &cfg.KCP)
-	NewNamedModule(ModuleIDQUICClient, "quic", quic_client.ModuleCreate, nil, &cfg.QUIC)
+	//NewNamedModule(ModuleIDGRPCClient, "grpc", grpc_client.ModuleCreate, nil, &cfg.GPRC)
+	// NewNamedModule(ModuleIDTCPClient, "tcp", tcp_client.ModuleCreate, nil, &cfg.TCP)
+	// NewNamedModule(ModuleIDKCPClient, "kcp", kcp_client.ModuleCreate, nil, &cfg.KCP)
+	// NewNamedModule(ModuleIDQUICClient, "quic", quic_client.ModuleCreate, nil, &cfg.QUIC)
 	InitSignal()
 	//GracefulExit()
 }

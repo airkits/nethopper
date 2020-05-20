@@ -62,16 +62,17 @@ func TestFormatLog(t *testing.T) {
 }
 
 func TestNewFileLogger(t *testing.T) {
-	m := map[string]interface{}{
-		"filename":    "logs/server_log.log",
-		"level":       7,
-		"maxSize":     50,
-		"maxLines":    1000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
+
+	conf := log.Config{
+		Filename:     "logs/server_log.log",
+		Level:        7,
+		MaxLines:     1000,
+		MaxSize:      50,
+		HourEnabled:  true,
+		DailyEnabled: true,
+		QueueSize:    1000,
 	}
-	logger, err := log.NewFileLogger(m)
+	logger, err := log.NewFileLogger(&conf)
 	if err != nil {
 		t.Error(err)
 	}

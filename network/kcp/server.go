@@ -11,11 +11,9 @@ import (
 )
 
 //NewServer create kcp server
-func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf *ServerConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
-	if err := s.ReadConfig(m); err != nil {
-		panic(err)
-	}
+	s.Conf = conf
 	s.NewAgent = agentFunc
 	s.CloseAgent = agentCloseFunc
 	return s
@@ -23,7 +21,7 @@ func NewServer(m map[string]interface{}, agentFunc network.AgentCreateFunc, agen
 
 // Server kcp server define
 type Server struct {
-	Config
+	Conf        *ServerConfig
 	NewAgent    network.AgentCreateFunc
 	CloseAgent  network.AgentCloseFunc
 	kcpListener *kcp.Listener
@@ -32,91 +30,24 @@ type Server struct {
 	wg          sync.WaitGroup
 }
 
-// ReadConfig config map
-// m := map[string]interface{}{
-// udpSocketBuf default 4194304
-// address default :14000
-// readDeadline default 15
-//	"maxConnNum":1024,
-//  "socketQueueSize":100,
-//  "maxMessageSize":4096,
-//  "":0,
-//  "":0,
-//  "":0,
-//  "":0,
-//  "":0,
-//  "":0,
-// }
-func (s *Server) ReadConfig(m map[string]interface{}) error {
-
-	if err := server.ParseConfigValue(m, "address", ":14000", &s.Address); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxConnNum", 1024, &s.MaxConnNum); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "socketQueueSize", 100, &s.RWQueueSize); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "maxMessageSize", 4096, &s.MaxMessageSize); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "udpSocketBuf", 4194304, &s.UDPSocketBufferSize); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "udpSndWnd", 32, &s.sndwnd); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "udpRcvWnd", 32, &s.rcvwnd); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "udpMtu", 1280, &s.mtu); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "dscp", 46, &s.dscp); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "nodelay", 1, &s.nodelay); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "interval", 20, &s.interval); err != nil {
-		return err
-	}
-
-	if err := server.ParseConfigValue(m, "resend", 1, &s.resend); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "nc", 1, &s.nc); err != nil {
-		return err
-	}
-	if err := server.ParseConfigValue(m, "readDeadline", 15, &s.ReadDeadline); err != nil {
-		return err
-	}
-	s.ReadDeadline = s.ReadDeadline * time.Second
-	return nil
-}
-
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
 
 	// Listen and bind local ip
-	listener, err := kcp.Listen(s.Address)
+	listener, err := kcp.Listen(s.Conf.Address)
 	if err != nil {
 		panic(err)
 	}
 	server.Info("KCP listening on: %s", listener.Addr())
 	s.kcpListener = listener.(*kcp.Listener)
 
-	if err := s.kcpListener.SetReadBuffer(s.UDPSocketBufferSize); err != nil {
+	if err := s.kcpListener.SetReadBuffer(s.Conf.UDPSocketBufferSize); err != nil {
 		server.Error("SetReadBuffer", err)
 	}
-	if err := s.kcpListener.SetWriteBuffer(s.UDPSocketBufferSize); err != nil {
+	if err := s.kcpListener.SetWriteBuffer(s.Conf.UDPSocketBufferSize); err != nil {
 		server.Error("SetWriteBuffer", err)
 	}
-	if err := s.kcpListener.SetDSCP(s.dscp); err != nil {
+	if err := s.kcpListener.SetDSCP(s.Conf.Dscp); err != nil {
 		server.Error("SetDSCP", err)
 	}
 	// loop accepting
@@ -127,10 +58,10 @@ func (s *Server) ListenAndServe() {
 			continue
 		}
 		// set kcp parameters
-		conn.SetWindowSize(s.sndwnd, s.rcvwnd)
-		conn.SetNoDelay(s.nodelay, s.interval, s.resend, s.nc)
+		conn.SetWindowSize(s.Conf.Sndwnd, s.Conf.Rcvwnd)
+		conn.SetNoDelay(s.Conf.Nodelay, s.Conf.Interval, s.Conf.Resend, s.Conf.Nc)
 		conn.SetStreamMode(true)
-		conn.SetMtu(s.mtu)
+		conn.SetMtu(s.Conf.Mtu)
 		// start a goroutine for every incoming connection for reading
 		//go conn
 		go s.Transport(conn)
@@ -147,7 +78,7 @@ func (s *Server) Transport(conn net.Conn) error {
 	// s.mutexConns.Unlock()
 
 	var agent network.IAgent
-	c := NewConn(conn, s.RWQueueSize, s.MaxMessageSize, s.ReadDeadline)
+	c := NewConn(conn, s.Conf.SocketQueueSize, s.Conf.MaxMessageSize, s.Conf.ReadDeadline*time.Second)
 	agent = s.NewAgent(c, 0, "")
 	agent.Run()
 

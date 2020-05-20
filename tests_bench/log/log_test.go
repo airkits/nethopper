@@ -57,17 +57,16 @@ func BenchmarkFormatLogWithParams(t *testing.B) {
 
 func BenchmarkWriteLog(b *testing.B) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       4,
-		"maxSize":     50,
-		"maxLines":    100000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
+	conf := log.Config{
+		Filename:     "logs/server_log.log",
+		Level:        7,
+		MaxLines:     1000,
+		MaxSize:      50,
+		HourEnabled:  true,
+		DailyEnabled: true,
+		QueueSize:    1000,
 	}
-
-	logger, err := log.NewFileLogger(m)
+	logger, err := log.NewFileLogger(&conf)
 	if err != nil {
 		b.Error(err)
 	}

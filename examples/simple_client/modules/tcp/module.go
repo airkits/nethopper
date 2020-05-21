@@ -64,7 +64,7 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	s.RegisterHandler(common.SSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
-	s.tcpClient = tcp.NewClient(conf.(*tcp.ClientConfig), func(conn network.IConn, uid uint64, token string) network.IAgent {
+	s.tcpClient = tcp.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		network.GetInstance().AddAgent(a)
 		return a

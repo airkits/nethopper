@@ -28,9 +28,13 @@
 package main
 
 import (
+	"github.com/gonethopper/nethopper/cache"
 	"github.com/gonethopper/nethopper/config"
+	"github.com/gonethopper/nethopper/database"
 	"github.com/gonethopper/nethopper/network/common"
+	"github.com/gonethopper/nethopper/network/grpc"
 	"github.com/gonethopper/nethopper/network/kcp"
+	"github.com/gonethopper/nethopper/network/quic"
 	"github.com/gonethopper/nethopper/network/tcp"
 	"github.com/gonethopper/nethopper/network/ws"
 
@@ -40,10 +44,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
+	grpc_server "github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/quic"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
@@ -58,8 +61,10 @@ type Config struct {
 	KCP   kcp.ServerConfig   `mapstructure:"kcp"`
 	QUIC  quic.ServerConfig  `mapstructure:"quic"`
 	TCP   tcp.ServerConfig   `mapstructure:"tcp"`
-	WS    ws.ServerConfig    `mapstructure:"ws"`
+	WS    ws.ServerConfig    `mapstructure:"wsjson"`
 	Logic common.LogicConfig `mapstructure:"logic"`
+	Mysql database.Config    `mapstructure:"mysql"`
+	Redis cache.Config       `mapstructure:"redis"`
 }
 
 var cfg Config
@@ -73,7 +78,7 @@ func init() {
 
 	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
 	flag.Parse()
-	if err := config.InitViper("simple_client", "./conf", cfg.Env, &cfg, false); err != nil {
+	if err := config.InitViper("simple_server", "./conf", cfg.Env, &cfg, false); err != nil {
 		panic(err.Error())
 	}
 }
@@ -97,16 +102,16 @@ func main() {
 	//runtime.GOMAXPROCS(1)
 
 	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
-	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, m)
-	NewNamedModule(ModuleIDRedis, "redis", redis.ModuleCreate, nil, m)
-	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, m)
-	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, m)
-	NewNamedModule(ModuleIDWSServer, "wsjson", wsjson.ModuleCreate, nil, m)
-	//NewNamedModule(ModuleIDWSServer, "wspb", wspb.ModuleCreate, nil, m)
-	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc.ModuleCreate, nil, m)
-	//NewNamedModule(ModuleIDTCP, "tcp",tcp.ModuleCreate, nil, m)
-	//NewNamedModule(ModuleIDKCP, "kcp",kcp.ModuleCreate, nil, m)
-	//NewNamedModule(ModuleIDQUIC, "quic", quic.ModuleCreate, nil, m)
+	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)
+	NewNamedModule(ModuleIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
+	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
+	NewNamedModule(ModuleIDWSServer, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
+	//NewNamedModule(ModuleIDWSServer, "wspb", wspb.ModuleCreate, nil,&cfg.Log)
+	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc_server.ModuleCreate, nil, &cfg.GPRC)
+	//NewNamedModule(ModuleIDTCP, "tcp",tcp.ModuleCreate, nil, &cfg.Tcp)
+	//NewNamedModule(ModuleIDKCP, "kcp",kcp.ModuleCreate, nil, &cfg.Kcp)
+	NewNamedModule(ModuleIDQUIC, "quic", grpc_server.ModuleCreate, nil, &cfg.QUIC)
 	InitSignal()
 	//GracefulExit()
 }

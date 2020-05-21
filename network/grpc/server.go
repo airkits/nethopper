@@ -14,9 +14,9 @@ import (
 )
 
 //NewServer create grpc server
-func NewServer(conf *ServerConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
-	s.Conf = conf
+	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
 	s.CloseAgent = agentCloseFunc
 

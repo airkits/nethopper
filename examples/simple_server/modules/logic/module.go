@@ -54,7 +54,7 @@ func ModuleCreate() (server.Module, error) {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil

@@ -31,14 +31,28 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gonethopper/nethopper/cache"
 	"github.com/gonethopper/nethopper/cache/redis"
 )
 
 func TestRedis(t *testing.T) {
-	m := map[string]interface{}{
-		"address": "127.0.0.1:6379",
+
+	node := cache.NodeInfo{
+		ID:       0,
+		Password: "",
+		Address:  "127.0.0.1:6378",
+		DB:       0,
 	}
-	redisCache, err := redis.NewRedisCache(m)
+	conf := cache.Config{
+		Nodes:           []cache.NodeInfo{node},
+		QueueSize:       1000,
+		ConnectInterval: 3,
+		MaxActive:       10,
+		MaxIdle:         8,
+		AutoReconnect:   true,
+	}
+
+	redisCache, err := redis.NewRedisCache(&conf)
 	if err != nil {
 		t.Error(err)
 	}

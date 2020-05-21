@@ -1,5 +1,4 @@
-server:
-  name: simple_server
+name: simple_server
 
 log:
   filename: server.log
@@ -8,9 +7,11 @@ log:
   max_lines: 100000
   hour_enabled: false
   daily_enabled: true
+  queue_size: 1000
 
 http:
   address: :11080
+  queue_size: 1000
 
 tcp:
   address: :15000
@@ -22,6 +23,7 @@ tcp:
   network: tcp4
   read_dead_line: 15
   worker_pool_capacity: 128
+  queue_size: 1000
 
 kcp:
   address: :14000
@@ -39,6 +41,7 @@ kcp:
   nc: 1
   read_dead_line: 15
   worker_pool_capacity: 128
+  queue_size: 1000
 
 quic:
   address: :16000
@@ -50,6 +53,7 @@ quic:
   network: quic4
   read_dead_line: 15
   worker_pool_capacity: 128
+  queue_size: 1000
 
 wsjson:
   address: :12080
@@ -60,6 +64,7 @@ wsjson:
   cert_file:
   key_file:
   worker_pool_capacity: 128
+  queue_size: 1000
 
 wspb:
   address: :12080
@@ -70,6 +75,7 @@ wspb:
   cert_file:
   key_file:
   worker_pool_capacity: 128
+  queue_size: 1000
 
 grpc:
   address: :14000
@@ -77,6 +83,7 @@ grpc:
   socket_queue_size: 100
   max_message_size: 4096
   worker_pool_capacity: 128
+  queue_size: 1000
 
 grpc_client:
   conn_num: 1
@@ -85,6 +92,7 @@ grpc_client:
   auto_reconnect: true
   max_message_size: 4096
   socket_queue_size: 100
+  queue_size: 1000
   nodes:
     - id: 0
       name: game1
@@ -92,11 +100,11 @@ grpc_client:
 
 mysql:
   worker_pool_capacity: 128
+  queue_size: 1000
   nodes:
-  - id: 0
-    driver: mysql
-    dsn: root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai
-
+    - id: 0
+      driver: mysql
+      dsn: root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai
 
 redis:
   max_idle: 8
@@ -108,7 +116,7 @@ redis:
   queue_size: 1000
   nodes:
     - id: 0
-      password: 
+      password:
       address: 127.0.0.1:6379
       db: 0
 

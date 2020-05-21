@@ -67,7 +67,7 @@ type Module struct {
 //  "certFile":"",
 //  "keyFile":"",
 // }
-func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	if err := s.ReadConfig(m); err != nil {
 		panic(err)
 	}

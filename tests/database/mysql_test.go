@@ -31,17 +31,22 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gonethopper/nethopper/database"
 	"github.com/gonethopper/nethopper/database/sqlx"
 	. "github.com/gonethopper/nethopper/server"
 )
 
 func TestSQLConnection(t *testing.T) {
-	m := map[string]interface{}{
-		"queueSize": 1000,
-		"dsn":       "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
-		"driver":    "mysql",
+	node := database.NodeInfo{
+		ID:     0,
+		Driver: "mysql",
+		DSN:    "root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
 	}
-	if conn, err := sqlx.NewSQLConnection(m); err == nil {
+	conf := database.Config{
+		Nodes:     []database.NodeInfo{node},
+		QueueSize: 1000,
+	}
+	if conn, err := sqlx.NewSQLConnection(&conf); err == nil {
 		if err := conn.Open(); err != nil {
 			t.Error(err)
 			Error("error")

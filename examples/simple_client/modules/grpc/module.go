@@ -75,7 +75,7 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	s.RegisterHandler(common.SSLoginCmd, NotifyLogin)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	s.Clients = skiplist.New()
-	s.grpcClient = grpc.NewClient(conf.(*grpc.ClientConfig), func(conn network.IConn, uid uint64, token string) network.IAgent {
+	s.grpcClient = grpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		s.Clients.Set(float64(uid), a)
 		return a

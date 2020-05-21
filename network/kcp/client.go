@@ -11,9 +11,9 @@ import (
 )
 
 // NewClient create kcp client
-func NewClient(conf *ClientConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
+func NewClient(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
-	c.Conf = conf
+	c.Conf = conf.(*ClientConfig)
 	c.NewAgent = agentFunc
 	c.CloseAgent = agentCloseFunc
 

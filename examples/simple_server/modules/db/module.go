@@ -58,9 +58,9 @@ func ModuleCreate() (server.Module, error) {
 //  "driver:"mysql",
 //  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
-func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
-	conn, err := sqlx.NewSQLConnection(m)
+	conn, err := sqlx.NewSQLConnection(conf)
 	if err != nil {
 		return nil, err
 	}

@@ -36,7 +36,7 @@ import (
 )
 
 // NewSQLConnection create redis cache instance
-func NewSQLConnection(conf *database.Config) (*SQLConnection, error) {
+func NewSQLConnection(conf server.IConfig) (*SQLConnection, error) {
 	conn := &SQLConnection{}
 	return conn.Setup(conf)
 
@@ -49,8 +49,8 @@ type SQLConnection struct {
 }
 
 // Setup init cache with config
-func (s *SQLConnection) Setup(conf *database.Config) (*SQLConnection, error) {
-	s.Conf = conf
+func (s *SQLConnection) Setup(conf server.IConfig) (*SQLConnection, error) {
+	s.Conf = conf.(*database.Config)
 	s.pools = make([]*sqlx.DB, len(s.Conf.Nodes))
 	return s, nil
 }

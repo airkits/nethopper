@@ -30,15 +30,48 @@ package main
 import (
 
 	//"github.com/gonethopper/nethopper/cache/redis"
+	"flag"
+
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gonethopper/nethopper/cache"
+	"github.com/gonethopper/nethopper/config"
 	_ "github.com/gonethopper/nethopper/examples/micro_server/logic/docs"
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/gclient"
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/logic"
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/redis"
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/network/common"
+	"github.com/gonethopper/nethopper/network/http"
 	. "github.com/gonethopper/nethopper/server"
 )
+
+// Config server config
+type Config struct {
+	Env        string                   `default:"env"`
+	Log        log.Config               `mapstructure:"log"`
+	GPRC       grpc_server.ServerConfig `mapstructure:"grpc"`
+	GPRCClient grpc_server.ClientConfig `mapstructure:"grpc_client"`
+	Logic      common.LogicConfig       `mapstructure:"logic"`
+	Redis      cache.Config             `mapstructure:"redis"`
+	HTTP       http.ServerConfig        `mapstructure:"http"`
+}
+
+var cfg Config
+
+//GetViper get config
+func GetViper() *Config {
+	return &cfg
+}
+
+func init() {
+
+	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
+	flag.Parse()
+	if err := config.InitViper("logic", "./conf", cfg.Env, &cfg, false); err != nil {
+		panic(err.Error())
+	}
+}
 
 // @title Nethopper Micro Server - Logic
 // @version 1.0.2
@@ -57,31 +90,12 @@ import (
 func main() {
 
 	//runtime.GOMAXPROCS(1)
-	m := map[string]interface{}{
-		"filename":       "logs/server.log",
-		"level":          DEBUG,
-		"maxSize":        5000,
-		"maxLines":       10000000,
-		"hourEnabled":    false,
-		"dailyEnable":    true,
-		"queueSize":      1000,
-		"driver":         "mysql",
-		"dsn":            "root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
-		"address":        ":14000",
-		"grpcServerID_0": 0,
-		"grpcAddress_0":  ":14001",
-		"grpcName_0":     "grpcclient_0",
-	}
-	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("logic", logic.ModuleCreate)
-	RegisterModule("redis", redis.ModuleCreate)
-	RegisterModule("grpc", grpc.ModuleCreate)
-	RegisterModule("gclient", gclient.ModuleCreate)
-	NewNamedModule(ModuleIDLog, "log", nil, m)
-	NewNamedModule(ModuleIDRedis, "redis", nil, m)
-	NewNamedModule(ModuleIDLogic, "logic", nil, m)
-	NewNamedModule(ModuleIDGRPCServer, "grpc", nil, m)
-	NewNamedModule(ModuleIDGRPCClient, "gclient", nil, m)
+
+	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(ModuleIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
+	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
+	NewNamedModule(ModuleIDGRPCClient, "gclient", gclient.ModuleCreate, nil, &cfg.GPRCClient)
 	InitSignal()
 	//GracefulExit()
 }

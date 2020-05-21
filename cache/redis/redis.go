@@ -33,11 +33,12 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/gonethopper/nethopper/cache"
+	"github.com/gonethopper/nethopper/server"
 	"github.com/pkg/errors"
 )
 
 // NewRedisCache create redis cache instance
-func NewRedisCache(conf *cache.Config) (*RedisCache, error) {
+func NewRedisCache(conf server.IConfig) (*RedisCache, error) {
 	cache := &RedisCache{}
 	return cache.Setup(conf)
 
@@ -85,8 +86,8 @@ type RedisCache struct {
 }
 
 // Setup init cache with config
-func (c *RedisCache) Setup(conf *cache.Config) (*RedisCache, error) {
-	c.Conf = conf
+func (c *RedisCache) Setup(conf server.IConfig) (*RedisCache, error) {
+	c.Conf = conf.(*cache.Config)
 	c.pools = make([]*redis.Pool, len(c.Conf.Nodes))
 	for index, info := range c.Conf.Nodes {
 		pool := NewRedisPool(info.Address, info.Password, info.DB, c.Conf.MaxIdle, c.Conf.MaxActive, c.Conf.IdleTimeout)

@@ -83,7 +83,7 @@ type Module struct {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-
+	s.Conf = conf.(*http_server.ServerConfig)
 	s.gs = gin.New()
 
 	//s.gs = gin.Default()

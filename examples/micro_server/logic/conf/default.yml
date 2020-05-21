@@ -1,0 +1,55 @@
+name: logic0
+
+log:
+  filename: logs/server.log
+  level: 7
+  max_size: 1024
+  max_lines: 100000
+  hour_enabled: false
+  daily_enabled: true
+  queue_size: 1000
+
+http:
+  address: :11080
+  queue_size: 1000
+
+grpc_client:
+  conn_num: 1
+  connect_interval: 3
+  handshake_timeout: 10
+  auto_reconnect: true
+  max_message_size: 4096
+  socket_queue_size: 100
+  queue_size: 1000
+  nodes:
+    - id: 0
+      name: gamedb0
+      address: :14001
+
+
+grpc:
+  address: :14000
+  max_conn_num: 1024
+  socket_queue_size: 100
+  max_message_size: 4096
+  worker_pool_capacity: 128
+  queue_size: 1000
+
+
+redis:
+  max_idle: 8
+  max_active: 10
+  idle_timeout: 300
+  worker_pool_capacity: 128
+  connect_interval: 3
+  auto_reconnect: true
+  queue_size: 1000
+  nodes:
+    - id: 0
+      password:
+      address: 127.0.0.1:6379
+      db: 0
+
+logic:
+  worker_pool_capacity: 128
+  queue_size: 1000

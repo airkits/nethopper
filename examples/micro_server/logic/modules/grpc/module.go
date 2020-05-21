@@ -55,8 +55,8 @@ type Module struct {
 //  "socketQueueSize":100,
 //  "maxMessageSize":4096
 // }
-func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
-	s.gs = grpc.NewServer(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
+func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+	s.gs = grpc.NewServer(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		network.GetInstance().AddAgent(a)
 		return a

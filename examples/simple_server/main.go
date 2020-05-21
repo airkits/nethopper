@@ -33,8 +33,11 @@ import (
 	"github.com/gonethopper/nethopper/database"
 	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/network/kcp"
 	"github.com/gonethopper/nethopper/network/quic"
+
+	//	"github.com/gonethopper/nethopper/network/grpc"
+	"github.com/gonethopper/nethopper/network/kcp"
+	//"github.com/gonethopper/nethopper/network/quic"
 	"github.com/gonethopper/nethopper/network/tcp"
 	"github.com/gonethopper/nethopper/network/ws"
 
@@ -44,27 +47,32 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
-	grpc_server "github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
+
+	//	grpc_server "github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
+
+	//	quic_server "github.com/gonethopper/nethopper/examples/simple_server/modules/quic"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
+	http_server "github.com/gonethopper/nethopper/network/http"
 	. "github.com/gonethopper/nethopper/server"
 )
 
 // Config server config
 type Config struct {
-	Env   string             `default:"env"`
-	Log   log.Config         `mapstructure:"log"`
-	GPRC  grpc.ServerConfig  `mapstructure:"grpc"`
-	KCP   kcp.ServerConfig   `mapstructure:"kcp"`
-	QUIC  quic.ServerConfig  `mapstructure:"quic"`
-	TCP   tcp.ServerConfig   `mapstructure:"tcp"`
-	WS    ws.ServerConfig    `mapstructure:"wsjson"`
-	Logic common.LogicConfig `mapstructure:"logic"`
-	Mysql database.Config    `mapstructure:"mysql"`
-	Redis cache.Config       `mapstructure:"redis"`
+	Env   string                   `default:"env"`
+	Log   log.Config               `mapstructure:"log"`
+	GPRC  grpc.ServerConfig        `mapstructure:"grpc"`
+	KCP   kcp.ServerConfig         `mapstructure:"kcp"`
+	QUIC  quic.ServerConfig        `mapstructure:"quic"`
+	TCP   tcp.ServerConfig         `mapstructure:"tcp"`
+	WS    ws.ServerConfig          `mapstructure:"wsjson"`
+	Logic common.LogicConfig       `mapstructure:"logic"`
+	Mysql database.Config          `mapstructure:"mysql"`
+	Redis cache.Config             `mapstructure:"redis"`
+	HTTP  http_server.ServerConfig `mapstructure:"http"`
 }
 
 var cfg Config
@@ -108,10 +116,10 @@ func main() {
 	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
 	NewNamedModule(ModuleIDWSServer, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
 	//NewNamedModule(ModuleIDWSServer, "wspb", wspb.ModuleCreate, nil,&cfg.Log)
-	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc_server.ModuleCreate, nil, &cfg.GPRC)
+	//NewNamedModule(ModuleIDGRPCServer, "grpc", grpc_server.ModuleCreate, nil, &cfg.GPRC)
 	//NewNamedModule(ModuleIDTCP, "tcp",tcp.ModuleCreate, nil, &cfg.Tcp)
 	//NewNamedModule(ModuleIDKCP, "kcp",kcp.ModuleCreate, nil, &cfg.Kcp)
-	NewNamedModule(ModuleIDQUIC, "quic", grpc_server.ModuleCreate, nil, &cfg.QUIC)
+	//NewNamedModule(ModuleIDQUIC, "quic", quic_server.ModuleCreate, nil, &cfg.QUIC)
 	InitSignal()
 	//GracefulExit()
 }

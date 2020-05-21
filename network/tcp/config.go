@@ -38,7 +38,7 @@ type ServerConfig struct {
 	MaxMessageSize  uint32        `mapstructure:"max_message_size"`
 	ReadBufferSize  int           `mapstructure:"read_buffer_size"`
 	WriteBufferSize int           `mapstructure:"write_buffer_size"`
-	ReadDeadline    time.Duration `mapstructure:"max_conn_num"`
+	ReadDeadline    time.Duration `mapstructure:"read_dead_line"`
 	QueueSize       int           `mapstructure:"queue_size"`
 }
 

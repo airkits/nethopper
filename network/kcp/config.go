@@ -44,8 +44,8 @@ type ServerConfig struct {
 	UDPSocketBufferSize int           `mapstructure:"udp_socket_buffer_size"` //UDP listener socket buffer
 	ReadDeadline        time.Duration `mapstructure:"read_dead_line"`
 	Dscp                int           `mapstructure:"dscp"`     //set DSCP(6bit)
-	Sndwnd              int           `mapstructure:"sndwnd"`   //per connection UDP send window
-	Rcvwnd              int           `mapstructure:"rcvwnd"`   //per connection UDP recv window
+	Sndwnd              int           `mapstructure:"snd_wnd"`  //per connection UDP send window
+	Rcvwnd              int           `mapstructure:"recv_wnd"` //per connection UDP recv window
 	Mtu                 int           `mapstructure:"mtu"`      //MTU of UDP packets, without IP(20) + UDP(8)
 	Nodelay             int           `mapstructure:"nodelay"`  //ikcp_nodelay()
 	Interval            int           `mapstructure:"interval"` //ikcp_nodelay()

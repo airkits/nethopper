@@ -56,9 +56,9 @@ func ModuleCreate() (server.Module, error) {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 
-	cache, err := redis.NewRedisCache(m)
+	cache, err := redis.NewRedisCache(conf)
 	if err != nil {
 		return nil, err
 	}

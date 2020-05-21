@@ -30,14 +30,49 @@ package main
 import (
 
 	//"github.com/gonethopper/nethopper/cache/redis"
+	"flag"
+
+	"github.com/gonethopper/nethopper/config"
 	_ "github.com/gonethopper/nethopper/examples/micro_server/gate/docs"
 	"github.com/gonethopper/nethopper/examples/micro_server/gate/modules/gclient"
 	"github.com/gonethopper/nethopper/examples/micro_server/gate/modules/http"
 	"github.com/gonethopper/nethopper/examples/micro_server/gate/modules/logic"
 	"github.com/gonethopper/nethopper/examples/micro_server/gate/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/network/common"
+	grpc_server "github.com/gonethopper/nethopper/network/grpc"
+	http_server "github.com/gonethopper/nethopper/network/http"
+	"github.com/gonethopper/nethopper/network/ws"
 	. "github.com/gonethopper/nethopper/server"
 )
+
+// Config server config
+type Config struct {
+	Env        string                   `default:"env"`
+	Log        log.Config               `mapstructure:"log"`
+	GPRC       grpc_server.ServerConfig `mapstructure:"grpc"`
+	GPRCClient grpc_server.ClientConfig `mapstructure:"grpc_client"`
+	Logic      common.LogicConfig       `mapstructure:"logic"`
+	WSJSON     ws.ServerConfig          `mapstructure:"wsjson"`
+	WSPB       ws.ServerConfig          `mapstructure:"wspb"`
+	HTTP       http_server.ServerConfig `mapstructure:"http"`
+}
+
+var cfg Config
+
+//GetViper get config
+func GetViper() *Config {
+	return &cfg
+}
+
+func init() {
+
+	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
+	flag.Parse()
+	if err := config.InitViper("gate", "./conf", cfg.Env, &cfg, false); err != nil {
+		panic(err.Error())
+	}
+}
 
 // @title Nethopper Micro Server - Gate
 // @version 1.0.2
@@ -56,29 +91,12 @@ import (
 func main() {
 
 	//runtime.GOMAXPROCS(1)
-	m := map[string]interface{}{
-		"filename":       "logs/server.log",
-		"level":          DEBUG,
-		"maxSize":        5000,
-		"maxLines":       10000000,
-		"hourEnabled":    false,
-		"dailyEnable":    true,
-		"queueSize":      1000,
-		"grpcServerID_0": 0,
-		"grpcAddress_0":  ":14000",
-		"grpcName_0":     "grpcclient_0",
-	}
-	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("logic", logic.ModuleCreate)
-	RegisterModule("http", http.ModuleCreate)
-	RegisterModule("wsjson", wsjson.ModuleCreate)
-	//RegisterModule("wspb", wspb.ModuleCreate)
-	RegisterModule("gclient", gclient.ModuleCreate)
-	NewNamedModule(ModuleIDLog, "log", nil, m)
-	NewNamedModule(ModuleIDLogic, "logic", nil, m)
-	NewNamedModule(ModuleIDHTTP, "http", nil, m)
-	NewNamedModule(ModuleIDWSServer, "wsjson", nil, m)
-	NewNamedModule(ModuleIDGRPCClient, "gclient", nil, m)
+
+	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
+	NewNamedModule(ModuleIDWSServer, "wsjson", wsjson.ModuleCreate, nil, &cfg.WSJSON)
+	NewNamedModule(ModuleIDGRPCClient, "gclient", gclient.ModuleCreate, nil, &cfg.GPRCClient)
 	InitSignal()
 	//GracefulExit()
 }

@@ -33,6 +33,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	http_server "github.com/gonethopper/nethopper/network/http"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/context"
 	swaggerFiles "github.com/swaggo/files"
@@ -66,9 +67,9 @@ func SessionHTTPMiddleware(next http.Handler) http.Handler {
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	Address string
 	//router  *mux.Router
-	gs *gin.Engine
+	gs   *gin.Engine
+	Conf *http_server.ServerConfig
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
@@ -81,8 +82,8 @@ type Module struct {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
-	if err := s.ReadConfig(m); err != nil {
+func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+	if err := s.ReadConfig(conf); err != nil {
 		panic(err)
 	}
 
@@ -94,7 +95,7 @@ func (s *Module) Setup(m map[string]interface{}) (server.Module, error) {
 	{
 		NewAPIV1(v1)
 	}
-	url := ginSwagger.URL("http://localhost" + s.Address + "/swagger/doc.json") // The url pointing to API definition
+	url := ginSwagger.URL("http://localhost" + s.Conf.Address + "/swagger/doc.json") // The url pointing to API definition
 	s.gs.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	// router := mux.NewRouter()
@@ -112,16 +113,14 @@ func (s *Module) web() {
 	// 	panic(err)
 	// }
 
-	s.gs.Run(s.Address)
+	s.gs.Run(s.Conf.Address)
 
 }
 
 // ReadConfig config map
 // address default :80
-func (s *Module) ReadConfig(m map[string]interface{}) error {
-	if err := server.ParseConfigValue(m, "address", ":11080", &s.Address); err != nil {
-		return err
-	}
+func (s *Module) ReadConfig(conf server.IConfig) error {
+	s.Conf = conf.(*http_server.ServerConfig)
 	return nil
 }
 

@@ -1,7 +1,7 @@
 name: simple_server
 
 log:
-  filename: server.log
+  filename: logs/server.log
   level: 7
   max_size: 1024
   max_lines: 100000
@@ -30,10 +30,10 @@ kcp:
   max_conn_num: 1024
   socket_queue_size: 100
   max_message_size: 4096
-  udp_socket_buffer: 4194304
-  udp_snd_wnd: 32
-  udp_recv_wnd: 32
-  udp_mtu: 1280
+  udp_socket_buffer_size: 4194304
+  snd_wnd: 32
+  recv_wnd: 32
+  mtu: 1280
   dscp: 46
   nodelay: 1
   interval: 20
@@ -104,7 +104,7 @@ mysql:
   nodes:
     - id: 0
       driver: mysql
-      dsn: root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai
+      dsn: root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai
 
 redis:
   max_idle: 8
@@ -122,3 +122,4 @@ redis:
 
 logic:
   worker_pool_capacity: 128
+  queue_size: 1000

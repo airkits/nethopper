@@ -59,7 +59,7 @@ func (c *Client) init() {
 	c.conns = make(ConnSet)
 	c.closeFlag = false
 	c.dialer = websocket.Dialer{
-		HandshakeTimeout: c.Conf.HandshakeTimeout,
+		HandshakeTimeout: c.Conf.HandshakeTimeout * time.Second,
 	}
 
 }

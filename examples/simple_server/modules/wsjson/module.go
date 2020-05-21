@@ -46,7 +46,7 @@ func ModuleCreate() (server.Module, error) {
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	config   ws.Config
+	Conf     *ws.ServerConfig
 	wsServer network.IServer
 }
 
@@ -68,11 +68,9 @@ type Module struct {
 //  "keyFile":"",
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	if err := s.ReadConfig(m); err != nil {
-		panic(err)
-	}
+	s.Conf = conf.(*ws.ServerConfig)
 
-	s.wsServer = ws.NewServer(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	s.wsServer = ws.NewServer(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		if len(token) > 0 {
 			agent, ok := network.GetInstance().GetAuthAgent(uid)
 			if ok { //exist agent,kick out old connection
@@ -92,18 +90,6 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 func (s *Module) web() {
 	s.wsServer.ListenAndServe()
 }
-
-// config map
-// m := map[string]interface{}{
-// }
-// func (s *Module) ReadConfig(m map[string]interface{}) error {
-// 	return nil
-// }
-
-// //Reload reload config
-// func (s *Module) Reload(m map[string]interface{}) error {
-// 	return nil
-// }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {

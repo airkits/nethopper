@@ -28,15 +28,48 @@
 package main
 
 import (
+	"flag"
+
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gonethopper/nethopper/config"
+	"github.com/gonethopper/nethopper/database"
 	_ "github.com/gonethopper/nethopper/examples/micro_server/gamedb/docs"
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/db"
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/logic"
-	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/redis"
 	"github.com/gonethopper/nethopper/log"
+	"github.com/gonethopper/nethopper/network/common"
+	grpc_server "github.com/gonethopper/nethopper/network/grpc"
+	"github.com/gonethopper/nethopper/network/http"
+
 	. "github.com/gonethopper/nethopper/server"
 )
+
+// Config server config
+type Config struct {
+	Env   string                   `default:"env"`
+	Log   log.Config               `mapstructure:"log"`
+	GPRC  grpc_server.ServerConfig `mapstructure:"grpc"`
+	Logic common.LogicConfig       `mapstructure:"logic"`
+	Mysql database.Config          `mapstructure:"mysql"`
+	HTTP  http.ServerConfig        `mapstructure:"http"`
+}
+
+var cfg Config
+
+//GetViper get config
+func GetViper() *Config {
+	return &cfg
+}
+
+func init() {
+
+	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
+	flag.Parse()
+	if err := config.InitViper("gamedb", "./conf", cfg.Env, &cfg, false); err != nil {
+		panic(err.Error())
+	}
+}
 
 // @title Nethopper Micro Server - Gamedb
 // @version 1.0.2
@@ -55,28 +88,10 @@ import (
 func main() {
 
 	//runtime.GOMAXPROCS(1)
-	m := map[string]interface{}{
-		"filename":    "logs/server.log",
-		"level":       DEBUG,
-		"maxSize":     5000,
-		"maxLines":    10000000,
-		"hourEnabled": false,
-		"dailyEnable": true,
-		"queueSize":   1000,
-		"driver":      "mysql",
-		"dsn":         "root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai",
-		"address":     ":14001",
-	}
-	RegisterModule("log", log.LogModuleCreate)
-	RegisterModule("mysql", db.ModuleCreate)
-	RegisterModule("logic", logic.ModuleCreate)
-	RegisterModule("grpc", grpc.ModuleCreate)
-	RegisterModule("redis", redis.ModuleCreate)
-	NewNamedModule(ModuleIDLog, "log", nil, m)
-	NewNamedModule(ModuleIDDB, "mysql", nil, m)
-	NewNamedModule(ModuleIDRedis, "redis", nil, m)
-	NewNamedModule(ModuleIDLogic, "logic", nil, m)
-	NewNamedModule(ModuleIDGRPCServer, "grpc", nil, m)
+	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)
+	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
 	InitSignal()
 	//GracefulExit()
 }

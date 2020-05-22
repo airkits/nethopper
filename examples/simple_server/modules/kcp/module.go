@@ -56,7 +56,7 @@ type Module struct {
 //  "maxMessageSize":4096
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.gs = kcp.NewServer(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	s.gs = kcp.NewServer(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		return a
 	}, func(agent network.IAgent) {

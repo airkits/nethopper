@@ -31,6 +31,7 @@ ws_client:
   socket_queue_size: 100
   token: 12345678
   queue_size: 1000
+  uid: 1
   nodes:
     - id: 0
       name: game1

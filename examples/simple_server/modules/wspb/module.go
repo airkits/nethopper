@@ -68,11 +68,11 @@ type Module struct {
 //  "keyFile":"",
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	if err := s.ReadConfig(m); err != nil {
+	if err := s.ReadConfig(conf); err != nil {
 		panic(err)
 	}
 
-	s.wsServer = ws.NewServer(m, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	s.wsServer = ws.NewServer(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		if len(token) > 0 {
 			agent, ok := network.GetInstance().GetAuthAgent(uid)
 			if ok { //exist agent,kick out old connection

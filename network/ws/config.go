@@ -16,6 +16,7 @@ type ClientConfig struct {
 	HandshakeTimeout time.Duration     `mapstructure:"handshake_timeout"`
 	AutoReconnect    bool              `mapstructure:"auto_reconnect"`
 	Token            string            `mapstructure:"token"`
+	UID              uint32            `mapstructure:"uid"`
 	QueueSize        int               `mapstructure:"queue_size"`
 }
 

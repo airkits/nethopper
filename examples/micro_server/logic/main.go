@@ -42,6 +42,7 @@ import (
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/redis"
 	"github.com/gonethopper/nethopper/log"
 	"github.com/gonethopper/nethopper/network/common"
+	grpc_server "github.com/gonethopper/nethopper/network/grpc"
 	"github.com/gonethopper/nethopper/network/http"
 	. "github.com/gonethopper/nethopper/server"
 )

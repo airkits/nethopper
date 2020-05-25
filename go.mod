@@ -1,10 +1,13 @@
 module github.com/gonethopper/nethopper
 
-go 1.12
+go 1.14
+
+replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.3
+replace google.golang.org/grpc => google.golang.org/grpc v1.26.0 // indirect
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/coreos/etcd v3.3.20+incompatible
+	github.com/coreos/etcd v3.3.22+incompatible
 	github.com/gin-gonic/gin v1.6.2
 	github.com/go-openapi/spec v0.19.7 // indirect
 	github.com/go-openapi/swag v0.19.9 // indirect

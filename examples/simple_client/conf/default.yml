@@ -22,21 +22,6 @@ grpc_client:
       name: game1
       address: :14000
 
-ws_client:
-  conn_num: 1
-  connect_interval: 3
-  handshake_timeout: 10
-  auto_reconnect: true
-  max_message_size: 4096
-  socket_queue_size: 100
-  token: 12345678
-  queue_size: 1000
-  uid: 1
-  nodes:
-    - id: 0
-      name: game1
-      address: ws://127.0.0.1:12080
-
 tcp_client:
   conn_num: 1
   connect_interval: 3
@@ -93,13 +78,30 @@ kcp_client:
   nc: 1
   read_dead_line: 15
   token: 12345678
-  uid: 1
+  uid: 2
   queue_size: 1000
   nodes:
     - id: 0
       name: game1
       address: 127.0.0.1:12080
 
+ws_client:
+  conn_num: 1
+  connect_interval: 3
+  handshake_timeout: 10
+  auto_reconnect: true
+  max_message_size: 4096
+  socket_queue_size: 100
+  token: 12345678
+  queue_size: 1000
+  uid: 2
+  nodes:
+    - id: 0
+      name: game1
+      address: ws://127.0.0.1:12080
+
 logic:
   worker_pool_capacity: 128
   queue_size: 1000
+  uid: 2
+  password: game

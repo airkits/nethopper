@@ -64,10 +64,10 @@ func (c *Client) init() {
 
 }
 
-func (c *Client) dial(serverID int, address string) (*websocket.Conn, error) {
+func (c *Client) dial(uid uint32, address string) (*websocket.Conn, error) {
 	headers := make(http.Header)
 	headers.Set(common.HeaderToken, c.Conf.Token)
-	headers.Set(common.HeaderUID, fmt.Sprintf("%d", serverID))
+	headers.Set(common.HeaderUID, fmt.Sprintf("%d", uid))
 
 	conn, _, err := c.dialer.Dial(address, headers)
 	if err == nil || c.closeFlag {
@@ -80,7 +80,7 @@ func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
-	conn, err := c.dial(serverID, address)
+	conn, err := c.dial(c.Conf.UID, address)
 	if err != nil {
 		server.Fatal("websocket client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.Conf.AutoReconnect {
@@ -101,7 +101,7 @@ reconnect:
 	c.Unlock()
 
 	wsConn := NewConn(conn, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
-	agent := c.NewAgent(wsConn, uint64(serverID), c.Conf.Token)
+	agent := c.NewAgent(wsConn, uint64(c.Conf.UID), c.Conf.Token)
 	agent.Run()
 
 	// cleanup

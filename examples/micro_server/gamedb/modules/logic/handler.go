@@ -68,10 +68,6 @@ func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (st
 	if err != nil {
 		return "", err
 	}
-	updated, err := server.Call(server.ModuleIDRedis, common.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
-	if updated == false {
-		server.Info("update redis failed %s %s", uid, password.(string))
-	}
 	server.Info("get from mysql")
 	return password.(string), err
 }

@@ -83,7 +83,7 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 
 //GetAgent get agent by option
 func (s *Module) GetAgent(option uint32) network.IAgent {
-	v := s.Clients.Get(float64(0))
+	v := s.Clients.Get(float64(option))
 	if v != nil {
 		return v.Value().(network.IAgent)
 	}

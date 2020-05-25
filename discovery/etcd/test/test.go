@@ -4,18 +4,31 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/discovery/etcd"
+	"github.com/gonethopper/nethopper/log"
 	"github.com/gonethopper/nethopper/server"
 )
 
 func main() {
+
+	conf := log.Config{
+		Filename:     "logs/server_log.log",
+		Level:        7,
+		MaxLines:     1000,
+		MaxSize:      50,
+		HourEnabled:  true,
+		DailyEnabled: true,
+		QueueSize:    1000,
+	}
+	server.NewNamedModule(server.ModuleIDLog, "log", log.LogModuleCreate, nil, &conf)
+
 	options := &etcd.Options{}
-	options.Endpoints = []string{"10.211.55.6:2379"}
+	options.Endpoints = []string{"127.0.0.1:2379"}
 	options.DialTimeout = time.Duration(2) * time.Second
 
 	etcd.NewEtcd(options)
-	etcd.Set("/test/test1", "adn")
+	etcd.Set("/nethopper/nethopper", "adn")
 
-	e, v := etcd.Get("/test/test2", false)
+	e, v := etcd.Get("/nethopper/test2", false)
 	for _, b := range v {
 		server.Debug("etcd value:[%s] len[%d]", b, len(v))
 
@@ -25,13 +38,13 @@ func main() {
 		server.Debug("etcd get value error:[%v] ", e)
 	}
 	// //去注册
-	go etcd.Register("/abdib/kal", "127.0.0.1:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
-	go etcd.Register("/abdib/kal", "168.2.3.1:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
-	go etcd.Watcher("/abdib/kal", watchBack)
+	go etcd.Register("/nethopper/game", "127.0.0.1:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
+	go etcd.Register("/nethopper/game", "192.168.1.178:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
+	go etcd.Watcher("/nethopper/game", watchBack)
 
 	server.InitSignal()
 }
 
 func watchBack(action string, key, val []byte) {
-	server.Debug("etcdcallback:action[%s],key[%s],value[%s]", action, string(key), string(val))
+	server.Debug("etcd callback:action[%s],key[%s],value[%s]", action, string(key), string(val))
 }

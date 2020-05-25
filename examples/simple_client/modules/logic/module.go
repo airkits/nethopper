@@ -28,6 +28,7 @@
 package logic
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/model/common"
@@ -37,6 +38,7 @@ import (
 // Module struct to define module
 type Module struct {
 	server.BaseContext
+	Conf *Config
 }
 
 // ModuleCreate  module create function
@@ -55,7 +57,7 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-
+	s.Conf = conf.(*Config)
 	return s, nil
 }
 
@@ -67,7 +69,7 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
 	time.Sleep(1 * time.Second)
-	server.Call(server.ModuleIDWSClient, common.CSLoginCmd, 1, "2", "game")
+	server.Call(server.ModuleIDWSClient, common.CSLoginCmd, 1, fmt.Sprintf("%d", s.Conf.UID), s.Conf.Password)
 	//server.Call(server.ModuleIDGRPCClient, common.SSLoginCmd, 1, "1", "game")
 
 	//server.Call(server.ModuleIDTCPClient, common.SSLoginCmd, 1, "1", "game")

@@ -77,6 +77,7 @@ type FileLog struct {
 // InitLogger init logger
 func (l *FileLog) InitLogger(conf server.IConfig) error {
 	l.Conf = conf.(*Config)
+	l.SetLevel(l.Conf.Level)
 	return l.createNewFile()
 }
 

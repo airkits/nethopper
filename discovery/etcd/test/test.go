@@ -28,7 +28,7 @@ func main() {
 	etcd.NewEtcd(options)
 	etcd.Set("/nethopper/nethopper", "adn")
 
-	e, v := etcd.Get("/nethopper/test2", false)
+	e, v := etcd.Get("/nethopper/nethopper", false)
 	for _, b := range v {
 		server.Debug("etcd value:[%s] len[%d]", b, len(v))
 
@@ -38,9 +38,9 @@ func main() {
 		server.Debug("etcd get value error:[%v] ", e)
 	}
 	// //去注册
-	go etcd.Register("/nethopper/game", "127.0.0.1:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
-	go etcd.Register("/nethopper/game", "192.168.1.178:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
-	go etcd.Watcher("/nethopper/game", watchBack)
+	etcd.Register("/nethopper/nethopper1", "127.0.0.1:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
+	//	etcd.Register("/nethopper/nethopper1", "192.168.1.178:1234", time.Duration(10)*time.Second, time.Duration(5)*time.Second)
+	go etcd.Watcher("/nethopper/nethopper1", watchBack)
 
 	server.InitSignal()
 }

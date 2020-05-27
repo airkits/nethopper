@@ -28,62 +28,23 @@
 package main
 
 import (
-	"github.com/gonethopper/nethopper/cache"
-	"github.com/gonethopper/nethopper/config"
-	"github.com/gonethopper/nethopper/database"
-	"github.com/gonethopper/nethopper/network/common"
-	"github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/network/quic"
-
-	//	"github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/network/kcp"
-	//"github.com/gonethopper/nethopper/network/quic"
-	"github.com/gonethopper/nethopper/network/tcp"
-	"github.com/gonethopper/nethopper/network/ws"
-
-	//"github.com/gonethopper/nethopper/cache/redis"
 	"flag"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gonethopper/nethopper/config"
 	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
+	"github.com/gonethopper/nethopper/examples/simple_server/global"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
-
-	//	grpc_server "github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
-
-	//	quic_server "github.com/gonethopper/nethopper/examples/simple_server/modules/quic"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
-	http_server "github.com/gonethopper/nethopper/network/http"
 	. "github.com/gonethopper/nethopper/server"
 )
 
-// Config server config
-type Config struct {
-	Env   string                   `default:"env"`
-	Log   log.Config               `mapstructure:"log"`
-	GPRC  grpc.ServerConfig        `mapstructure:"grpc"`
-	KCP   kcp.ServerConfig         `mapstructure:"kcp"`
-	QUIC  quic.ServerConfig        `mapstructure:"quic"`
-	TCP   tcp.ServerConfig         `mapstructure:"tcp"`
-	WS    ws.ServerConfig          `mapstructure:"wsjson"`
-	Logic common.LogicConfig       `mapstructure:"logic"`
-	Mysql database.Config          `mapstructure:"mysql"`
-	Redis cache.Config             `mapstructure:"redis"`
-	HTTP  http_server.ServerConfig `mapstructure:"http"`
-}
-
-var cfg Config
-
-//GetViper get config
-func GetViper() *Config {
-	return &cfg
-}
-
 func init() {
-
+	cfg := global.GetInstance().GetConfig()
 	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
 	flag.Parse()
 	if err := config.InitViper("simple_server", "./conf", cfg.Env, &cfg, false); err != nil {
@@ -108,6 +69,7 @@ func init() {
 func main() {
 
 	//runtime.GOMAXPROCS(1)
+	cfg := global.GetInstance().GetConfig()
 
 	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
 	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)

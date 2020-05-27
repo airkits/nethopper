@@ -30,45 +30,18 @@ package main
 import (
 	"flag"
 
-	"github.com/gonethopper/nethopper/config"
-	// grpc_client "github.com/gonethopper/nethopper/examples/simple_client/modules/grpc"
-	// kcp_client "github.com/gonethopper/nethopper/examples/simple_client/modules/kcp"
-	// quic_client "github.com/gonethopper/nethopper/examples/simple_client/modules/quic"
-	// tcp_client "github.com/gonethopper/nethopper/examples/simple_client/modules/tcp"
+	"github.com/gonethopper/nethopper/examples/simple_client/global"
 
+	"github.com/gonethopper/nethopper/config"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/wsjson"
 
 	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/network/kcp"
-	"github.com/gonethopper/nethopper/network/quic"
-	"github.com/gonethopper/nethopper/network/tcp"
-	"github.com/gonethopper/nethopper/network/ws"
 	. "github.com/gonethopper/nethopper/server"
 )
 
-// Config server config
-type Config struct {
-	Env   string            `default:"env"`
-	Log   log.Config        `mapstructure:"log"`
-	GPRC  grpc.ClientConfig `mapstructure:"grpc_client"`
-	KCP   kcp.ClientConfig  `mapstructure:"kcp_client"`
-	QUIC  quic.ClientConfig `mapstructure:"quic_client"`
-	TCP   tcp.ClientConfig  `mapstructure:"tcp_client"`
-	WS    ws.ClientConfig   `mapstructure:"ws_client"`
-	Logic logic.Config      `mapstructure:"logic"`
-}
-
-var cfg Config
-
-//GetViper get config
-func GetViper() *Config {
-	return &cfg
-}
-
 func init() {
-
+	cfg := global.GetInstance().GetConfig()
 	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
 	flag.Parse()
 	if err := config.InitViper("simple_client", "./conf", cfg.Env, &cfg, false); err != nil {
@@ -77,6 +50,7 @@ func init() {
 }
 
 func main() {
+	cfg := global.GetInstance().GetConfig()
 
 	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
 	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)

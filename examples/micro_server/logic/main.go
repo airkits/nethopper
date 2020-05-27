@@ -33,40 +33,19 @@ import (
 	"flag"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gonethopper/nethopper/cache"
 	"github.com/gonethopper/nethopper/config"
 	_ "github.com/gonethopper/nethopper/examples/micro_server/logic/docs"
+	"github.com/gonethopper/nethopper/examples/micro_server/logic/global"
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/gclient"
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/logic"
 	"github.com/gonethopper/nethopper/examples/micro_server/logic/modules/redis"
 	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/network/common"
-	grpc_server "github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/network/http"
 	. "github.com/gonethopper/nethopper/server"
 )
 
-// Config server config
-type Config struct {
-	Env        string                   `default:"env"`
-	Log        log.Config               `mapstructure:"log"`
-	GPRC       grpc_server.ServerConfig `mapstructure:"grpc"`
-	GPRCClient grpc_server.ClientConfig `mapstructure:"grpc_client"`
-	Logic      common.LogicConfig       `mapstructure:"logic"`
-	Redis      cache.Config             `mapstructure:"redis"`
-	HTTP       http.ServerConfig        `mapstructure:"http"`
-}
-
-var cfg Config
-
-//GetViper get config
-func GetViper() *Config {
-	return &cfg
-}
-
 func init() {
-
+	cfg := global.GetInstance().GetConfig()
 	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
 	flag.Parse()
 	if err := config.InitViper("logic", "./conf", cfg.Env, &cfg, false); err != nil {
@@ -91,7 +70,7 @@ func init() {
 func main() {
 
 	//runtime.GOMAXPROCS(1)
-
+	cfg := global.GetInstance().GetConfig()
 	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
 	NewNamedModule(ModuleIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
 	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)

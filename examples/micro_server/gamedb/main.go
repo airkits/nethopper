@@ -32,38 +32,18 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gonethopper/nethopper/config"
-	"github.com/gonethopper/nethopper/database"
 	_ "github.com/gonethopper/nethopper/examples/micro_server/gamedb/docs"
+	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/global"
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/db"
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/logic"
 	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/network/common"
-	grpc_server "github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/network/http"
 
 	. "github.com/gonethopper/nethopper/server"
 )
 
-// Config server config
-type Config struct {
-	Env   string                   `default:"env"`
-	Log   log.Config               `mapstructure:"log"`
-	GPRC  grpc_server.ServerConfig `mapstructure:"grpc"`
-	Logic common.LogicConfig       `mapstructure:"logic"`
-	Mysql database.Config          `mapstructure:"mysql"`
-	HTTP  http.ServerConfig        `mapstructure:"http"`
-}
-
-var cfg Config
-
-//GetViper get config
-func GetViper() *Config {
-	return &cfg
-}
-
 func init() {
-
+	cfg := global.GetInstance().GetConfig()
 	flag.StringVar(&cfg.Env, "env", "dev", "the environment and config that used")
 	flag.Parse()
 	if err := config.InitViper("gamedb", "./conf", cfg.Env, &cfg, false); err != nil {
@@ -86,7 +66,7 @@ func init() {
 // @host localhost:11080
 // @BasePath
 func main() {
-
+	cfg := global.GetInstance().GetConfig()
 	//runtime.GOMAXPROCS(1)
 	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
 	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)

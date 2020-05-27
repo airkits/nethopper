@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
@@ -48,7 +49,9 @@ func register(serviceKey string, val string, interval, ttl time.Duration) {
 				//创建key-value 进去
 				putResp, err := etcdClient.Put(context.Background(), serviceKey, val, clientv3.WithLease(resp.ID))
 				if err != nil {
+					fmt.Println("get error")
 					server.Error("etcd:put failed[%v],key[%s],resp[%q]", err, serviceKey, putResp)
+
 				}
 			} else {
 				server.Debug("etcd:registed key[%s] val[%v]", serviceKey, vals)

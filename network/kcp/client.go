@@ -64,7 +64,7 @@ func (c *Client) dial(serverID int, address string) (*kcp.UDPSession, error) {
 	return nil, err
 }
 
-func (c *Client) connect(uid int64, token string, serverID int, name string, address string) {
+func (c *Client) connect(serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:
@@ -87,7 +87,7 @@ reconnect:
 	c.conns[conn] = struct{}{}
 	c.Unlock()
 	kcpConn := NewConn(conn, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize, c.Conf.ReadDeadline*time.Second)
-	agent := c.NewAgent(kcpConn, c.Conf.UID, c.Conf.Token)
+	agent := c.NewAgent(kcpConn, uint64(serverID), address)
 	agent.Run()
 
 	// cleanup

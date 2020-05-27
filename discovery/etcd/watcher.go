@@ -3,8 +3,8 @@ package etcd
 import (
 	"context"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/coreos/etcd/clientv3"
 )
 
 const (

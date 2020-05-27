@@ -15,8 +15,6 @@ type ClientConfig struct {
 	MaxMessageSize      uint32            `mapstructure:"max_message_size"`
 	HandshakeTimeout    time.Duration     `mapstructure:"handshake_timeout"`
 	AutoReconnect       bool              `mapstructure:"auto_reconnect"`
-	Token               string            `mapstructure:"token"`
-	UID                 uint64            `mapstructure:"uid"`
 	UDPSocketBufferSize int               `mapstructure:"udp_socket_buffer_size"` //UDP listener socket buffer
 	Dscp                int               `mapstructure:"dscp"`                   //set DSCP(6bit)
 	Sndwnd              int               `mapstructure:"sndwnd"`                 //per connection UDP send window

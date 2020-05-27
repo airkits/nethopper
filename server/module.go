@@ -484,6 +484,7 @@ func NewModule(name string, parent Module, conf IConfig) (Module, error) {
 }
 
 // Call get info from modules
+// same option will run in same processor
 func Call(destModuleID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
 	var obj = NewCallObject(cmd, option, args...)
 	m, err := GetModuleByID(destModuleID)

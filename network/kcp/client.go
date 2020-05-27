@@ -64,7 +64,7 @@ func (c *Client) dial(serverID int, address string) (*kcp.UDPSession, error) {
 	return nil, err
 }
 
-func (c *Client) connect(serverID int, name string, address string) {
+func (c *Client) connect(uid int64, token string, serverID int, name string, address string) {
 	defer c.wg.Done()
 
 reconnect:

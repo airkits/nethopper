@@ -24,3 +24,9 @@ const (
 	//CallIDUpdateUserInfoCmd update user info
 	CallIDUpdateUserInfoCmd = "updateUser"
 )
+
+//SnowFlake cmd
+const (
+	// CallIDGenUIDCmd create uniq uid cmd
+	CallIDGenUIDCmd = "genUID"
+)

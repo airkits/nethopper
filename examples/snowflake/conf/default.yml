@@ -1,0 +1,27 @@
+name: snowflake0
+id: 1
+
+log:
+  filename: logs/server.log
+  level: 7
+  max_size: 1024
+  max_lines: 100000
+  hour_enabled: false
+  daily_enabled: true
+  queue_size: 1000
+
+http:
+  address: :11080
+  queue_size: 1000
+
+grpc:
+  address: :14000
+  max_conn_num: 1024
+  socket_queue_size: 100
+  max_message_size: 4096
+  worker_pool_capacity: 128
+  queue_size: 1000
+
+logic:
+  worker_pool_capacity: 128
+  queue_size: 1000

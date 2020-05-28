@@ -1,0 +1,34 @@
+host: localhost:11080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server Petstore server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Nethopper SnowFlake Server
+  version: 1.0.2
+paths:
+  /call/UIDHandler:
+    put:
+      consumes:
+      - text/plain
+      parameters:
+      - description: channel
+        in: query
+        name: channel
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: LoginHandler
+      tags:
+      - LogicModule
+swagger: "2.0"

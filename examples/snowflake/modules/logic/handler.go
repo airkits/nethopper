@@ -37,11 +37,36 @@ import (
 // @version 1.0
 // @Accept  plain
 // @Produce plain
-// @Param channel query string 1 "channel"
-// @Success 200 {string} string 成功后返回值
+// @Param channel query int32 1 "channel"
+// @Success 200 {uint64} uint64 成功后返回值
 // @Router /call/UUIDHandler [put]
-func UUIDHandler(s *Module, obj *server.CallObject, channel uint8) (uint64, error) {
-	defer server.TraceCost("UIDHandler")()
+func UUIDHandler(s *Module, obj *server.CallObject, channel int32) (uint64, error) {
+	defer server.TraceCost("UUIDHandler")()
 	//	opt, err := strconv.Atoi(uid)
 	return s.GenerateUUID()
+}
+
+// UUIDsHandler get one uniq id
+// @Summary UUIDHandler
+// @Tags LogicModule
+// @version 1.0
+// @Accept  plain
+// @Produce plain
+// @Param channel query int64 1 "channel"
+// @Success 200 {uint64} uint64 成功后返回值
+// @Router /call/UUIDsHandler [put]
+func UUIDsHandler(s *Module, obj *server.CallObject, channel int32, num int32) ([]uint64, error) {
+	defer server.TraceCost("UUIDsHandler")()
+	//	opt, err := strconv.Atoi(uid)
+	uids := make([]uint64, num)
+	var err error
+	var uid uint64
+	for i := 0; i < int(num); i++ {
+		if uid, err = s.GenerateUUID(); err == nil {
+			uids[i] = uid
+		} else {
+			return []uint64{}, err
+		}
+	}
+	return uids, nil
 }

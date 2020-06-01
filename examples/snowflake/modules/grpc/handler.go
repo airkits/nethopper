@@ -45,26 +45,23 @@ import (
 //LoginHandler request login
 func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	message := m.(*ss.Message)
-	req := s2s.LoginReq{}
+	req := s2s.GenUIDReq{}
 	if err := ptypes.UnmarshalAny(message.Body, &req); err != nil {
 		fmt.Println(err)
 		return nil
 	}
 	server.Info("receive message %v", req)
-	userID := server.StringToInt64(req.Uid)
-	result, err := server.Call(server.ModuleIDLogic, common.CallIDGenUIDCmd, utils.RandomInt32(0, 100))
+	result, err := server.Call(server.ModuleIDLogic, common.CallIDGenUIDCmd, utils.RandomInt32(0, 1000), req.Channel)
 	// header := m.(*ss.Header)
 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
 	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
 
-	resp := &s2s.LoginResp{
+	resp := &s2s.GenUIDResp{
 		Result: &s2s.Result{
 			Code: 0,
 			Msg:  "ok",
 		},
-		Uid:    req.Uid,
-		Passwd: result.(string),
-		Name:   result.(string),
+		Uid: result.(int64),
 	}
 	if err != nil {
 		resp.Result.Code = 500
@@ -77,10 +74,10 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 
 	respMsg := &ss.Message{
 		ID:      message.GetID(),
-		UID:     uint64(userID),
+		UID:     uint64(req.Channel),
 		Cmd:     message.GetCmd(),
 		MsgType: server.MTResponse,
-		Body:    &any.Any{TypeUrl: "./s2s.LoginResp", Value: body},
+		Body:    &any.Any{TypeUrl: "./s2s.GenUIDResp", Value: body},
 	}
 
 	agent.WriteMessage(respMsg)

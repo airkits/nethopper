@@ -37,6 +37,7 @@ import (
 	_ "github.com/gonethopper/nethopper/examples/snowflake/docs"
 	"github.com/gonethopper/nethopper/examples/snowflake/global"
 	"github.com/gonethopper/nethopper/examples/snowflake/modules/grpc"
+	"github.com/gonethopper/nethopper/examples/snowflake/modules/http"
 	"github.com/gonethopper/nethopper/examples/snowflake/modules/logic"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
@@ -72,6 +73,8 @@ func main() {
 	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
 	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
 	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
+	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
+
 	InitSignal()
 	//GracefulExit()
 }

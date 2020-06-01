@@ -29,4 +29,23 @@ message LoginResp {
   string name = 4;
 }
 
-o
+
+message GenUIDReq {
+  int32 channel = 1;
+}
+
+message GenUIDResp {
+   Result result = 1;
+  uint64 uid = 2;
+}
+
+message GenUIDsReq {
+  int32 channel = 1;
+  int32 num = 2;
+}
+
+message GenUIDResp {
+   Result result = 1;
+   repeated uint64 uid = 2;
+
+}

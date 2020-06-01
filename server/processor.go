@@ -101,37 +101,38 @@ type Processor struct {
 
 // Process goruntine process pre call
 func Process(s Module, obj *CallObject) {
-	var err error
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
+
 	var ret = RetObject{
 		Ret: nil,
 		Err: nil,
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			ret.Err = r.(error)
+		}
+	}()
+
 	f := s.(Module).GetHandler(obj.Cmd)
 	if f == nil {
-		err = Error("handler id %v: function not registered", obj.Cmd)
-		panic(err)
+		ret.Err = Error("handler id %v: function not registered", obj.Cmd)
+		panic(ret.Err)
 	} else {
 		args := []interface{}{s, obj}
 		args = append(args, obj.Args...)
 		values := CallUserFunc(f, args...)
 		if values == nil {
-			err = Error("unsupport handler,need return (interface{},error) or ([]interface{},error)")
-			panic(err)
+			ret.Err = Error("unsupport handler,need return (interface{},error) or ([]interface{},error)")
+			panic(ret.Err)
 		} else {
 			l := len(values)
 			if l == 2 {
 				ret.Ret = values[0].Interface()
 				if values[1].Interface() != nil {
-					err = values[1].Interface().(error)
-					ret.Err = err
+					ret.Err = values[1].Interface().(error)
+					panic(ret.Err)
 				}
 			} else {
-				panic(err)
+				panic(ret.Err)
 			}
 		}
 	}

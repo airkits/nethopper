@@ -22,3 +22,4 @@ __debug_bin
 **/micro_server/logic/logic
 **/micro_server/gamedb/gamedb
 test
+**/snowflake/snowflake

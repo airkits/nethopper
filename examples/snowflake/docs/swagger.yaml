@@ -1,3 +1,25 @@
+definitions:
+  http.GenUIDReq:
+    properties:
+      channel:
+        type: integer
+    type: object
+  http.GenUIDsReq:
+    properties:
+      channel:
+        type: integer
+      num:
+        type: integer
+    type: object
+  http.Response:
+    properties:
+      code:
+        type: integer
+      data:
+        type: object
+      msg:
+        type: string
+    type: object
 host: localhost:11080
 info:
   contact:
@@ -12,7 +34,7 @@ info:
   title: Nethopper SnowFlake Server
   version: 1.0.2
 paths:
-  /call/UIDHandler:
+  /call/UUIDHandler:
     put:
       consumes:
       - text/plain
@@ -20,15 +42,111 @@ paths:
       - description: channel
         in: query
         name: channel
-        type: string
+        type: integer
       produces:
       - text/plain
       responses:
         "200":
           description: OK
           schema:
-            type: string
-      summary: LoginHandler
+            type: uint64
+      summary: UUIDHandler
       tags:
       - LogicModule
+  /call/UUIDsHandler:
+    put:
+      consumes:
+      - text/plain
+      parameters:
+      - description: channel
+        in: query
+        name: channel
+        type: integer
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: uint64
+      summary: UUIDHandler
+      tags:
+      - LogicModule
+  /v1/call/:module/:cmd/:opt:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: module
+        in: query
+        name: module
+        required: true
+        type: integer
+      - description: cmd
+        in: query
+        name: cmd
+        required: true
+        type: string
+      - description: opt
+        in: query
+        name: opt
+        required: true
+        type: integer
+      - description: data
+        in: formData
+        name: data
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.Response'
+      summary: 登录
+      tags:
+      - http web 模块
+  /v1/genuid:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: GenUIDReq
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/http.GenUIDReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.Response'
+      summary: 登录
+      tags:
+      - http web 模块
+  /v1/genuids:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: GenUIDsReq
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/http.GenUIDsReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.Response'
+      summary: 登录
+      tags:
+      - http web 模块
 swagger: "2.0"

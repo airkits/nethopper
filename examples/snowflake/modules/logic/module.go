@@ -81,6 +81,7 @@ func ModuleCreate() (server.Module, error) {
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	s.RegisterHandler(common.CallIDGenUIDCmd, UUIDHandler)
+	s.RegisterHandler(common.CallIDGenUIDsCmd, UUIDsHandler)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	cfg := global.GetInstance().GetConfig()
 	s.chProc = make(chan chan uint64, UUID_QUEUE)

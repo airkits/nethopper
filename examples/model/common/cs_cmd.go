@@ -28,5 +28,8 @@ const (
 //SnowFlake cmd
 const (
 	// CallIDGenUIDCmd create uniq uid cmd
-	CallIDGenUIDCmd = "genUID"
+	CallIDGenUIDCmd = "gen_uid"
+
+	// CallIDGenUIDsCmd create uniq uid cmd
+	CallIDGenUIDsCmd = "gen_uids"
 )

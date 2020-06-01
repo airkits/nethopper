@@ -8,6 +8,7 @@ import (
 	"github.com/gonethopper/nethopper/log"
 	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/network/grpc"
+	"github.com/gonethopper/nethopper/network/http"
 	"github.com/gonethopper/nethopper/network/kcp"
 	"github.com/gonethopper/nethopper/network/quic"
 	"github.com/gonethopper/nethopper/network/tcp"
@@ -16,17 +17,17 @@ import (
 
 // Config server config
 type Config struct {
-	Env   string                   `default:"env"`
-	Log   log.Config               `mapstructure:"log"`
-	GPRC  grpc.ServerConfig        `mapstructure:"grpc"`
-	KCP   kcp.ServerConfig         `mapstructure:"kcp"`
-	QUIC  quic.ServerConfig        `mapstructure:"quic"`
-	TCP   tcp.ServerConfig         `mapstructure:"tcp"`
-	WS    ws.ServerConfig          `mapstructure:"wsjson"`
-	Logic common.LogicConfig       `mapstructure:"logic"`
-	Mysql database.Config          `mapstructure:"mysql"`
-	Redis cache.Config             `mapstructure:"redis"`
-	HTTP  http_server.ServerConfig `mapstructure:"http"`
+	Env   string             `default:"env"`
+	Log   log.Config         `mapstructure:"log"`
+	GPRC  grpc.ServerConfig  `mapstructure:"grpc"`
+	KCP   kcp.ServerConfig   `mapstructure:"kcp"`
+	QUIC  quic.ServerConfig  `mapstructure:"quic"`
+	TCP   tcp.ServerConfig   `mapstructure:"tcp"`
+	WS    ws.ServerConfig    `mapstructure:"wsjson"`
+	Logic common.LogicConfig `mapstructure:"logic"`
+	Mysql database.Config    `mapstructure:"mysql"`
+	Redis cache.Config       `mapstructure:"redis"`
+	HTTP  http.ServerConfig  `mapstructure:"http"`
 }
 
 //ConfigManager define

@@ -55,8 +55,8 @@ type Module struct {
 	pkroot     string
 	uuidkey    string
 	machine_id uint64 // 10-bit machine id
-
-	muNext sync.Mutex
+	chProc     chan chan uint64
+	muNext     sync.Mutex
 }
 
 // get timestamp
@@ -80,47 +80,47 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(common.CallIDGenUIDCmd, UIDHandler)
+	s.RegisterHandler(common.CallIDGenUIDCmd, UUIDHandler)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	cfg := global.GetInstance().GetConfig()
-	s.ch_proc = make(chan chan uint64, UUID_QUEUE)
+	s.chProc = make(chan chan uint64, UUID_QUEUE)
 	// shifted machine id
 	s.machine_id = (uint64(cfg.SID) & MACHINE_ID_MASK) << 12
-	go s.uuid_task()
+	go s.uuidTask()
 
 	return s, nil
 }
 
-// generate an unique uuid
-func (s *Module) GetUUID() (int64, error) {
+// GenerateUUID an unique uuid
+func (s *Module) GenerateUUID() (uint64, error) {
 	req := make(chan uint64, 1)
-	s.ch_proc <- req
+	s.chProc <- req
 	return <-req, nil
 }
 
-// uuid generator
-func (s *Module) uuid_task() {
-	var sn uint64     // 12-bit serial no
-	var last_ts int64 // last timestamp
+// uuidTask generator
+func (s *Module) uuidTask() {
+	var sn uint64    // 12-bit serial no
+	var lastTs int64 // last timestamp
 	for {
-		ret := <-s.ch_proc
+		ret := <-s.chProc
 		// get a correct serial number
 		t := ts()
-		if t < last_ts { // clock shift backward
+		if t < lastTs { // clock shift backward
 			server.Warning("clock shift happened, waiting until the clock moving to the next millisecond.")
-			t = s.wait_ms(last_ts)
+			t = s.waitMillisecond(lastTs)
 		}
 
-		if last_ts == t { // same millisecond
+		if lastTs == t { // same millisecond
 			sn = (sn + 1) & SN_MASK
 			if sn == 0 { // serial number overflows, wait until next ms
-				t = s.wait_ms(last_ts)
+				t = s.waitMillisecond(lastTs)
 			}
 		} else { // new millsecond, reset serial number to 0
 			sn = 0
 		}
 		// remember last timestamp
-		last_ts = t
+		lastTs = t
 
 		// generate uuid, format:
 		//
@@ -134,11 +134,11 @@ func (s *Module) uuid_task() {
 	}
 }
 
-// wait_ms will wait untill last_ts
-func (s *Module) wait_ms(last_ts int64) int64 {
+// waitMillisecond will wait untill last_ts
+func (s *Module) waitMillisecond(lastTs int64) int64 {
 	t := ts()
-	for t < last_ts {
-		time.Sleep(time.Duration(last_ts-t) * time.Millisecond)
+	for t < lastTs {
+		time.Sleep(time.Duration(lastTs-t) * time.Millisecond)
 		t = ts()
 	}
 	return t

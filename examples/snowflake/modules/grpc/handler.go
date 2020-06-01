@@ -39,6 +39,7 @@ import (
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 )
 
 //LoginHandler request login
@@ -51,7 +52,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 	server.Info("receive message %v", req)
 	userID := server.StringToInt64(req.Uid)
-	result, err := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
+	result, err := server.Call(server.ModuleIDLogic, common.CallIDGenUIDCmd, utils.RandomInt32(0, 100))
 	// header := m.(*ss.Header)
 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
 	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)

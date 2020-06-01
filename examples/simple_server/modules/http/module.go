@@ -92,8 +92,8 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	{
 		NewAPIV1(v1)
 	}
-	url := ginSwagger.URL("http://localhost" + s.Conf.Address + "/swagger/doc.json") // The url pointing to API definition
-	s.gs.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+
+	s.gs.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// router := mux.NewRouter()
 	// s.router = router

@@ -31,17 +31,17 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// UIDHandler get one uniq id
-// @Summary LoginHandler
+// UUIDHandler get one uniq id
+// @Summary UUIDHandler
 // @Tags LogicModule
 // @version 1.0
 // @Accept  plain
 // @Produce plain
 // @Param channel query string 1 "channel"
 // @Success 200 {string} string 成功后返回值
-// @Router /call/UIDHandler [put]
-func UIDHandler(s *Module, obj *server.CallObject, channel uint8) (int64, error) {
+// @Router /call/UUIDHandler [put]
+func UUIDHandler(s *Module, obj *server.CallObject, channel uint8) (uint64, error) {
 	defer server.TraceCost("UIDHandler")()
 	//	opt, err := strconv.Atoi(uid)
-	return s.(*LogicModule).GetUUID()
+	return s.GenerateUUID()
 }

@@ -19,49 +19,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-// snowflake 算法参考 https://github.com/gonet2/snowflake/blob/master/service.go
 
 // * @Author: ankye
 // * @Date: 2019-06-24 11:07:19
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package logic
+package redis
 
 import (
-	"sync"
 	"time"
 
+	"github.com/gonethopper/nethopper/cache/redis"
 	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/snowflake/global"
 	"github.com/gonethopper/nethopper/server"
-)
-
-const (
-	BACKOFF    = 100  // max backoff delay millisecond
-	CONCURRENT = 128  // max concurrent connections to etcd
-	UUID_QUEUE = 1024 // uuid process queue
-)
-
-const (
-	TS_MASK         = 0x1FFFFFFFFFF // 41bit
-	SN_MASK         = 0xFFF         // 12bit
-	MACHINE_ID_MASK = 0x3FF         // 10bit
 )
 
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	pkroot     string
-	uuidkey    string
-	machine_id uint64 // 10-bit machine id
-	chProc     chan chan uint64
-	muNext     sync.Mutex
-}
-
-// get timestamp
-func ts() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
+	rdb *redis.RedisCache
 }
 
 // ModuleCreate  module create function
@@ -80,70 +57,24 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(common.CallIDGenUIDCmd, UUIDHandler)
-	//s.RegisterHandler(common.CallIDGenUIDsCmd, UUIDsHandler)
-	s.CreateWorkerPool(s, 128, 10*time.Second, true)
-	cfg := global.GetInstance().GetConfig()
-	s.chProc = make(chan chan uint64, UUID_QUEUE)
-	// shifted machine id
-	s.machine_id = (uint64(cfg.SID) & MACHINE_ID_MASK) << 12
-	go s.uuidTask()
 
+	cache, err := redis.NewRedisCache(conf)
+	if err != nil {
+		return nil, err
+	}
+	s.rdb = cache
+
+	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
+	s.RegisterHandler(common.CallIDUpdateUserInfoCmd, UpdateUserInfoHandler)
+
+	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
-// GenerateUUID an unique uuid
-func (s *Module) GenerateUUID() (uint64, error) {
-	req := make(chan uint64, 1)
-	s.chProc <- req
-	return <-req, nil
-}
-
-// uuidTask generator
-func (s *Module) uuidTask() {
-	var sn uint64    // 12-bit serial no
-	var lastTs int64 // last timestamp
-	for {
-		ret := <-s.chProc
-		// get a correct serial number
-		t := ts()
-		if t < lastTs { // clock shift backward
-			server.Warning("clock shift happened, waiting until the clock moving to the next millisecond.")
-			t = s.waitMillisecond(lastTs)
-		}
-
-		if lastTs == t { // same millisecond
-			sn = (sn + 1) & SN_MASK
-			if sn == 0 { // serial number overflows, wait until next ms
-				t = s.waitMillisecond(lastTs)
-			}
-		} else { // new millsecond, reset serial number to 0
-			sn = 0
-		}
-		// remember last timestamp
-		lastTs = t
-
-		// generate uuid, format:
-		//
-		// 0		0.................0		0..............0	0........0
-		// 1-bit	41bit timestamp			10bit machine-id	12bit sn
-		var uuid uint64
-		uuid |= (uint64(t) & TS_MASK) << 22
-		uuid |= s.machine_id
-		uuid |= sn
-		ret <- uuid
-	}
-}
-
-// waitMillisecond will wait untill last_ts
-func (s *Module) waitMillisecond(lastTs int64) int64 {
-	t := ts()
-	for t < lastTs {
-		time.Sleep(time.Duration(lastTs-t) * time.Millisecond)
-		t = ts()
-	}
-	return t
-}
+//Reload reload config
+// func (s *Module) Reload(m map[string]interface{}) error {
+// 	return nil
+// }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
@@ -155,12 +86,13 @@ func (s *Module) Stop() error {
 	return nil
 }
 
-// Call async send message to module
+// // Call async send message to module
 // func (s *Module) Call(option int32, obj *server.CallObject) error {
 // 	if err := s.MQ().AsyncPush(obj); err != nil {
 // 		server.Error(err.Error())
 // 	}
 // 	return nil
+
 // }
 
 // PushBytes async send string or bytes to queue

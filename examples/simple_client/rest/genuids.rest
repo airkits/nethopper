@@ -3,5 +3,5 @@ Content-Type: application/json
 
 {
     "channel":1,
-    "num":100
+    "num":1000
 }

@@ -61,7 +61,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 			Code: 0,
 			Msg:  "ok",
 		},
-		Uid: result.(int64),
+		Uid: result.(uint64),
 	}
 	if err != nil {
 		resp.Result.Code = 500

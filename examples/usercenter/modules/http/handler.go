@@ -36,6 +36,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gonethopper/nethopper/codec"
 	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/utils"
 )
@@ -68,31 +69,22 @@ func NewAPIV1(router *gin.RouterGroup) {
 //RegisterCmdAPI  api 初始化
 func RegisterCmdAPI(group *gin.RouterGroup) {
 
-	group.POST("/genuid", GenUID)
-	group.POST("/genuids", GenUIDs)
+	group.POST("/login", Login)
 
 	group.POST("/call/:mid/:cmd/:opt", Call)
 }
 
-//GenUIDReq request body
-type GenUIDReq struct {
-	Channel int32 `form:"channel" json:"channel"`
+//LoginReq request body
+type LoginReq struct {
+	Appid   string `form:"appid" json:"appid"`
+	Code    string `form:"code" json:"code"`
+	Openid  string `form:"openid" json:"openid"`
+	Channel int32  `form:"channel" json:"channel"`
 }
 
-//GenUIDResp response body
-type GenUIDResp struct {
-	UID uint64 `form:"uid" json:"uid"`
-}
-
-//GenUIDsReq request body
-type GenUIDsReq struct {
-	Channel int32 `form:"channel" json:"channel"`
-	Num     int32 `form:"num" json:"num"`
-}
-
-//GenUIDsResp response body
-type GenUIDsResp struct {
-	UIDs []uint64 `form:"uids" json:"uids"`
+//LoginResp response body
+type LoginResp struct {
+	User model.User `form:"user" json:"user"`
 }
 
 //HTTPSession 请求上下文，用于保存请求，用于reponse的上下文数据
@@ -151,62 +143,32 @@ func ResponseSuccess(session *HTTPSession, data interface{}) {
 
 }
 
-// GenUID api index
+// Login api index
 // @Summary 登录
 // @Tags http web 模块
 // @version 1.0
 // @Accept  json
 // @Produce  json
-// @Param   account body  http.GenUIDReq    true        "GenUIDReq"
+// @Param   account body  http.LoginReq    true        "LoginReq"
 // @Success 200 object Response 成功后返回值
-// @Router /v1/genuid [post]
-func GenUID(c *gin.Context) {
-	defer server.TraceCost("GenUID")()
+// @Router /v1/login [post]
+func Login(c *gin.Context) {
+	defer server.TraceCost("Login")()
 	session := NewHTTPSession(c)
-	model := &GenUIDReq{}
+	model := &LoginReq{}
 	if err := c.BindJSON(model); err != nil {
 		ResponseError(session, CSErrorCodeClientError, err)
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDGenUIDCmd, utils.RandomInt32(0, 1024), model.Channel)
+	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, utils.RandomInt32(0, 1024), model.Appid, model.Openid, model.Channel)
 	if err2 != nil {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)
 	} else {
-		server.Info("message done,get uid  %v", result.(uint64))
+		server.Info("message done,get user  %v", result.(model.User))
 
-		ResponseSuccess(session, GenUIDResp{UID: result.(uint64)})
-	}
-
-}
-
-// GenUIDs api index
-// @Summary 登录
-// @Tags http web 模块
-// @version 1.0
-// @Accept  json
-// @Produce  json
-// @Param   account body  http.GenUIDsReq    true        "GenUIDsReq"
-// @Success 200 object Response 成功后返回值
-// @Router /v1/genuids [post]
-func GenUIDs(c *gin.Context) {
-	defer server.TraceCost("GenUIDs")()
-	session := NewHTTPSession(c)
-	model := &GenUIDsReq{}
-	if err := c.BindJSON(model); err != nil {
-		ResponseError(session, CSErrorCodeClientError, err)
-		return
-	}
-
-	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), model.Channel, model.Num)
-	if err2 != nil {
-		server.Info("message done,get err %s", err2.Error())
-		ResponseError(session, CSErrorCodeClientError, err2)
-	} else {
-		server.Info("message done,get uid  %v", result.([]uint64))
-
-		ResponseSuccess(session, GenUIDsResp{UIDs: result.([]uint64)})
+		ResponseSuccess(session, LoginResp{User: result.(*model.User)})
 	}
 
 }

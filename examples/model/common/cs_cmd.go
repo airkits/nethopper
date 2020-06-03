@@ -14,6 +14,7 @@ const (
 	ErrorCodeRedisKeyNotExist = 1000
 )
 
+//UserCenter cmd
 const (
 	// CallIDLoginCmd login cmd
 	CallIDLoginCmd = "login"

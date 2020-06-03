@@ -44,7 +44,7 @@ message GenUIDsReq {
   int32 num = 2;
 }
 
-message GenUIDResp {
+message GenUIDsResp {
    Result result = 1;
    repeated uint64 uid = 2;
 

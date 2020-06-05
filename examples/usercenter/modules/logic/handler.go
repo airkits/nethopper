@@ -28,45 +28,39 @@
 package logic
 
 import (
+	"strconv"
+
+	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// UUIDHandler get one uniq id
-// @Summary UUIDHandler
+// LoginHandler user to login
+// @Summary LoginHandler
 // @Tags LogicModule
 // @version 1.0
 // @Accept  plain
 // @Produce plain
-// @Param channel query int32 1 "channel"
-// @Success 200 {uint64} uint64 成功后返回值
-// @Router /call/UUIDHandler [put]
-func UUIDHandler(s *Module, obj *server.CallObject, channel int32) (uint64, error) {
-	defer server.TraceCost("UUIDHandler")()
-	//	opt, err := strconv.Atoi(uid)
-	return s.GenerateUUID()
-}
-
-// UUIDsHandler get one uniq id
-// @Summary UUIDHandler
-// @Tags LogicModule
-// @version 1.0
-// @Accept  plain
-// @Produce plain
-// @Param channel query int64 1 "channel"
-// @Success 200 {uint64} uint64 成功后返回值
-// @Router /call/UUIDsHandler [put]
-func UUIDsHandler(s *Module, obj *server.CallObject, channel int32, num int32) ([]uint64, error) {
-	defer server.TraceCost("UUIDsHandler")()
-	//	opt, err := strconv.Atoi(uid)
-	uids := make([]uint64, num)
-	var err error
-	var uid uint64
-	for i := 0; i < int(num); i++ {
-		if uid, err = s.GenerateUUID(); err == nil {
-			uids[i] = uid
-		} else {
-			return []uint64{}, err
-		}
+// @Param uid query string true "UserID"
+// @Param pwd query string true "Password"
+// @Success 200 {string} string 成功后返回值
+// @Router /call/LoginHandler [put]
+func LoginHandler(s *Module, obj *server.CallObject, uid string, oid string, token string) (*model.User, error) {
+	defer server.TraceCost("LoginHandler")()
+	opt, err := strconv.Atoi(uid)
+	password, err := server.Call(server.ModuleIDRedis, common.CallIDGetUserInfoCmd, int32(opt), uid)
+	if err == nil {
+		server.Info("get from redis")
+		return password.(string), err
 	}
-	return uids, nil
+	password, err = server.Call(server.ModuleIDDB, common.CallIDGetUserInfoCmd, int32(opt), uid)
+	if err != nil {
+		return "", err
+	}
+	updated, err := server.Call(server.ModuleIDRedis, common.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
+	if updated == false {
+		server.Info("update redis failed %s %s", uid, password.(string))
+	}
+	server.Info("get from mysql")
+	return password.(string), err
 }

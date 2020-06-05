@@ -76,10 +76,9 @@ func RegisterCmdAPI(group *gin.RouterGroup) {
 
 //LoginReq request body
 type LoginReq struct {
-	Appid   string `form:"appid" json:"appid"`
-	Code    string `form:"code" json:"code"`
-	Openid  string `form:"openid" json:"openid"`
-	Channel int32  `form:"channel" json:"channel"`
+	AppID  string `form:"appid" json:"appid"`
+	Code   string `form:"code" json:"code"`
+	OpenID string `form:"oid" json:"oid"`
 }
 
 //LoginResp response body
@@ -161,7 +160,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, utils.RandomInt32(0, 1024), model.Appid, model.Openid, model.Channel)
+	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, utils.RandomInt32(0, 1024), model.AppID, model.OpenID, model.Code)
 	if err2 != nil {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)

@@ -42,8 +42,8 @@ import (
 	"github.com/gonethopper/nethopper/utils"
 )
 
-//LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
+//GenUIDHandler request uid
+func GenUIDHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	message := m.(*ss.Message)
 	req := s2s.GenUIDReq{}
 	if err := ptypes.UnmarshalAny(message.Body, &req); err != nil {

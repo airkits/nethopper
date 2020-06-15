@@ -70,8 +70,10 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 func (a *AgentAdapter) processRequestMessage(message *ss.Message) error {
 
 	switch message.Cmd {
-	case common.SSLoginCmd:
-		return LoginHandler(a, message)
+	case common.SSGenUIDCmd:
+		return GenUIDHandler(a, message)
+	case common.SSGenUIDsCmd:
+		return GenUIDsHandler(a, message)
 	default:
 		return errors.New("unknown message")
 	}

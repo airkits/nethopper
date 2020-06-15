@@ -1,0 +1,1 @@
+$env:GOPROXY = "https://goproxy.io"

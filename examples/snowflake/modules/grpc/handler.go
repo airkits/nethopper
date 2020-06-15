@@ -84,3 +84,46 @@ func GenUIDHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	server.Info("send message %v", respMsg)
 	return nil
 }
+
+//GenUIDsHandler request uid
+func GenUIDsHandler(agent network.IAgentAdapter, m transport.IMessage) error {
+	message := m.(*ss.Message)
+	req := s2s.GenUIDsReq{}
+	if err := ptypes.UnmarshalAny(message.Body, &req); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	server.Info("receive message %v", req)
+	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), req.Channel, req.Num)
+	// header := m.(*ss.Header)
+	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
+	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
+
+	resp := &s2s.GenUIDsResp{
+		Result: &s2s.Result{
+			Code: 0,
+			Msg:  "ok",
+		},
+		Uid: result.([]uint64),
+	}
+	if err2 != nil {
+		resp.Result.Code = 500
+		resp.Result.Msg = err2.Error()
+	}
+	body, err := proto.Marshal(resp)
+	if err != nil {
+		return nil
+	}
+
+	respMsg := &ss.Message{
+		ID:      message.GetID(),
+		UID:     uint64(req.Channel),
+		Cmd:     message.GetCmd(),
+		MsgType: server.MTResponse,
+		Body:    &any.Any{TypeUrl: "./s2s.GenUIDsResp", Value: body},
+	}
+
+	agent.WriteMessage(respMsg)
+	server.Info("send message %v", respMsg)
+	return nil
+}

@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/cache/redis"
-	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -64,8 +63,7 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	}
 	s.rdb = cache
 
-	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
-	s.RegisterHandler(common.CallIDUpdateUserInfoCmd, UpdateUserInfoHandler)
+	//s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
 
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil

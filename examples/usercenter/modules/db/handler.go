@@ -28,25 +28,24 @@
 package db
 
 import (
+	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// GetUserInfoHander 获取用户信息
-//func GetUserInfoHander(s *Module, obj *server.CallObject, u string) (string, error) {
-func GetUserInfoHander(s *Module, obj *server.CallObject, u string) (string, error) {
+// GetUserInfoByOpenIDHander 获取用户信息
+//func GetUserInfoByOpenIDHander(s *Module, obj *server.CallObject,appID string, openID string) (*model.User, error) {
+func GetUserInfoByOpenIDHander(s *Module, obj *server.CallObject, appID string, openID string) (*model.User, error) {
 
-	//var uid = (obj.Args[0]).(string)
-	//uid := 1
-	sql := "select password from user where uid= ?"
-	row := s.conn.QueryRow(sql, u)
-	var password string
-	var err error
-	if err = row.Scan(&password); err == nil {
-		return password, nil
+	sql := "select uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,loginat,createat,status,loginip,channel from user where appid= ? and openid= ?"
+	user := model.User{
+		AppID:  appID,
+		OpenID: openID,
 	}
-
-	return "", err
-
+	var err error
+	if err = s.conn.Select(&user, sql, appID, openID); err == nil {
+		return &user, nil
+	}
+	return nil, err
 }
 
 // InsertUserInfoHander 获取用户信息

@@ -32,7 +32,7 @@ mysql:
   nodes:
     - id: 0
       driver: mysql
-      dsn: root:123456@tcp(127.0.0.1:3306)/game?charset=utf8&parseTime=True&loc=Asia%2FShanghai
+      dsn: root:123456@tcp(127.0.0.1:3306)/usercenter?charset=utf8&parseTime=True&loc=Asia%2FShanghai
 
 
 redis:

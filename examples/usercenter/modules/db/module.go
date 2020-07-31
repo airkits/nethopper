@@ -59,7 +59,7 @@ func ModuleCreate() (server.Module, error) {
 //  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
+	s.RegisterHandler(common.CallIDGetUserInfoByOpenIDCmd, GetUserInfoByOpenIDHander)
 	conn, err := sqlx.NewSQLConnection(conf)
 	if err != nil {
 		return nil, err

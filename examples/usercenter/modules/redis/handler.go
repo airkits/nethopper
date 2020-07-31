@@ -34,12 +34,14 @@ import (
 )
 
 // GetUserInfoHander 获取用户信息
-func GetUserInfoHander(s *Module, obj *server.CallObject, uid string) (string, error) {
-	defer server.TraceCost("GetUserInfoHander")()
-	password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%s", uid))
-	return password, err
+// func GetUserInfoHander(s *Module, obj *server.CallObject, uid string) (*model.User, error) {
+// 	defer server.TraceCost("GetUserInfoHander")()
+// 	key := fmt.Sprintf("uid_%s", uid)
+// 	results, err ;= s.rdb.HMGet(s.Context(),key,"uid", "appid", "openid", "uuid", "avatar", "name", "gender", "channel", "gold", "coin", "status")
 
-}
+// 	return password, err
+
+// }
 
 // UpdateUserInfoHandler update user info
 func UpdateUserInfoHandler(s *Module, obj *server.CallObject, uid string, pwd string) (bool, error) {

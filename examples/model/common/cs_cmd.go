@@ -18,7 +18,7 @@ const (
 	ErrorCodeRedisKeyNotExist = 1000
 )
 
-//UserCenter cmd
+//micro server
 const (
 	// CallIDLoginCmd login cmd
 	CallIDLoginCmd = "login"
@@ -28,6 +28,14 @@ const (
 	CallIDInsertUserInfoCmd = "insertUser"
 	//CallIDUpdateUserInfoCmd update user info
 	CallIDUpdateUserInfoCmd = "updateUser"
+)
+
+//UserCenter cmd
+const (
+	// CallIDWXLoginCmd weixin login cmd
+	CallIDWXLoginCmd = "wxlogin"
+	//CallIDGetUserInfoByOpenIDCmd get userinfo by openid
+	CallIDGetUserInfoByOpenIDCmd = "getUserByOpenID"
 )
 
 //SnowFlake cmd

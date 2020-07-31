@@ -1,16 +1,4 @@
 definitions:
-  http.GenUIDReq:
-    properties:
-      channel:
-        type: integer
-    type: object
-  http.GenUIDsReq:
-    properties:
-      channel:
-        type: integer
-      num:
-        type: integer
-    type: object
   http.Response:
     properties:
       code:
@@ -18,6 +6,13 @@ definitions:
       data:
         type: object
       msg:
+        type: string
+    type: object
+  http.WXLoginReq:
+    properties:
+      appid:
+        type: string
+      code:
         type: string
     type: object
 host: localhost:11080
@@ -34,42 +29,29 @@ info:
   title: Nethopper UserCenter Server
   version: 1.0.2
 paths:
-  /call/UUIDHandler:
+  /call/WXLoginHandler:
     put:
       consumes:
       - text/plain
       parameters:
-      - description: channel
+      - description: appID
         in: query
-        name: channel
-        type: integer
+        name: appID
+        required: true
+        type: string
+      - description: code
+        in: query
+        name: code
+        required: true
+        type: string
       produces:
       - text/plain
       responses:
         "200":
           description: OK
           schema:
-            type: uint64
-      summary: UUIDHandler
-      tags:
-      - LogicModule
-  /call/UUIDsHandler:
-    put:
-      consumes:
-      - text/plain
-      parameters:
-      - description: channel
-        in: query
-        name: channel
-        type: integer
-      produces:
-      - text/plain
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: uint64
-      summary: UUIDHandler
+            type: string
+      summary: WXLoginHandler
       tags:
       - LogicModule
   /v1/call/:module/:cmd/:opt:
@@ -107,38 +89,17 @@ paths:
       summary: 登录
       tags:
       - http web 模块
-  /v1/genuid:
+  /v1/wxlogin:
     post:
       consumes:
       - application/json
       parameters:
-      - description: GenUIDReq
+      - description: WXLoginReq
         in: body
         name: account
         required: true
         schema:
-          $ref: '#/definitions/http.GenUIDReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/http.Response'
-      summary: 登录
-      tags:
-      - http web 模块
-  /v1/genuids:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: GenUIDsReq
-        in: body
-        name: account
-        required: true
-        schema:
-          $ref: '#/definitions/http.GenUIDsReq'
+          $ref: '#/definitions/http.WXLoginReq'
       produces:
       - application/json
       responses:

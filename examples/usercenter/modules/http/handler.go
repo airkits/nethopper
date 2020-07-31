@@ -69,16 +69,15 @@ func NewAPIV1(router *gin.RouterGroup) {
 //RegisterCmdAPI  api 初始化
 func RegisterCmdAPI(group *gin.RouterGroup) {
 
-	group.POST("/login", Login)
+	group.POST("/wxlogin", WXLogin)
 
 	group.POST("/call/:mid/:cmd/:opt", Call)
 }
 
-//LoginReq request body
-type LoginReq struct {
-	AppID  string `form:"appid" json:"appid"`
-	Code   string `form:"code" json:"code"`
-	OpenID string `form:"oid" json:"oid"`
+//WXLoginReq request body
+type WXLoginReq struct {
+	AppID string `form:"appid" json:"appid"`
+	Code  string `form:"code" json:"code"`
 }
 
 //LoginResp response body
@@ -142,32 +141,32 @@ func ResponseSuccess(session *HTTPSession, data interface{}) {
 
 }
 
-// Login api index
+// WXLogin api index
 // @Summary 登录
 // @Tags http web 模块
 // @version 1.0
 // @Accept  json
 // @Produce  json
-// @Param   account body  http.LoginReq    true        "LoginReq"
+// @Param   account body  http.WXLoginReq    true        "WXLoginReq"
 // @Success 200 object Response 成功后返回值
-// @Router /v1/login [post]
-func Login(c *gin.Context) {
-	defer server.TraceCost("Login")()
+// @Router /v1/wxlogin [post]
+func WXLogin(c *gin.Context) {
+	defer server.TraceCost("WXLogin")()
 	session := NewHTTPSession(c)
-	model := &LoginReq{}
-	if err := c.BindJSON(model); err != nil {
+	req := &WXLoginReq{}
+	if err := c.BindJSON(req); err != nil {
 		ResponseError(session, CSErrorCodeClientError, err)
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDLoginCmd, utils.RandomInt32(0, 1024), model.AppID, model.OpenID, model.Code)
+	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDWXLoginCmd, utils.RandomInt32(0, 1024), req.AppID, req.Code)
 	if err2 != nil {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)
 	} else {
 		server.Info("message done,get user  %v", result.(model.User))
 
-		ResponseSuccess(session, LoginResp{User: result.(*model.User)})
+		ResponseSuccess(session, LoginResp{User: result.(model.User)})
 	}
 
 }

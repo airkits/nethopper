@@ -55,7 +55,7 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
+	s.RegisterHandler(common.CallIDLoginCmd, WXLoginHandler)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }

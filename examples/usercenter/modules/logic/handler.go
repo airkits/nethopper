@@ -28,39 +28,38 @@
 package logic
 
 import (
-	"strconv"
+	"errors"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// LoginHandler user to login
-// @Summary LoginHandler
+// WXLoginHandler weixin user login
+// @Summary WXLoginHandler
 // @Tags LogicModule
 // @version 1.0
 // @Accept  plain
 // @Produce plain
-// @Param uid query string true "UserID"
-// @Param pwd query string true "Password"
+// @Param appID query string true "appID"
+// @Param code query string true "code"
 // @Success 200 {string} string 成功后返回值
-// @Router /call/LoginHandler [put]
-func LoginHandler(s *Module, obj *server.CallObject, uid string, oid string, token string) (*model.User, error) {
+// @Router /call/WXLoginHandler [put]
+func WXLoginHandler(s *Module, obj *server.CallObject, appID string, code string) (*model.User, error) {
 	defer server.TraceCost("LoginHandler")()
-	opt, err := strconv.Atoi(uid)
-	password, err := server.Call(server.ModuleIDRedis, common.CallIDGetUserInfoCmd, int32(opt), uid)
-	if err == nil {
-		server.Info("get from redis")
-		return password.(string), err
-	}
-	password, err = server.Call(server.ModuleIDDB, common.CallIDGetUserInfoCmd, int32(opt), uid)
-	if err != nil {
-		return "", err
-	}
-	updated, err := server.Call(server.ModuleIDRedis, common.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
-	if updated == false {
-		server.Info("update redis failed %s %s", uid, password.(string))
-	}
-	server.Info("get from mysql")
-	return password.(string), err
+
+	// user, err := server.Call(server.ModuleIDRedis, common.CallIDGetUserInfoCmd, appID, code)
+	// if err == nil {
+	// 	server.Info("get from redis")
+	// 	return password.(string), err
+	// }
+	// password, err = server.Call(server.ModuleIDDB, common.CallIDGetUserInfoCmd, int32(opt), uid)
+	// if err != nil {
+	// 	return "", err
+	// }
+	// updated, err := server.Call(server.ModuleIDRedis, common.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
+	// if updated == false {
+	// 	server.Info("update redis failed %s %s", uid, password.(string))
+	// }
+	// server.Info("get from mysql")
+	return nil, errors.New("no user")
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
+	"github.com/gonethopper/nethopper/utils/conv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -87,7 +87,7 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 		}
 		if md.Get("UID") != nil {
 			uidStr := md.Get("UID")[0]
-			uid, _ = utils.Str2Uint64(uidStr)
+			uid = conv.Str2Uint64(uidStr)
 			server.Info("UID from header: %ld", uid)
 		}
 	}

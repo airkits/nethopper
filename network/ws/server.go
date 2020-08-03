@@ -10,7 +10,7 @@ import (
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
+	"github.com/gonethopper/nethopper/utils/conv"
 	"github.com/gorilla/websocket"
 )
 
@@ -68,7 +68,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mutexConns.Unlock()
 	token := r.Header.Get(common.HeaderToken)
 	uid := r.Header.Get(common.HeaderUID)
-	userID, _ := utils.Str2Uint64(uid)
+	userID := conv.Str2Uint64(uid)
 	var agent network.IAgent
 
 	wsConn := NewConn(conn, s.Conf.SocketQueueSize, s.Conf.MaxMessageSize)

@@ -30,25 +30,64 @@ package redis
 import (
 	"fmt"
 
+	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils/conv"
 )
 
+func getUserInfoKey(uid uint64) string {
+	return fmt.Sprintf("userinfo_%d", uid)
+}
+
 // GetUserInfoHander 获取用户信息
-// func GetUserInfoHander(s *Module, obj *server.CallObject, uid string) (*model.User, error) {
-// 	defer server.TraceCost("GetUserInfoHander")()
-// 	key := fmt.Sprintf("uid_%s", uid)
-// 	results, err ;= s.rdb.HMGet(s.Context(),key,"uid", "appid", "openid", "uuid", "avatar", "name", "gender", "channel", "gold", "coin", "status")
+func GetUserInfoHander(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
+	defer server.TraceCost("GetUserInfoHander")()
+	key := getUserInfoKey(uid)
+	results, err := s.rdb.HMGet(s.Context(), key, "uid", "appid", "openid", "uuid", "avatar", "name", "gender", "channel", "gold", "coin", "status")
+	if err == nil {
 
-// 	return password, err
-
-// }
+		user := &model.User{
+			UID:     conv.Str2Uint64(results["uid"]),
+			AppID:   results["appid"],
+			OpenID:  results["openid"],
+			UUID:    results["uuid"],
+			Name:    results["name"],
+			Channel: results["channel"],
+			Avatar:  results["avatar"],
+			Gender:  conv.Str2Int(results["gender"]),
+			Gold:    conv.Str2Uint64(results["gold"]),
+			Coin:    conv.Str2Uint64(results["coin"]),
+			Status:  conv.Str2Int(results["status"]),
+		}
+		return user, err
+	}
+	return nil, err
+}
 
 // UpdateUserInfoHandler update user info
-func UpdateUserInfoHandler(s *Module, obj *server.CallObject, uid string, pwd string) (bool, error) {
+func UpdateUserInfoHandler(s *Module, obj *server.CallObject, u *model.User) (bool, error) {
 
-	var key = fmt.Sprintf("uid_%s", uid)
-	err := s.rdb.Set(s.Context(), key, pwd, 0)
-	if err != nil {
+	var key = getUserInfoKey(u.UID)
+	params := map[interface{}]interface{}{
+		"uid":      u.UID,
+		"appid":    u.AppID,
+		"openid":   u.OpenID,
+		"uuid":     u.UUID,
+		"name":     u.Name,
+		"channel":  u.Channel,
+		"avatar":   u.Avatar,
+		"password": u.Password,
+		"phone":    u.Phone,
+		"gender":   u.Gender,
+		"age":      u.Age,
+		"gold":     u.Gold,
+		"coin":     u.Coin,
+		"status":   u.Status,
+		"loginAt":  u.LoginAt,
+		"loginIP":  u.LoginIP,
+		"createAt": u.CreateAt,
+	}
+	if err := s.rdb.HMSet(s.Context(), key, params); err != nil {
 		return false, err
 	}
 	return true, nil

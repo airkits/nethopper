@@ -11,12 +11,12 @@ import (
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/raw"
 	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
+	"github.com/gonethopper/nethopper/utils/conv"
 )
 
 // NotifyLogin user to login
 func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
-	if id, err := utils.Str2Uint64(uid); err == nil {
+	if id := conv.Str2Uint64(uid); id > 0 {
 		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
 
 			req := &s2s.LoginReq{

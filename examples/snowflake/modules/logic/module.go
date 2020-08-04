@@ -32,7 +32,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/snowflake/cmd"
 	"github.com/gonethopper/nethopper/examples/snowflake/global"
 	"github.com/gonethopper/nethopper/server"
 )
@@ -80,7 +80,7 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(common.CallIDGenUIDCmd, UUIDHandler)
+	s.RegisterHandler(cmd.CallIDGenUIDCmd, UUIDHandler)
 	//s.RegisterHandler(common.CallIDGenUIDsCmd, UUIDsHandler)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	cfg := global.GetInstance().GetConfig()

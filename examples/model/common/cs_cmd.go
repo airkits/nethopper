@@ -17,32 +17,3 @@ const (
 	// ErrorCodeRedisKeyNotExist redis key not exist
 	ErrorCodeRedisKeyNotExist = 1000
 )
-
-//micro server
-const (
-	// CallIDLoginCmd login cmd
-	CallIDLoginCmd = "login"
-	// CallIDGetUserInfoCmd get userinfo
-	CallIDGetUserInfoCmd = "getUser"
-	//CallIDInsertUserInfoCmd insert user info
-	CallIDInsertUserInfoCmd = "insertUser"
-	//CallIDUpdateUserInfoCmd update user info
-	CallIDUpdateUserInfoCmd = "updateUser"
-)
-
-//UserCenter cmd
-const (
-	// CallIDWXLoginCmd weixin login cmd
-	CallIDWXLoginCmd = "wxlogin"
-	//CallIDGetUserInfoByOpenIDCmd get userinfo by openid
-	CallIDGetUserInfoByOpenIDCmd = "getUserByOpenID"
-)
-
-//SnowFlake cmd
-const (
-	// CallIDGenUIDCmd create uniq uid cmd
-	CallIDGenUIDCmd = "gen_uid"
-
-	// CallIDGenUIDsCmd create uniq uid cmd
-	CallIDGenUIDsCmd = "gen_uids"
-)

@@ -28,12 +28,13 @@
 package db
 
 import (
+	"fmt"
+
 	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
 )
 
 // GetUserInfoByOpenIDHander 获取用户信息
-//func GetUserInfoByOpenIDHander(s *Module, obj *server.CallObject,appID string, openID string) (*model.User, error) {
 func GetUserInfoByOpenIDHander(s *Module, obj *server.CallObject, appID string, openID string) (*model.User, error) {
 
 	sql := "select uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,loginat,createat,status,loginip,channel from user where appid= ? and openid= ?"
@@ -47,49 +48,17 @@ func GetUserInfoByOpenIDHander(s *Module, obj *server.CallObject, appID string, 
 	}
 	return nil, err
 }
+func getTableByUID(uid uint64) string {
+	return fmt.Sprintf("usercenter.user_%d", uid%8)
+}
 
-// InsertUserInfoHander 获取用户信息
-// func InsertUserInfoHander(s *Module, obj *server.CallObject) {
-// 	var uid = (obj.Args[0]).(string)
-// 	var password = (obj.Args[1]).(string)
-// 	sql := "insert into user.user(uid,password) value(?,?)"
-// 	_, err := s.conn.Exec(sql, password, uid)
+// CreateUserInfoHander 创建用户信息
+func CreateUserInfoHander(s *Module, obj *server.CallObject, u *model.User) (*model.User, error) {
+	sql := "insert into " + getTableByUID(u.UID) + "(uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,status,channel,loginip,loginat,createat) value(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	_, err := s.conn.Exec(sql, u.UID, u.AppID, u.OpenID, u.UUID, u.Avatar, u.Name, u.Password, u.Phone, u.Gender, u.Age, u.Gold, u.Coin, u.Status, u.Channel, u.LoginIP, u.LoginAt, u.CreateAt)
 
-// 	if err == nil {
-// 		var ret = server.RetObject{
-// 			Ret: password,
-// 			Err: nil,
-// 		}
-// 		obj.ChanRet <- ret
-// 	} else {
-// 		var ret = server.RetObject{
-// 			Ret: nil,
-// 			Err: err,
-// 		}
-// 		obj.ChanRet <- ret
-// 	}
-
-// }
-
-// UpdateUserInfoHander 获取用户信息
-// func UpdateUserInfoHander(s *Module, obj *server.CallObject) {
-// 	var uid = (obj.Args[0]).(string)
-// 	var password = (obj.Args[1]).(string)
-// 	sql := "update user.user set password=? where uid=?"
-// 	_, err := s.conn.Exec(sql, password, uid)
-
-// 	if err == nil {
-// 		var ret = server.RetObject{
-// 			Ret: password,
-// 			Err: nil,
-// 		}
-// 		obj.ChanRet <- ret
-// 	} else {
-// 		var ret = server.RetObject{
-// 			Ret: nil,
-// 			Err: err,
-// 		}
-// 		obj.ChanRet <- ret
-// 	}
-
-// }
+	if err == nil {
+		return u, nil
+	}
+	return nil, err
+}

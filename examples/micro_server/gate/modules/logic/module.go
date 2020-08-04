@@ -30,7 +30,7 @@ package logic
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/micro_server/gate/cmd"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -55,7 +55,7 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(common.CallIDLoginCmd, LoginHandler)
+	s.RegisterHandler(cmd.CallIDLoginCmd, LoginHandler)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }

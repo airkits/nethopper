@@ -30,7 +30,7 @@ package gclient
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/micro_server/logic/cmd"
 	"github.com/gonethopper/nethopper/libs/skiplist"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/grpc"
@@ -64,7 +64,7 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	if err := s.ReadConfig(conf); err != nil {
 		panic(err)
 	}
-	s.RegisterHandler(common.CallIDGetUserInfoCmd, RequestGetUserInfo)
+	s.RegisterHandler(cmd.CallIDGetUserInfoCmd, RequestGetUserInfo)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	s.Clients = skiplist.New()
 	s.grpcClient = grpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {

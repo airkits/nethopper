@@ -35,7 +35,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/usercenter/cmd"
 	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/utils"
@@ -159,7 +159,7 @@ func WXLogin(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDWXLoginCmd, utils.RandomInt32(0, 1024), req.AppID, req.Code)
+	result, err2 := server.Call(server.ModuleIDLogic, cmd.CallIDWXLoginCmd, utils.RandomInt32(0, 1024), req.AppID, req.Code)
 	if err2 != nil {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)

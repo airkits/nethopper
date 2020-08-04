@@ -35,7 +35,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/snowflake/cmd"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/utils"
 )
@@ -169,7 +169,7 @@ func GenUID(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDGenUIDCmd, utils.RandomInt32(0, 1024), model.Channel)
+	result, err2 := server.Call(server.ModuleIDLogic, cmd.CallIDGenUIDCmd, utils.RandomInt32(0, 1024), model.Channel)
 	if err2 != nil {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)
@@ -199,7 +199,7 @@ func GenUIDs(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), model.Channel, model.Num)
+	result, err2 := server.Call(server.ModuleIDLogic, cmd.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), model.Channel, model.Num)
 	if err2 != nil {
 		server.Info("message done,get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)

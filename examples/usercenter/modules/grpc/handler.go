@@ -27,60 +27,45 @@
 
 package grpc
 
-import (
-	"fmt"
+// //LoginHandler request login
+// func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
+// 	message := m.(*ss.Message)
+// 	req := s2s.GenUIDReq{}
+// 	if err := ptypes.UnmarshalAny(message.Body, &req); err != nil {
+// 		fmt.Println(err)
+// 		return nil
+// 	}
+// 	server.Info("receive message %v", req)
+// 	result, err := server.Call(server.ModuleIDLogic, common.CallIDGenUIDCmd, utils.RandomInt32(0, 1000), req.Channel)
+// 	// header := m.(*ss.Header)
+// 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
+// 	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
 
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
-	"github.com/gonethopper/nethopper/network/transport/pb/ss"
-	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
-)
+// 	resp := &s2s.GenUIDResp{
+// 		Result: &s2s.Result{
+// 			Code: 0,
+// 			Msg:  "ok",
+// 		},
+// 		Uid: result.(uint64),
+// 	}
+// 	if err != nil {
+// 		resp.Result.Code = 500
+// 		resp.Result.Msg = err.Error()
+// 	}
+// 	body, err := proto.Marshal(resp)
+// 	if err != nil {
+// 		return nil
+// 	}
 
-//LoginHandler request login
-func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
-	message := m.(*ss.Message)
-	req := s2s.GenUIDReq{}
-	if err := ptypes.UnmarshalAny(message.Body, &req); err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	server.Info("receive message %v", req)
-	result, err := server.Call(server.ModuleIDLogic, common.CallIDGenUIDCmd, utils.RandomInt32(0, 1000), req.Channel)
-	// header := m.(*ss.Header)
-	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
-	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
+// 	respMsg := &ss.Message{
+// 		ID:      message.GetID(),
+// 		UID:     uint64(req.Channel),
+// 		Cmd:     message.GetCmd(),
+// 		MsgType: server.MTResponse,
+// 		Body:    &any.Any{TypeUrl: "./s2s.GenUIDResp", Value: body},
+// 	}
 
-	resp := &s2s.GenUIDResp{
-		Result: &s2s.Result{
-			Code: 0,
-			Msg:  "ok",
-		},
-		Uid: result.(uint64),
-	}
-	if err != nil {
-		resp.Result.Code = 500
-		resp.Result.Msg = err.Error()
-	}
-	body, err := proto.Marshal(resp)
-	if err != nil {
-		return nil
-	}
-
-	respMsg := &ss.Message{
-		ID:      message.GetID(),
-		UID:     uint64(req.Channel),
-		Cmd:     message.GetCmd(),
-		MsgType: server.MTResponse,
-		Body:    &any.Any{TypeUrl: "./s2s.GenUIDResp", Value: body},
-	}
-
-	agent.WriteMessage(respMsg)
-	server.Info("send message %v", respMsg)
-	return nil
-}
+// 	agent.WriteMessage(respMsg)
+// 	server.Info("send message %v", respMsg)
+// 	return nil
+// }

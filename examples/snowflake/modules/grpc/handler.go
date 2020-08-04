@@ -33,8 +33,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/gonethopper/nethopper/examples/model/common"
 	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
+	"github.com/gonethopper/nethopper/examples/snowflake/cmd"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport"
 	"github.com/gonethopper/nethopper/network/transport/pb/ss"
@@ -51,7 +51,7 @@ func GenUIDHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 		return nil
 	}
 	server.Info("receive message %v", req)
-	result, err := server.Call(server.ModuleIDLogic, common.CallIDGenUIDCmd, utils.RandomInt32(0, 1000), req.Channel)
+	result, err := server.Call(server.ModuleIDLogic, cmd.CallIDGenUIDCmd, utils.RandomInt32(0, 1000), req.Channel)
 	// header := m.(*ss.Header)
 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
 	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
@@ -94,7 +94,7 @@ func GenUIDsHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 		return nil
 	}
 	server.Info("receive message %v", req)
-	result, err2 := server.Call(server.ModuleIDLogic, common.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), req.Channel, req.Num)
+	result, err2 := server.Call(server.ModuleIDLogic, cmd.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), req.Channel, req.Num)
 	// header := m.(*ss.Header)
 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
 	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)

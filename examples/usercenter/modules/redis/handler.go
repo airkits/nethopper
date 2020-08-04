@@ -38,9 +38,30 @@ import (
 func getUserInfoKey(uid uint64) string {
 	return fmt.Sprintf("userinfo_%d", uid)
 }
+func getOpenID2UIDKey(openID string) string {
+	return fmt.Sprintf("openid2uid_%s", openID)
+}
 
-// GetUserInfoHander 获取用户信息
-func GetUserInfoHander(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
+//ConvertOpenID2UID 通过openID映射为uid，没有就创建一个
+func ConvertOpenID2UID(s *Module, obj *server.CallObject, openID string) (uint64, error) {
+	defer server.TraceCost("ConvertOpenID2UID")()
+	key := getOpenID2UIDKey(openID)
+	uid, err := s.rdb.GetUint64(s.Context(), key)
+	return uid, err
+}
+
+// SetOpenID2UID set openid to uid mapping
+func SetOpenID2UID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, error) {
+	var key = getOpenID2UIDKey(openID)
+	err := s.rdb.Set(s.Context(), key, uid, 0)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// GetUserInfo 获取用户信息
+func GetUserInfo(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
 	defer server.TraceCost("GetUserInfoHander")()
 	key := getUserInfoKey(uid)
 	results, err := s.rdb.HMGet(s.Context(), key, "uid", "appid", "openid", "uuid", "avatar", "name", "gender", "channel", "gold", "coin", "status")
@@ -64,9 +85,8 @@ func GetUserInfoHander(s *Module, obj *server.CallObject, uid uint64) (*model.Us
 	return nil, err
 }
 
-// UpdateUserInfoHandler update user info
-func UpdateUserInfoHandler(s *Module, obj *server.CallObject, u *model.User) (bool, error) {
-
+// UpdateUserInfo update user info
+func UpdateUserInfo(s *Module, obj *server.CallObject, u *model.User) (bool, error) {
 	var key = getUserInfoKey(u.UID)
 	params := map[interface{}]interface{}{
 		"uid":      u.UID,

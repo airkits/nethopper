@@ -30,7 +30,7 @@ package logic
 import (
 	"strconv"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/cmd"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -64,7 +64,7 @@ func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (st
 	defer server.TraceCost("LoginHandler")()
 	opt, err := strconv.Atoi(uid)
 
-	password, err := server.Call(server.ModuleIDGRPCClient, common.CallIDGetUserInfoCmd, int32(opt), uid, pwd)
+	password, err := server.Call(server.ModuleIDGRPCClient, cmd.CallIDGetUserInfoCmd, int32(opt), uid, pwd)
 	if err != nil {
 		return "", err
 	}

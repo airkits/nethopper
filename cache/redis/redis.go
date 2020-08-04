@@ -130,6 +130,11 @@ func (c *RedisCache) GetInt64(ctx context.Context, key string) (int64, error) {
 	return redis.Int64(c.Get(ctx, key))
 }
 
+// GetUint64 command
+func (c *RedisCache) GetUint64(ctx context.Context, key string) (uint64, error) {
+	return redis.Uint64(c.Get(ctx, key))
+}
+
 // GetFloat64 command
 func (c *RedisCache) GetFloat64(ctx context.Context, key string) (float64, error) {
 	return redis.Float64(c.Get(ctx, key))

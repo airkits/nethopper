@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/gonethopper/nethopper/database/sqlx"
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/cmd"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -59,7 +59,7 @@ func ModuleCreate() (server.Module, error) {
 //  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(common.CallIDGetUserInfoCmd, GetUserInfoHander)
+	s.RegisterHandler(cmd.CallIDGetUserInfoCmd, GetUserInfoHander)
 	conn, err := sqlx.NewSQLConnection(conf)
 	if err != nil {
 		return nil, err

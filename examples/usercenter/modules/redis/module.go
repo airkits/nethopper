@@ -64,8 +64,8 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	}
 	s.rdb = cache
 
-	s.RegisterHandler(cmd.CallIDGetUserInfoCmd, GetUserInfo)
-	s.RegisterHandler(cmd.CallIDUpdateUserInfoCmd, UpdateUserInfo)
+	s.RegisterHandler(cmd.MCRedisGetUserInfo, GetUserInfo)
+	s.RegisterHandler(cmd.MCRedisUpdateUserInfo, UpdateUserInfo)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }

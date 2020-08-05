@@ -159,7 +159,7 @@ func WXLogin(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, cmd.CallIDWXLoginCmd, utils.RandomInt32(0, 1024), req.AppID, req.Code)
+	result, err2 := server.Call(server.ModuleIDLogic, cmd.MCLogicWXLogin, utils.RandomInt32(0, 1024), req.AppID, req.Code)
 	if err2 != nil {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)

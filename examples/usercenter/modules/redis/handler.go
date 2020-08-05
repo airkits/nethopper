@@ -62,7 +62,7 @@ func SetOpenID2UID(s *Module, obj *server.CallObject, openID string, uid uint64)
 
 // GetUserInfo 获取用户信息
 func GetUserInfo(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
-	defer server.TraceCost("GetUserInfoHander")()
+	defer server.TraceCost("GetUserInfo")()
 	key := getUserInfoKey(uid)
 	results, err := s.rdb.HMGet(s.Context(), key, "uid", "appid", "openid", "uuid", "avatar", "name", "gender", "channel", "gold", "coin", "status")
 	if err == nil {

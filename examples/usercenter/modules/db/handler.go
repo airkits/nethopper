@@ -32,29 +32,51 @@ import (
 
 	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils/crypto/md5"
 )
 
-// GetUserInfoByOpenIDHander 获取用户信息
-func GetUserInfoByOpenIDHander(s *Module, obj *server.CallObject, appID string, openID string) (*model.User, error) {
+func getUserTableByUID(uid uint64) string {
+	return fmt.Sprintf("usercenter.user_%d", uid%8)
+}
+func getOID2UIDTable(openID string) string {
+	return fmt.Sprintf("usercenter.oid2uid_%d", md5.HashMod(openID, 8))
+}
 
-	sql := "select uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,loginat,createat,status,loginip,channel from user where appid= ? and openid= ?"
+// GetUIDByOpenID 获取uid
+func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, error) {
+	sql := "select uid from " + getOID2UIDTable(openID) + " where openid= ?"
+	row := s.conn.QueryRow(sql, openID)
+	var uid uint64
+	var err error
+	if err = row.Scan(&uid); err == nil {
+		return uid, nil
+	}
+	return 0, err
+}
+
+//InsertOID2UID insert oid and uid in mapping
+func InsertOID2UID(s *Module, obj *server.CallObject, openID string, uid uint64) (uint64, error) {
+	sql := "insert into " + getOID2UIDTable(openID) + "(openid,uid) value(?,?)"
+	_, err := s.conn.Exec(sql, openID, uid)
+	return uid, err
+}
+
+// GetUserByUID 获取用户信息
+func GetUserByUID(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
+	sql := "select uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,loginat,createat,status,loginip,channel from " + getUserTableByUID(uid) + " where uid= ?"
 	user := model.User{
-		AppID:  appID,
-		OpenID: openID,
+		UID: uid,
 	}
 	var err error
-	if err = s.conn.Select(&user, sql, appID, openID); err == nil {
+	if err = s.conn.Select(&user, sql, uid); err == nil {
 		return &user, nil
 	}
 	return nil, err
 }
-func getTableByUID(uid uint64) string {
-	return fmt.Sprintf("usercenter.user_%d", uid%8)
-}
 
-// CreateUserInfoHander 创建用户信息
-func CreateUserInfoHander(s *Module, obj *server.CallObject, u *model.User) (*model.User, error) {
-	sql := "insert into " + getTableByUID(u.UID) + "(uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,status,channel,loginip,loginat,createat) value(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+// CreateUser 创建用户信息
+func CreateUser(s *Module, obj *server.CallObject, u *model.User) (*model.User, error) {
+	sql := "insert into " + getUserTableByUID(u.UID) + "(uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,status,channel,loginip,loginat,createat) value(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 	_, err := s.conn.Exec(sql, u.UID, u.AppID, u.OpenID, u.UUID, u.Avatar, u.Name, u.Password, u.Phone, u.Gender, u.Age, u.Gold, u.Coin, u.Status, u.Channel, u.LoginIP, u.LoginAt, u.CreateAt)
 
 	if err == nil {

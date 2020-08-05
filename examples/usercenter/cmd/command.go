@@ -1,16 +1,33 @@
 package cmd
 
-//UserCenter cmd
+//UserCenter module call cmd
 const (
-	// CallIDWXLoginCmd weixin login cmd
-	CallIDWXLoginCmd = "wxlogin"
-	//CallIDGetUserInfoByOpenIDCmd get userinfo by openid
-	CallIDGetUserInfoByOpenIDCmd = "getUserByOpenID"
+	// module http
+	// MCHTTPWXLogin weixin login cmd
+	MCHTTPWXLogin = "wxlogin"
 
-	// CallIDGetUserInfoCmd get userinfo
-	CallIDGetUserInfoCmd = "getUser"
-	//CallIDInsertUserInfoCmd insert user info
-	CallIDInsertUserInfoCmd = "insertUser"
-	//CallIDUpdateUserInfoCmd update user info
-	CallIDUpdateUserInfoCmd = "updateUser"
+	// module grpc
+
+	// module logic
+	// MCLogicWXLogin
+	MCLogicWXLogin = MCHTTPWXLogin
+
+	// module wx
+	MCWXLogin = "wxlogin"
+
+	// module redis
+	// MCRedisGetUserInfo
+	MCRedisGetUserInfo = "getUserInfo"
+	// MCRedisUpdateUserInfo
+	MCRedisUpdateUserInfo = "updateUserInfo"
+
+	// module db
+	// MCDBGetUIDByOpenID get uid by openid
+	MCDBGetUIDByOpenID = "getUserByOpenID"
+	// MCDBInsertOID2UID  make openid to uid mapping
+	MCDBInsertOID2UID = "insertOID2UID"
+	// MCDBCreateUser
+	MCDBCreateUser = "createUser"
+	// MCDBGetUserByUID
+	MCDBGetUserByUID = "getUserByUID"
 )

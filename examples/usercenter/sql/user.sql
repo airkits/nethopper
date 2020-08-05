@@ -181,3 +181,52 @@ CREATE TABLE IF NOT EXISTS `user_7`(
    UNIQUE KEY `idx_appid_oid` ( `appid` , `openid` ),
    KEY `idx_appid_uuid` ( `appid` , `uuid` )
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE IF NOT EXISTS `oid2uid_0`(
+   `openid` CHAR(255) NOT NULL,
+   `uid` BIGINT UNSIGNED NOT NULL,
+   PRIMARY KEY ( `openid` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `oid2uid_1`(
+   `openid` CHAR(255) NOT NULL,
+   `uid` BIGINT UNSIGNED NOT NULL,
+   PRIMARY KEY ( `openid` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `oid2uid_2`(
+   `openid` CHAR(255) NOT NULL,
+   `uid` BIGINT UNSIGNED NOT NULL,
+   PRIMARY KEY ( `openid` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `oid2uid_3`(
+   `openid` CHAR(255) NOT NULL,
+   `uid` BIGINT UNSIGNED NOT NULL,
+   PRIMARY KEY ( `openid` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `oid2uid_4`(
+   `openid` CHAR(255) NOT NULL,
+   `uid` BIGINT UNSIGNED NOT NULL,
+   PRIMARY KEY ( `openid` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `oid2uid_5`(
+   `openid` CHAR(255) NOT NULL,
+   `uid` BIGINT UNSIGNED NOT NULL,
+   PRIMARY KEY ( `openid` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `oid2uid_6`(
+   `openid` CHAR(255) NOT NULL,
+   `uid` BIGINT UNSIGNED NOT NULL,
+   PRIMARY KEY ( `openid` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `oid2uid_7`(
+   `openid` CHAR(255) NOT NULL,
+   `uid` BIGINT UNSIGNED NOT NULL,
+   PRIMARY KEY ( `openid` )
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

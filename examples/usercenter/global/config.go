@@ -5,10 +5,18 @@ import (
 
 	"github.com/gonethopper/nethopper/cache"
 	"github.com/gonethopper/nethopper/database"
+	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/log"
 	"github.com/gonethopper/nethopper/network/common"
 	"github.com/gonethopper/nethopper/network/grpc"
 	"github.com/gonethopper/nethopper/network/http"
+)
+
+const (
+	// ModuleIDUserCustom User custom define named modules from 64-128
+	ModuleIDUserCustom = 64
+	// ModuleIDWechatClient module id wechat
+	ModuleIDWechatClient
 )
 
 // Config server config
@@ -21,6 +29,7 @@ type Config struct {
 	Redis cache.Config       `mapstructure:"redis"`
 	Mysql database.Config    `mapstructure:"mysql"`
 	HTTP  http.ServerConfig  `mapstructure:"http"`
+	WX    model.WXConfig     `mapstructure:"wx"`
 }
 
 //ConfigManager define

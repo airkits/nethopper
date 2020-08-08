@@ -48,3 +48,9 @@ redis:
       password:
       address: 127.0.0.1:6379
       db: 0
+
+wx:
+  queue_size: 100
+  apps:
+    - appid: wxec644f0c4e2cb275
+      app_secret: ed2ff69a1575fb635eba2a03e9c304d6

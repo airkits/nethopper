@@ -28,10 +28,11 @@
 package logic
 
 import (
-	"errors"
-
+	"github.com/gonethopper/nethopper/examples/usercenter/cmd"
+	"github.com/gonethopper/nethopper/examples/usercenter/global"
 	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
+	"github.com/gonethopper/nethopper/utils"
 )
 
 // WXLoginHandler weixin user login
@@ -46,7 +47,14 @@ import (
 // @Router /call/WXLoginHandler [put]
 func WXLoginHandler(s *Module, obj *server.CallObject, appID string, code string) (*model.User, error) {
 	defer server.TraceCost("LoginHandler")()
-
+	info, err := server.Call(global.ModuleIDWechatClient, cmd.MCWXLogin, utils.RandomInt32(0, 1024), appID, code)
+	if err != nil {
+		return nil, err
+	}
+	server.Info("%v", info)
+	return &model.User{
+		UID: 1111,
+	}, nil
 	// user, err := server.Call(server.ModuleIDRedis, common.CallIDGetUserInfoCmd, appID, code)
 	// if err == nil {
 	// 	server.Info("get from redis")
@@ -61,5 +69,5 @@ func WXLoginHandler(s *Module, obj *server.CallObject, appID string, code string
 	// 	server.Info("update redis failed %s %s", uid, password.(string))
 	// }
 	// server.Info("get from mysql")
-	return nil, errors.New("no user")
+	//return nil, errors.New("no user")
 }

@@ -25,19 +25,15 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2020-01-09 11:01:43
 
-package redis
+package wx
 
 import (
-	"errors"
-
-	"github.com/gonethopper/nethopper/examples/usercenter/model"
+	"github.com/gonethopper/nethopper/examples/usercenter/modules/wx/sdk"
 	"github.com/gonethopper/nethopper/server"
 )
 
-// GetUserInfoHander 获取用户信息
-func GetUserInfoHander(s *Module, obj *server.CallObject, uid string) (*model.User, error) {
-	// defer server.TraceCost("GetUserInfoHander")()
-	// password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%s", uid))
-	return nil, errors.New("no user")
-
+// Login 微信登陆
+func Login(s *Module, obj *server.CallObject, appID string, code string) (map[string]interface{}, error) {
+	defer server.TraceCost("Login")()
+	return sdk.Login(appID, s.AppSecret(appID), code)
 }

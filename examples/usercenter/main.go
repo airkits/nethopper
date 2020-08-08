@@ -41,6 +41,7 @@ import (
 	"github.com/gonethopper/nethopper/examples/usercenter/modules/http"
 	"github.com/gonethopper/nethopper/examples/usercenter/modules/logic"
 	"github.com/gonethopper/nethopper/examples/usercenter/modules/redis"
+	"github.com/gonethopper/nethopper/examples/usercenter/modules/wx"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -78,7 +79,7 @@ func main() {
 	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
 	NewNamedModule(ModuleIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
 	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)
-
+	NewNamedModule(global.ModuleIDWechatClient, "wechat", wx.ModuleCreate, nil, &cfg.WX)
 	InitSignal()
 	//GracefulExit()
 }

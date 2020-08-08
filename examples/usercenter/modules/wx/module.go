@@ -25,17 +25,21 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package redis
+package wx
 
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/examples/usercenter/cmd"
+	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
 )
 
 // Module struct to define module
 type Module struct {
 	server.BaseContext
+	Conf *model.WXConfig
+	Apps map[string]string
 }
 
 // ModuleCreate  module create function
@@ -49,9 +53,19 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-
+	s.Conf = conf.(*model.WXConfig)
+	s.Apps = make(map[string]string)
+	for _, v := range s.Conf.Apps {
+		s.Apps[v.AppID] = v.AppSecret
+	}
+	s.RegisterHandler(cmd.MCWXLogin, Login)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
+}
+
+//AppSecret get appsecret by appid
+func (s *Module) AppSecret(appID string) string {
+	return s.Apps[appID]
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function

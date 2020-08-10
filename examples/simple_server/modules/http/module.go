@@ -55,7 +55,7 @@ func SessionHTTPMiddleware(next http.Handler) http.Handler {
 			arr := strings.Split(req.RemoteAddr, ":")
 			host := arr[0]
 			port := arr[1]
-			sess := server.CreateSession(server.ModuleIDHTTP, host, port)
+			sess := server.CreateSession(server.MIDHTTP, host, port)
 			server.Info("new connection from:%v port:%v sessionid:%s", host, port, sess.SessionID)
 			context.Set(req, "token", sess.SessionID)
 		}

@@ -36,4 +36,7 @@ const (
 	MCDBCreateUser = "CreateUser"
 	// MCDBGetUserByUID
 	MCDBGetUserByUID = "GetUserByUID"
+
+	//module snowflake
+	MCSFGetUID = "GetUID"
 )

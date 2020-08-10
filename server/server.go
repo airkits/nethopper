@@ -53,8 +53,8 @@ var WG sync.WaitGroup
 
 // module variable start
 
-// AnonymousModuleID Anonymous Module Counter
-var AnonymousModuleID int32 = ModuleIDNamedMax
+// AnonymousMID Anonymous Module Counter
+var AnonymousMID int32 = MIDNamedMax
 
 // relModules relate name to create module function
 var relModules = make(map[string]func() (Module, error))

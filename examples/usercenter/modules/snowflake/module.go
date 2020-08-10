@@ -38,8 +38,7 @@ import (
 // Module struct to define module
 type Module struct {
 	server.BaseContext
-	Conf *model.WXConfig
-	Apps map[string]string
+	Conf *model.SFConfig
 }
 
 // ModuleCreate  module create function
@@ -53,19 +52,16 @@ func ModuleCreate() (server.Module, error) {
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.Conf = conf.(*model.WXConfig)
-	s.Apps = make(map[string]string)
-	for _, v := range s.Conf.Apps {
-		s.Apps[v.AppID] = v.AppSecret
-	}
-	s.RegisterHandler(cmd.MCWXLogin, Login)
+	s.Conf = conf.(*model.SFConfig)
+
+	s.RegisterHandler(cmd.MCSFGetUID, GetUID)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
-//AppSecret get appsecret by appid
-func (s *Module) AppSecret(appID string) string {
-	return s.Apps[appID]
+//GetHost get snowflake server host
+func (s *Module) GetHost() string {
+	return s.Conf.Hosts[0]
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function

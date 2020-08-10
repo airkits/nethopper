@@ -52,14 +52,14 @@ func init() {
 func main() {
 	cfg := global.GetInstance().GetConfig()
 
-	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
-	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
-	//NewNamedModule(ModuleIDWSClient, "wspb",wspb.ModuleCreate, nil, &cfg.WS)
-	NewNamedModule(ModuleIDWSClient, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
-	//NewNamedModule(ModuleIDGRPCClient, "grpc", grpc_client.ModuleCreate, nil, &cfg.GPRC)
-	// NewNamedModule(ModuleIDTCPClient, "tcp", tcp_client.ModuleCreate, nil, &cfg.TCP)
-	// NewNamedModule(ModuleIDKCPClient, "kcp", kcp_client.ModuleCreate, nil, &cfg.KCP)
-	// NewNamedModule(ModuleIDQUICClient, "quic", quic_client.ModuleCreate, nil, &cfg.QUIC)
+	NewNamedModule(MIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(MIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	//NewNamedModule(MIDWSClient, "wspb",wspb.ModuleCreate, nil, &cfg.WS)
+	NewNamedModule(MIDWSClient, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
+	//NewNamedModule(MIDGRPCClient, "grpc", grpc_client.ModuleCreate, nil, &cfg.GPRC)
+	// NewNamedModule(MIDTCPClient, "tcp", tcp_client.ModuleCreate, nil, &cfg.TCP)
+	// NewNamedModule(MIDKCPClient, "kcp", kcp_client.ModuleCreate, nil, &cfg.KCP)
+	// NewNamedModule(MIDQUICClient, "quic", quic_client.ModuleCreate, nil, &cfg.QUIC)
 	InitSignal()
 	//GracefulExit()
 }

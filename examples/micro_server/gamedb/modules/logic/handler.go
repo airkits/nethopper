@@ -38,7 +38,7 @@ import (
 // 	var uid = (obj.Args[0]).(string)
 
 // 	var redisObj = server.NewCallObject(common.CallIDGetUserInfoCmd, uid)
-// 	server.Call(server.ModuleIDRedis, 0, redisObj)
+// 	server.Call(server.MIDRedis, 0, redisObj)
 // 	result := <-redisObj.ChanRet
 // 	if result.Err == nil {
 // 		var ret = server.RetObject{
@@ -64,7 +64,7 @@ func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (st
 	defer server.TraceCost("LoginHandler")()
 	opt, err := strconv.Atoi(uid)
 
-	password, err := server.Call(server.ModuleIDDB, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
+	password, err := server.Call(server.MIDDB, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
 	if err != nil {
 		return "", err
 	}

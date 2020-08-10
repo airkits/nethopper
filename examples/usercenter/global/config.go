@@ -13,10 +13,12 @@ import (
 )
 
 const (
-	// ModuleIDUserCustom User custom define named modules from 64-128
-	ModuleIDUserCustom = 64
-	// ModuleIDWechatClient module id wechat
-	ModuleIDWechatClient
+	// MIDUserCustom User custom define named modules from 64-128
+	MIDUserCustom = 64
+	// MIDWechatClient module id wechat client
+	MIDWechatClient = 65
+	//MIDSnowflakeClient module id snowflake client
+	MIDSnowflakeClient = 66
 )
 
 // Config server config
@@ -30,6 +32,7 @@ type Config struct {
 	Mysql database.Config    `mapstructure:"mysql"`
 	HTTP  http.ServerConfig  `mapstructure:"http"`
 	WX    model.WXConfig     `mapstructure:"wx"`
+	SF    model.SFConfig     `mapstructure:"sf"`
 }
 
 //ConfigManager define

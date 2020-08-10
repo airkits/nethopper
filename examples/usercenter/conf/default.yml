@@ -15,7 +15,7 @@ http:
   queue_size: 1000
 
 grpc:
-  address: :14000
+  address: :14001
   max_conn_num: 1024
   socket_queue_size: 100
   max_message_size: 4096
@@ -54,3 +54,8 @@ wx:
   apps:
     - appid: wxec644f0c4e2cb275
       app_secret: ed2ff69a1575fb635eba2a03e9c304d6
+
+sf:
+  hosts:
+    - http://127.0.0.1:11080
+  queue_size: 1000

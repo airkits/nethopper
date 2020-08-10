@@ -70,11 +70,11 @@ func main() {
 
 	//runtime.GOMAXPROCS(1)
 	cfg := global.GetInstance().GetConfig()
-	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
-	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
-	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
-	NewNamedModule(ModuleIDWSServer, "wsjson", wsjson.ModuleCreate, nil, &cfg.WSJSON)
-	NewNamedModule(ModuleIDGRPCClient, "gclient", gclient.ModuleCreate, nil, &cfg.GPRCClient)
+	NewNamedModule(MIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(MIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	NewNamedModule(MIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
+	NewNamedModule(MIDWSServer, "wsjson", wsjson.ModuleCreate, nil, &cfg.WSJSON)
+	NewNamedModule(MIDGRPCClient, "gclient", gclient.ModuleCreate, nil, &cfg.GPRCClient)
 	InitSignal()
 	//GracefulExit()
 }

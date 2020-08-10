@@ -151,7 +151,7 @@ func Index(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, cmd.CallIDLoginCmd, int32(model.UID), strconv.FormatInt(model.UID, 10), model.Passwd)
+	result, err2 := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(model.UID), strconv.FormatInt(model.UID, 10), model.Passwd)
 	if err2 != nil {
 		server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)

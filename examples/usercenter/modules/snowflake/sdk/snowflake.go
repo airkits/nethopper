@@ -1,34 +1,34 @@
 package sdk
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/network/http"
+	"github.com/gonethopper/nethopper/server"
 )
 
-//API api server
-const API = "https://api.weixin.qq.com"
+//GenUIDAPI api server
+const GenUIDAPI = "%s/v1/genuid"
 
-//LoginURL login account balance url
-const LoginURL = API + "/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code"
+//GenUID 获取uid
+func GenUID(host string, channel int32) (uint64, error) {
+	url := fmt.Sprintf(GenUIDAPI, host)
 
-//Login 微信登陆
-func Login(appID string, appSecret string, code string) (*model.WXUser, error) {
-	url := fmt.Sprintf(LoginURL, appID, appSecret, code)
-	var content string
-	if err := http.Request(url, http.GET, http.RequestTypeText, nil, nil, http.ResponseTypeText, &content, http.ConnTimeoutMS, http.ServeTimeoutMS); err != nil {
-		return nil, err
+	req := map[string]interface{}{
+		"Channel": channel,
 	}
-	wxuser := &model.WXUser{}
-	if err := json.Unmarshal([]byte(content), &wxuser); err != nil {
-		return nil, err
+	resp := model.Response{
+		Data: &model.GenUIDResp{},
 	}
-	if wxuser.ErrCode == 0 {
-		return wxuser, nil
+	if err := http.Request(url, http.POST, http.RequestTypeJSON, nil, req, http.ResponseTypeJSON, &resp, http.ConnTimeoutMS, http.ServeTimeoutMS); err != nil {
+		return 0, err
 	}
-	return nil, errors.New(wxuser.ErrMsg)
+	server.Info("%v", resp)
+	if resp.Code == 0 {
+		return resp.Data.(*model.GenUIDResp).UID, nil
+	}
+	return 0, errors.New(resp.Msg)
 
 }

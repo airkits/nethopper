@@ -71,11 +71,11 @@ func main() {
 
 	//runtime.GOMAXPROCS(1)
 	cfg := global.GetInstance().GetConfig()
-	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
-	NewNamedModule(ModuleIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
-	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
-	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
-	NewNamedModule(ModuleIDGRPCClient, "gclient", gclient.ModuleCreate, nil, &cfg.GPRCClient)
+	NewNamedModule(MIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(MIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
+	NewNamedModule(MIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	NewNamedModule(MIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
+	NewNamedModule(MIDGRPCClient, "gclient", gclient.ModuleCreate, nil, &cfg.GPRCClient)
 	InitSignal()
 	//GracefulExit()
 }

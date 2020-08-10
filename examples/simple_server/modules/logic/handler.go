@@ -38,7 +38,7 @@ import (
 // 	var uid = (obj.Args[0]).(string)
 
 // 	var redisObj = server.NewCallObject(common.CallIDGetUserInfoCmd, uid)
-// 	server.Call(server.ModuleIDRedis, 0, redisObj)
+// 	server.Call(server.MIDRedis, 0, redisObj)
 // 	result := <-redisObj.ChanRet
 // 	if result.Err == nil {
 // 		var ret = server.RetObject{
@@ -63,16 +63,16 @@ import (
 func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
 	defer server.TraceCost("LoginHandler")()
 	opt, err := strconv.Atoi(uid)
-	password, err := server.Call(server.ModuleIDRedis, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
+	password, err := server.Call(server.MIDRedis, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
 	if err == nil {
 		server.Info("get from redis")
 		return password.(string), err
 	}
-	password, err = server.Call(server.ModuleIDDB, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
+	password, err = server.Call(server.MIDDB, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
 	if err != nil {
 		return "", err
 	}
-	updated, err := server.Call(server.ModuleIDRedis, cmd.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
+	updated, err := server.Call(server.MIDRedis, cmd.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
 	if updated == false {
 		server.Info("update redis failed %s %s", uid, password.(string))
 	}

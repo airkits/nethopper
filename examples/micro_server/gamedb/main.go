@@ -68,10 +68,10 @@ func init() {
 func main() {
 	cfg := global.GetInstance().GetConfig()
 	//runtime.GOMAXPROCS(1)
-	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
-	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)
-	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
-	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
+	NewNamedModule(MIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(MIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)
+	NewNamedModule(MIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	NewNamedModule(MIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
 	InitSignal()
 	//GracefulExit()
 }

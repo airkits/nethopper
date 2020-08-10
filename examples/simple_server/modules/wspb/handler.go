@@ -53,7 +53,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 	server.Info("receive message %v", message)
 	userID := server.StringToInt64(req.Uid)
-	result, err := server.Call(server.ModuleIDLogic, cmd.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
+	result, err := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
 
 	resp := &c2s.LoginResp{
 		Result: &c2s.Result{

@@ -169,7 +169,7 @@ func GenUID(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, cmd.CallIDGenUIDCmd, utils.RandomInt32(0, 1024), model.Channel)
+	result, err2 := server.Call(server.MIDLogic, cmd.CallIDGenUIDCmd, utils.RandomInt32(0, 1024), model.Channel)
 	if err2 != nil {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)
@@ -199,7 +199,7 @@ func GenUIDs(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.ModuleIDLogic, cmd.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), model.Channel, model.Num)
+	result, err2 := server.Call(server.MIDLogic, cmd.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), model.Channel, model.Num)
 	if err2 != nil {
 		server.Info("message done,get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)

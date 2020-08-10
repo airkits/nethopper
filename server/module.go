@@ -43,47 +43,47 @@ import (
 const (
 	// ModuleNamedIDs module id define, system reserved 1-63
 	ModuleNamedIDs = iota
-	// ModuleIDMain main goruntinue
-	ModuleIDMain
-	// ModuleIDMonitor server monitor module
-	ModuleIDMonitor
-	// ModuleIDLog log module
-	ModuleIDLog
-	// ModuleIDTCP tcp module
-	ModuleIDTCP
-	// ModuleIDKCP kcp module
-	ModuleIDKCP
-	// ModuleIDQUIC quic module
-	ModuleIDQUIC
-	// ModuleIDWSServer ws server
-	ModuleIDWSServer
-	// ModuleIDGRPCServer grpc server
-	ModuleIDGRPCServer
-	// ModuleIDHTTP http module
-	ModuleIDHTTP
-	// ModuleIDLogic logic module
-	ModuleIDLogic
-	// ModuleIDRedis redis module
-	ModuleIDRedis
-	// ModuleIDTCPClient tcp client module
-	ModuleIDTCPClient
-	// ModuleIDKCPClient kcp client module
-	ModuleIDKCPClient
-	// ModuleIDQUICClient quic client module
-	ModuleIDQUICClient
-	// ModuleIDHTTPClient http client module
-	ModuleIDHTTPClient
-	// ModuleIDGRPCClient grpc client module
-	ModuleIDGRPCClient
-	// ModuleIDWSClient ws client
-	ModuleIDWSClient
-	// ModuleIDDB common db module
-	ModuleIDDB
+	// MIDMain main goruntinue
+	MIDMain
+	// MIDMonitor server monitor module
+	MIDMonitor
+	// MIDLog log module
+	MIDLog
+	// MIDTCP tcp module
+	MIDTCP
+	// MIDKCP kcp module
+	MIDKCP
+	// MIDQUIC quic module
+	MIDQUIC
+	// MIDWSServer ws server
+	MIDWSServer
+	// MIDGRPCServer grpc server
+	MIDGRPCServer
+	// MIDHTTP http module
+	MIDHTTP
+	// MIDLogic logic module
+	MIDLogic
+	// MIDRedis redis module
+	MIDRedis
+	// MIDTCPClient tcp client module
+	MIDTCPClient
+	// MIDKCPClient kcp client module
+	MIDKCPClient
+	// MIDQUICClient quic client module
+	MIDQUICClient
+	// MIDHTTPClient http client module
+	MIDHTTPClient
+	// MIDGRPCClient grpc client module
+	MIDGRPCClient
+	// MIDWSClient ws client
+	MIDWSClient
+	// MIDDB common db module
+	MIDDB
 
-	// ModuleIDUserCustom User custom define named modules from 64-128
-	ModuleIDUserCustom = 64
-	// ModuleIDNamedMax named modules max ID
-	ModuleIDNamedMax = 128
+	// MIDUserCustom User custom define named modules from 64-128
+	MIDUserCustom = 64
+	// MIDNamedMax named modules max ID
+	MIDNamedMax = 128
 )
 
 // Module interface define
@@ -442,24 +442,24 @@ func CreateModule(name string) (Module, error) {
 }
 
 // GetModuleByID get module instance by id
-func GetModuleByID(moduleID int32) (Module, error) {
-	se, ok := App.Modules.Load(moduleID)
+func GetModuleByID(MID int32) (Module, error) {
+	se, ok := App.Modules.Load(MID)
 	if ok {
 		return se.(Module), nil
 	}
-	return nil, fmt.Errorf("cant get module ID %d", moduleID)
+	return nil, fmt.Errorf("cant get module ID %d", MID)
 }
 
 // NewNamedModule create named module
-func NewNamedModule(moduleID int32, name string, createFunc func() (Module, error), parent Module, conf IConfig) (Module, error) {
+func NewNamedModule(MID int32, name string, createFunc func() (Module, error), parent Module, conf IConfig) (Module, error) {
 	if !IsModuleRegistered(name) {
 		if err := RegisterModule(name, createFunc); err != nil {
 			panic(err)
 		}
 	}
-	return createModuleByID(moduleID, name, parent, conf)
+	return createModuleByID(MID, name, parent, conf)
 }
-func createModuleByID(moduleID int32, name string, parent Module, conf IConfig) (Module, error) {
+func createModuleByID(MID int32, name string, parent Module, conf IConfig) (Module, error) {
 	se, err := CreateModule(name)
 	if err != nil {
 		return nil, err
@@ -467,9 +467,9 @@ func createModuleByID(moduleID int32, name string, parent Module, conf IConfig) 
 	se.MakeContext(nil, int32(conf.GetQueueSize()))
 	se.SetName(ModuleName(se))
 	se.Setup(conf)
-	se.SetID(moduleID)
-	App.Modules.Store(moduleID, se)
-	if moduleID == ModuleIDLog {
+	se.SetID(MID)
+	App.Modules.Store(MID, se)
+	if MID == MIDLog {
 		GLoggerModule = se
 	}
 	GOWithContext(ModuleRun, se)
@@ -478,16 +478,16 @@ func createModuleByID(moduleID int32, name string, parent Module, conf IConfig) 
 
 // NewModule create anonymous module
 func NewModule(name string, parent Module, conf IConfig) (Module, error) {
-	//Inc AnonymousModuleID count = count +1
-	moduleID := atomic.AddInt32(&AnonymousModuleID, 1)
-	return createModuleByID(moduleID, name, parent, conf)
+	//Inc AnonymousMID count = count +1
+	MID := atomic.AddInt32(&AnonymousMID, 1)
+	return createModuleByID(MID, name, parent, conf)
 }
 
 // Call get info from modules
 // same option will run in same processor
-func Call(destModuleID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
+func Call(destMID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
 	var obj = NewCallObject(cmd, option, args...)
-	m, err := GetModuleByID(destModuleID)
+	m, err := GetModuleByID(destMID)
 	if err != nil {
 		return nil, err
 	}

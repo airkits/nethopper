@@ -41,6 +41,7 @@ import (
 	"github.com/gonethopper/nethopper/examples/usercenter/modules/http"
 	"github.com/gonethopper/nethopper/examples/usercenter/modules/logic"
 	"github.com/gonethopper/nethopper/examples/usercenter/modules/redis"
+	"github.com/gonethopper/nethopper/examples/usercenter/modules/snowflake"
 	"github.com/gonethopper/nethopper/examples/usercenter/modules/wx"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
@@ -73,13 +74,14 @@ func main() {
 
 	//runtime.GOMAXPROCS(1)
 	cfg := global.GetInstance().GetConfig()
-	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
-	NewNamedModule(ModuleIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
-	NewNamedModule(ModuleIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
-	NewNamedModule(ModuleIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
-	NewNamedModule(ModuleIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
-	NewNamedModule(ModuleIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)
-	NewNamedModule(global.ModuleIDWechatClient, "wechat", wx.ModuleCreate, nil, &cfg.WX)
+	NewNamedModule(MIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
+	NewNamedModule(MIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
+	NewNamedModule(MIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
+	NewNamedModule(MIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
+	NewNamedModule(MIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
+	NewNamedModule(MIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)
+	NewNamedModule(global.MIDWechatClient, "wechat", wx.ModuleCreate, nil, &cfg.WX)
+	NewNamedModule(global.MIDSnowflakeClient, "snowflake", snowflake.ModuleCreate, nil, &cfg.SF)
 	InitSignal()
 	//GracefulExit()
 }

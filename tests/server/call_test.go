@@ -67,7 +67,7 @@ func initServer() error {
 		DailyEnabled: true,
 		QueueSize:    1000,
 	}
-	NewNamedModule(ModuleIDLog, "log", log.LogModuleCreate, nil, &conf)
+	NewNamedModule(MIDLog, "log", log.LogModuleCreate, nil, &conf)
 
 	return nil
 }

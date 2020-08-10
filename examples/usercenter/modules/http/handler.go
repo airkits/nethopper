@@ -164,9 +164,9 @@ func WXLogin(c *gin.Context) {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)
 	} else {
-		server.Info("message done,get user  %v", result.(model.User))
+		server.Info("message done,get user  %v", (result.(*model.User)))
 
-		ResponseSuccess(session, LoginResp{User: result.(model.User)})
+		ResponseSuccess(session, LoginResp{User: *(result.(*model.User))})
 	}
 
 }

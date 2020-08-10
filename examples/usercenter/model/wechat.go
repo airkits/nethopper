@@ -16,3 +16,12 @@ type WXConfig struct {
 func (c *WXConfig) GetQueueSize() int {
 	return c.QueueSize
 }
+
+//WXUser info struct
+type WXUser struct {
+	OpenID     string `json:"openid"`
+	UUID       string `json:"uuid"`
+	SessionKey string `json:"session_key"`
+	ErrCode    int    `json:"errcode"`
+	ErrMsg     string `json:"errMsg"`
+}

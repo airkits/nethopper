@@ -29,7 +29,27 @@ info:
   title: Nethopper UserCenter Server
   version: 1.0.2
 paths:
-  /call/WXLoginHandler:
+  /call/GetUIDByOpenID:
+    put:
+      consumes:
+      - text/plain
+      parameters:
+      - description: appID
+        in: query
+        name: openID
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: GetUIDByOpenID
+      tags:
+      - LogicModule
+  /call/WXLogin:
     put:
       consumes:
       - text/plain
@@ -51,7 +71,7 @@ paths:
           description: OK
           schema:
             type: string
-      summary: WXLoginHandler
+      summary: WXLogin
       tags:
       - LogicModule
   /v1/call/:module/:cmd/:opt:

@@ -42,16 +42,16 @@ func getOpenID2UIDKey(openID string) string {
 	return fmt.Sprintf("openid2uid_%s", openID)
 }
 
-//ConvertOpenID2UID 通过openID映射为uid，没有就创建一个
-func ConvertOpenID2UID(s *Module, obj *server.CallObject, openID string) (uint64, error) {
+//GetUIDByOpenID 通过openID映射为uid，没有就创建一个
+func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, error) {
 	defer server.TraceCost("ConvertOpenID2UID")()
 	key := getOpenID2UIDKey(openID)
 	uid, err := s.rdb.GetUint64(s.Context(), key)
 	return uid, err
 }
 
-// SetOpenID2UID set openid to uid mapping
-func SetOpenID2UID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, error) {
+// SetUIDByOpenID set openid to uid mapping
+func SetUIDByOpenID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, error) {
 	var key = getOpenID2UIDKey(openID)
 	err := s.rdb.Set(s.Context(), key, uid, 0)
 	if err != nil {

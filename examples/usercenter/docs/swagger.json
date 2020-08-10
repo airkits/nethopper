@@ -17,7 +17,7 @@
     },
     "host": "localhost:11080",
     "paths": {
-        "/call/WXLoginHandler": {
+        "/call/GetUIDByOpenID": {
             "put": {
                 "consumes": [
                     "text/plain"
@@ -28,7 +28,38 @@
                 "tags": [
                     "LogicModule"
                 ],
-                "summary": "WXLoginHandler",
+                "summary": "GetUIDByOpenID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "appID",
+                        "name": "openID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/call/WXLogin": {
+            "put": {
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "LogicModule"
+                ],
+                "summary": "WXLogin",
                 "parameters": [
                     {
                         "type": "string",

@@ -11,7 +11,7 @@ log:
   queue_size: 1000
 
 http:
-  address: :11080
+  address: :8000
   queue_size: 1000
 
 grpc:

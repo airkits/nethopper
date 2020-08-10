@@ -66,6 +66,8 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 
 	s.RegisterHandler(cmd.MCRedisGetUserInfo, GetUserInfo)
 	s.RegisterHandler(cmd.MCRedisUpdateUserInfo, UpdateUserInfo)
+	s.RegisterHandler(cmd.MCRedisGetUIDByOpenID, GetUIDByOpenID)
+	s.RegisterHandler(cmd.MCRedisSetUIDByOpenID, SetUIDByOpenID)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }

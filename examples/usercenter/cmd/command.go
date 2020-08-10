@@ -4,30 +4,36 @@ package cmd
 const (
 	// module http
 	// MCHTTPWXLogin weixin login cmd
-	MCHTTPWXLogin = "wxlogin"
+	MCHTTPWXLogin = "WXLogin"
 
 	// module grpc
 
 	// module logic
 	// MCLogicWXLogin
-	MCLogicWXLogin = MCHTTPWXLogin
+	MCLogicWXLogin = "WXLogin"
+	// MCLogicGetUIDByOpenID
+	MCLogicGetUIDByOpenID = "GetUIDByOpenID"
 
 	// module wx
-	MCWXLogin = "wxlogin"
+	MCWXLogin = "WXLogin"
 
 	// module redis
 	// MCRedisGetUserInfo
-	MCRedisGetUserInfo = "getUserInfo"
+	MCRedisGetUserInfo = "GetUserInfo"
 	// MCRedisUpdateUserInfo
-	MCRedisUpdateUserInfo = "updateUserInfo"
+	MCRedisUpdateUserInfo = "UpdateUserInfo"
+	// MCRedisGetUIDByOpenID
+	MCRedisGetUIDByOpenID = "GetUIDByOpenID"
+	// MCRedisSetUIDByOpenID
+	MCRedisSetUIDByOpenID = "SetUIDByOpenID"
 
 	// module db
 	// MCDBGetUIDByOpenID get uid by openid
-	MCDBGetUIDByOpenID = "getUserByOpenID"
+	MCDBGetUIDByOpenID = "GetUserByOpenID"
 	// MCDBInsertOID2UID  make openid to uid mapping
-	MCDBInsertOID2UID = "insertOID2UID"
+	MCDBInsertOID2UID = "InsertOID2UID"
 	// MCDBCreateUser
-	MCDBCreateUser = "createUser"
+	MCDBCreateUser = "CreateUser"
 	// MCDBGetUserByUID
-	MCDBGetUserByUID = "getUserByUID"
+	MCDBGetUserByUID = "GetUserByUID"
 )

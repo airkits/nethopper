@@ -25,18 +25,21 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-24 11:07:19
 
-package logic
+package snowflake
 
 import (
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/usercenter/cmd"
+	"github.com/gonethopper/nethopper/examples/usercenter/model"
 	"github.com/gonethopper/nethopper/server"
 )
 
 // Module struct to define module
 type Module struct {
 	server.BaseContext
+	Conf *model.WXConfig
+	Apps map[string]string
 }
 
 // ModuleCreate  module create function
@@ -44,27 +47,26 @@ func ModuleCreate() (server.Module, error) {
 	return &Module{}, nil
 }
 
-// UserData module custom option, can you store you data and you must keep goruntine safe
-// func (s *Module) UserData() int32 {
-// 	return 0
-// }
-
 // Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(cmd.MCLogicWXLogin, WXLogin)
-	s.RegisterHandler(cmd.MCLogicGetUIDByOpenID, GetUIDByOpenID)
+	s.Conf = conf.(*model.WXConfig)
+	s.Apps = make(map[string]string)
+	for _, v := range s.Conf.Apps {
+		s.Apps[v.AppID] = v.AppSecret
+	}
+	s.RegisterHandler(cmd.MCWXLogin, Login)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }
 
-//Reload reload config
-// func (s *Module) Reload(m map[string]interface{}) error {
-// 	return nil
-// }
+//AppSecret get appsecret by appid
+func (s *Module) AppSecret(appID string) string {
+	return s.Apps[appID]
+}
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
@@ -75,16 +77,3 @@ func (s *Module) OnRun(dt time.Duration) {
 func (s *Module) Stop() error {
 	return nil
 }
-
-// Call async send message to module
-// func (s *Module) Call(option int32, obj *server.CallObject) error {
-// 	if err := s.MQ().AsyncPush(obj); err != nil {
-// 		server.Error(err.Error())
-// 	}
-// 	return nil
-// }
-
-// PushBytes async send string or bytes to queue
-// func (s *Module) PushBytes(option int32, buf []byte) error {
-// 	return nil
-// }

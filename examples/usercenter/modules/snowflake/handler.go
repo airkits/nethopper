@@ -25,11 +25,11 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2020-01-09 11:01:43
 
-package wx
+package snowflake
 
 import (
 	"github.com/gonethopper/nethopper/examples/usercenter/model"
-	"github.com/gonethopper/nethopper/examples/usercenter/modules/wx/sdk"
+	"github.com/gonethopper/nethopper/examples/usercenter/modules/snowflake/sdk"
 	"github.com/gonethopper/nethopper/server"
 )
 

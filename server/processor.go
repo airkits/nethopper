@@ -113,7 +113,7 @@ func Process(s Module, obj *CallObject) (err error) {
 	}
 	f := s.(Module).GetHandler(obj.Cmd)
 	if f == nil {
-		err = Error("handler id %v: function not registered", obj.Cmd)
+		err = Error("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
 		panic(err)
 	} else {
 		args := []interface{}{s, obj}

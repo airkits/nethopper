@@ -12,7 +12,15 @@ definitions:
     properties:
       appid:
         type: string
+      avatar:
+        type: string
+      channel:
+        type: string
       code:
+        type: string
+      gender:
+        type: integer
+      nickname:
         type: string
     type: object
 host: localhost:11080
@@ -29,6 +37,26 @@ info:
   title: Nethopper UserCenter Server
   version: 1.0.2
 paths:
+  /call/CreateUser:
+    put:
+      consumes:
+      - text/plain
+      parameters:
+      - description: user
+        in: query
+        name: user
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: CreateUser
+      tags:
+      - LogicModule
   /call/GetUIDByOpenID:
     put:
       consumes:
@@ -62,6 +90,26 @@ paths:
       - description: code
         in: query
         name: code
+        required: true
+        type: string
+      - description: channel
+        in: query
+        name: channel
+        required: true
+        type: string
+      - description: nickname
+        in: query
+        name: nickname
+        required: true
+        type: string
+      - description: gender
+        in: query
+        name: gender
+        required: true
+        type: integer
+      - description: avatar
+        in: query
+        name: avatar
         required: true
         type: string
       produces:

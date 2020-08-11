@@ -76,8 +76,12 @@ func RegisterCmdAPI(group *gin.RouterGroup) {
 
 //WXLoginReq request body
 type WXLoginReq struct {
-	AppID string `form:"appid" json:"appid"`
-	Code  string `form:"code" json:"code"`
+	AppID    string `form:"appid" json:"appid"`
+	Code     string `form:"code" json:"code"`
+	Channel  string `form:"channel" json:"channel"`
+	Nickname string `form:"nickname" json:"nickname"`
+	Gender   int    `form:"gender" json:"gender"`
+	Avatar   string `form:"avatar" json:"avatar"`
 }
 
 //LoginResp response body
@@ -159,7 +163,7 @@ func WXLogin(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.MIDLogic, cmd.MCLogicWXLogin, utils.RandomInt32(0, 1024), req.AppID, req.Code)
+	result, err2 := server.Call(server.MIDLogic, cmd.MCLogicWXLogin, utils.RandomInt32(0, 1024), req.AppID, req.Code, req.Channel, req.Nickname, req.Gender, req.Avatar)
 	if err2 != nil {
 		server.Info("message done, get err %s", err2.Error())
 		ResponseError(session, CSErrorCodeClientError, err2)

@@ -55,10 +55,12 @@ func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, e
 }
 
 //InsertOID2UID insert oid and uid in mapping
-func InsertOID2UID(s *Module, obj *server.CallObject, openID string, uid uint64) (uint64, error) {
+func InsertOID2UID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, error) {
 	sql := "insert into " + getOID2UIDTable(openID) + "(openid,uid) value(?,?)"
-	_, err := s.conn.Exec(sql, openID, uid)
-	return uid, err
+	if _, err := s.conn.Exec(sql, openID, uid); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // GetUserByUID 获取用户信息

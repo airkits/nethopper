@@ -43,12 +43,21 @@ import (
 // @Produce plain
 // @Param appID query string true "appID"
 // @Param code query string true "code"
+// @Param channel query string true "channel"
+// @Param nickname query string true "nickname"
+// @Param gender query int true "gender"
+// @Param avatar query string true "avatar"
 // @Success 200 {string} string 成功后返回值
 // @Router /call/WXLogin [put]
-func WXLogin(s *Module, obj *server.CallObject, appID string, code string) (*model.User, error) {
+func WXLogin(s *Module, obj *server.CallObject, appID string, code string, channel string, nickname string, gender int, avatar string) (*model.User, error) {
 	defer server.TraceCost("LoginHandler")()
 	user := &model.User{
-		UID: 0,
+		UID:     0,
+		AppID:   appID,
+		Channel: channel,
+		Name:    nickname,
+		Gender:  gender,
+		Avatar:  avatar,
 	}
 	wxuser, err := server.Call(global.MIDWechatClient, cmd.MCWXLogin, utils.RandomInt32(0, 1024), appID, code)
 	if err != nil {
@@ -116,8 +125,12 @@ func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, e
 	if err != nil {
 		return 0, err
 	}
-
-	updated, err := server.Call(server.MIDRedis, cmd.MCRedisSetUIDByOpenID, utils.RandomInt32(0, 1024), openID, uid)
+	updated, err := server.Call(server.MIDDB, cmd.MCDBInsertOID2UID, int32(uid.(uint64)), openID, uid)
+	if updated == false {
+		server.Info("set db failed %s %ld", openID, uid)
+		return 0, err
+	}
+	updated, err = server.Call(server.MIDRedis, cmd.MCRedisSetUIDByOpenID, int32(uid.(uint64)), openID, uid)
 	if updated == false {
 		server.Info("update redis failed %s %ld", openID, uid)
 	}
@@ -130,26 +143,19 @@ func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, e
 // @version 1.0
 // @Accept  plain
 // @Produce plain
-// @Param user query {object} true "user"
+// @Param user query string true "user"
 // @Success 200 {string} string 成功后返回值
 // @Router /call/CreateUser [put]
 func CreateUser(s *Module, obj *server.CallObject, user *model.User) (*model.User, error) {
 	defer server.TraceCost("CreateUser")()
 
-	// uid, err := server.Call(server.MIDRedis, cmd.MCRedisGetUIDByOpenID, utils.RandomInt32(0, 1024), openID)
-	// if err == nil {
-	// 	server.Info("get from redis uid=%ld", uid)
-	// 	return uid.(uint64), err
-	// }
-
-	// uid, err = server.Call(server.MIDDB, cmd.MCDBGetUIDByOpenID, utils.RandomInt32(0, 1024), openID)
-	// if err != nil {
-	// 	return 0, err
-	// }
-
-	// updated, err := server.Call(server.MIDRedis, cmd.MCRedisSetUIDByOpenID, utils.RandomInt32(0, 1024), openID, uid)
-	// if updated == false {
-	// 	server.Info("update redis failed %s %ld", openID, uid)
-	// }
-	return user, nil
+	result, err := server.Call(server.MIDDB, cmd.MCDBCreateUser, int32(user.UID), user)
+	if err != nil {
+		return nil, err
+	}
+	updated, err := server.Call(server.MIDRedis, cmd.MCRedisUpdateUserInfo, int32(user.UID), result)
+	if updated == false {
+		server.Info("update redis failed %s %ld  err:%s", user.OpenID, user.UID, err.Error())
+	}
+	return result.(*model.User), nil
 }

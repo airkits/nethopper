@@ -17,6 +17,37 @@
     },
     "host": "localhost:11080",
     "paths": {
+        "/call/CreateUser": {
+            "put": {
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "LogicModule"
+                ],
+                "summary": "CreateUser",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user",
+                        "name": "user",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/call/GetUIDByOpenID": {
             "put": {
                 "consumes": [
@@ -72,6 +103,34 @@
                         "type": "string",
                         "description": "code",
                         "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "channel",
+                        "name": "channel",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "nickname",
+                        "name": "nickname",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "gender",
+                        "name": "gender",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "avatar",
+                        "name": "avatar",
                         "in": "query",
                         "required": true
                     }
@@ -193,7 +252,19 @@
                 "appid": {
                     "type": "string"
                 },
+                "avatar": {
+                    "type": "string"
+                },
+                "channel": {
+                    "type": "string"
+                },
                 "code": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "integer"
+                },
+                "nickname": {
                     "type": "string"
                 }
             }

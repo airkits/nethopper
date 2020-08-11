@@ -88,7 +88,7 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 		if md.Get("UID") != nil {
 			uidStr := md.Get("UID")[0]
 			uid = conv.Str2Uint64(uidStr)
-			server.Info("UID from header: %ld", uid)
+			server.Info("UID from header: %d", uid)
 		}
 	}
 

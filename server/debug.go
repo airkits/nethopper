@@ -37,7 +37,7 @@ import (
 func TraceCost(msg string) func() {
 	start := time.Now()
 	return func() {
-		Error("[TraceCost] %s cost (%s)\n", msg, time.Since(start))
+		Trace("[TraceCost] %s cost (%s)\n", msg, time.Since(start))
 	}
 }
 

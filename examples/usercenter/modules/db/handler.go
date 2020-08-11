@@ -39,12 +39,13 @@ func getUserTableByUID(uid uint64) string {
 	return fmt.Sprintf("usercenter.user_%d", uid%8)
 }
 func getOID2UIDTable(openID string) string {
-	return fmt.Sprintf("usercenter.oid2uid_%d", md5.HashMod(openID, 8))
+	num := md5.HashMod(openID, 8)
+	return fmt.Sprintf("usercenter.oid2uid_%d", num)
 }
 
 // GetUIDByOpenID 获取uid
 func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, error) {
-	sql := "select uid from " + getOID2UIDTable(openID) + " where openid= ?"
+	sql := fmt.Sprintf("select uid from %s where openid=?", getOID2UIDTable(openID))
 	row := s.conn.QueryRow(sql, openID)
 	var uid uint64
 	var err error
@@ -56,7 +57,7 @@ func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, e
 
 //InsertOID2UID insert oid and uid in mapping
 func InsertOID2UID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, error) {
-	sql := "insert into " + getOID2UIDTable(openID) + "(openid,uid) value(?,?)"
+	sql := fmt.Sprintf("insert into %s (openid,uid) value(?,?)", getOID2UIDTable(openID))
 	if _, err := s.conn.Exec(sql, openID, uid); err != nil {
 		return false, err
 	}
@@ -65,7 +66,7 @@ func InsertOID2UID(s *Module, obj *server.CallObject, openID string, uid uint64)
 
 // GetUserByUID 获取用户信息
 func GetUserByUID(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
-	sql := "select uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,loginat,createat,status,loginip,channel from " + getUserTableByUID(uid) + " where uid= ?"
+	sql := fmt.Sprintf("select uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,loginat,createat,status,loginip,channel from %s where uid= ?", getUserTableByUID(uid))
 	user := model.User{
 		UID: uid,
 	}
@@ -78,7 +79,7 @@ func GetUserByUID(s *Module, obj *server.CallObject, uid uint64) (*model.User, e
 
 // CreateUser 创建用户信息
 func CreateUser(s *Module, obj *server.CallObject, u *model.User) (*model.User, error) {
-	sql := "insert into " + getUserTableByUID(u.UID) + "(uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,status,channel,loginip,loginat,createat) value(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	sql := fmt.Sprintf("insert into %s(uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,status,channel,loginip,loginat,createat) value(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", getUserTableByUID(u.UID))
 	_, err := s.conn.Exec(sql, u.UID, u.AppID, u.OpenID, u.UUID, u.Avatar, u.Name, u.Password, u.Phone, u.Gender, u.Age, u.Gold, u.Coin, u.Status, u.Channel, u.LoginIP, u.LoginAt, u.CreateAt)
 
 	if err == nil {

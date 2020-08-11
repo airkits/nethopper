@@ -37,12 +37,14 @@ import (
 // Log Levels Define
 // 0       Fatal: system is unusable
 // 1       Error: error conditions
-// 2       Warning: warning conditions
-// 3       Info: informational messages
-// 4       Debug: debug-level messages
+// 2       Trace: trace conditions
+// 3       Warning: warning conditions
+// 4       Info: informational messages
+// 5       Debug: debug-level messages
 const (
 	FATAL = iota
 	ERROR
+	TRACE
 	WARNING
 	INFO
 	DEBUG
@@ -78,7 +80,7 @@ type Log interface {
 }
 
 // LogLevelPrefix level format to string
-var LogLevelPrefix = [DEBUG + 1]string{" [FATAL] ", " [ERROR] ", " [WARNING] ", " [INFO] ", " [DEBUG] "}
+var LogLevelPrefix = [DEBUG + 1]string{" [FATAL] ", " [ERROR] ", " [TRACE] ", " [WARNING] ", " [INFO] ", " [DEBUG] "}
 
 // FormatLog format log and return string
 // if len(v) > 1 ,format = v[0]
@@ -121,6 +123,11 @@ func Fatal(v ...interface{}) error {
 // Error error conditions
 func Error(v ...interface{}) error {
 	return WriteLog(ERROR, v...)
+}
+
+// Trace error conditions
+func Trace(v ...interface{}) error {
+	return WriteLog(TRACE, v...)
 }
 
 // Warning warning conditions

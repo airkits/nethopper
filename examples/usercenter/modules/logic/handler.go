@@ -28,6 +28,8 @@
 package logic
 
 import (
+	"time"
+
 	"github.com/gonethopper/nethopper/examples/usercenter/cmd"
 	"github.com/gonethopper/nethopper/examples/usercenter/global"
 	"github.com/gonethopper/nethopper/examples/usercenter/model"
@@ -80,7 +82,7 @@ func WXLogin(s *Module, obj *server.CallObject, appID string, code string, chann
 			server.Error(err.Error())
 			return nil, err
 		}
-		server.Info("get sf uid %ld", uid)
+		server.Info("get sf uid %d", uid)
 	} else {
 		user.UID = uid
 	}
@@ -117,22 +119,23 @@ func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, e
 
 	uid, err := server.Call(server.MIDRedis, cmd.MCRedisGetUIDByOpenID, utils.RandomInt32(0, 1024), openID)
 	if err == nil {
-		server.Info("get from redis uid=%ld", uid)
+		server.Info("get from redis uid=%d", uid)
 		return uid.(uint64), err
 	}
 
 	uid, err = server.Call(server.MIDDB, cmd.MCDBGetUIDByOpenID, utils.RandomInt32(0, 1024), openID)
 	if err != nil {
+		server.Info("get uid from db uid=%d", uid)
 		return 0, err
 	}
 	updated, err := server.Call(server.MIDDB, cmd.MCDBInsertOID2UID, int32(uid.(uint64)), openID, uid)
 	if updated == false {
-		server.Info("set db failed %s %ld", openID, uid)
+		server.Info("set db failed %s %d", openID, uid)
 		return 0, err
 	}
 	updated, err = server.Call(server.MIDRedis, cmd.MCRedisSetUIDByOpenID, int32(uid.(uint64)), openID, uid)
 	if updated == false {
-		server.Info("update redis failed %s %ld", openID, uid)
+		server.Info("update redis failed %s %d", openID, uid)
 	}
 	return uid.(uint64), err
 }
@@ -148,14 +151,15 @@ func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, e
 // @Router /call/CreateUser [put]
 func CreateUser(s *Module, obj *server.CallObject, user *model.User) (*model.User, error) {
 	defer server.TraceCost("CreateUser")()
-
+	user.CreateAt = time.Now()
+	user.LoginAt = time.Now()
 	result, err := server.Call(server.MIDDB, cmd.MCDBCreateUser, int32(user.UID), user)
 	if err != nil {
 		return nil, err
 	}
 	updated, err := server.Call(server.MIDRedis, cmd.MCRedisUpdateUserInfo, int32(user.UID), result)
 	if updated == false {
-		server.Info("update redis failed %s %ld  err:%s", user.OpenID, user.UID, err.Error())
+		server.Info("update redis failed %s %d  err:%s", user.OpenID, user.UID, err.Error())
 	}
 	return result.(*model.User), nil
 }

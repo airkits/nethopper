@@ -13,7 +13,10 @@ const (
 	MCLogicWXLogin = "WXLogin"
 	// MCLogicGetUIDByOpenID
 	MCLogicGetUIDByOpenID = "GetUIDByOpenID"
-
+	//MCLogicGetUser get user
+	MCLogicGetUser = "GetUser"
+	//MCLogicCreateUser create user
+	MCLogicCreateUser = "CreateUser"
 	// module wx
 	MCWXLogin = "WXLogin"
 

@@ -19,7 +19,7 @@ func main() {
 		DailyEnabled: true,
 		QueueSize:    1000,
 	}
-	server.NewNamedModule(server.ModuleIDLog, "log", log.LogModuleCreate, nil, &conf)
+	server.NewNamedModule(server.MIDLog, "log", log.LogModuleCreate, nil, &conf)
 
 	options := &etcd.Options{}
 	options.Endpoints = []string{"127.0.0.1:2379"}

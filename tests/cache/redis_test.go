@@ -40,7 +40,7 @@ func TestRedis(t *testing.T) {
 	node := cache.NodeInfo{
 		ID:       0,
 		Password: "",
-		Address:  "127.0.0.1:6378",
+		Address:  "127.0.0.1:6379",
 		DB:       0,
 	}
 	conf := cache.Config{

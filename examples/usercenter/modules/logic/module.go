@@ -57,6 +57,7 @@ func ModuleCreate() (server.Module, error) {
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	s.RegisterHandler(cmd.MCLogicWXLogin, WXLogin)
 	s.RegisterHandler(cmd.MCLogicGetUIDByOpenID, GetUIDByOpenID)
+	s.RegisterHandler(cmd.MCLogicGetUser, GetUser)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }

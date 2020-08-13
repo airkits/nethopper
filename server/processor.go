@@ -29,6 +29,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -101,26 +102,26 @@ type Processor struct {
 
 // Process goruntine process pre call
 func Process(s Module, obj *CallObject) (err error) {
-
+	var ret = RetObject{
+		Ret: nil,
+		Err: nil,
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
 		}
 	}()
-	var ret = RetObject{
-		Ret: nil,
-		Err: nil,
-	}
+
 	f := s.(Module).GetHandler(obj.Cmd)
 	if f == nil {
-		err = Error("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
+		err = fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
 		panic(err)
 	} else {
 		args := []interface{}{s, obj}
 		args = append(args, obj.Args...)
 		values := CallUserFunc(f, args...)
 		if values == nil {
-			err = Error("unsupport handler,need return (interface{},error) or ([]interface{},error)")
+			err = errors.New("unsupport handler,need return (interface{},error) or ([]interface{},error)")
 			panic(err)
 		} else {
 			l := len(values)
@@ -131,7 +132,7 @@ func Process(s Module, obj *CallObject) (err error) {
 					panic(err)
 				}
 			} else {
-				err = Error("unsupport params length")
+				err = errors.New("unsupport params length")
 				panic(err)
 			}
 		}
@@ -140,7 +141,7 @@ func Process(s Module, obj *CallObject) (err error) {
 		ret.Err = err
 	}
 	obj.ChanRet <- ret
-	return nil
+	return err
 }
 
 // Run Processor goruntine

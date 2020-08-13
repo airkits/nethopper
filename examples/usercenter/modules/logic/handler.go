@@ -60,49 +60,34 @@ func WXLogin(s *Module, obj *server.CallObject, appID string, code string, chann
 		Name:    nickname,
 		Gender:  gender,
 		Avatar:  avatar,
+		Gold:    10000,
+		Coin:    10000,
 	}
 	wxuser, err := server.Call(global.MIDWechatClient, cmd.MCWXLogin, utils.RandomInt32(0, 1024), appID, code)
 	if err != nil {
 		return nil, err
 	}
 	wxu := wxuser.(*model.WXUser)
-	server.Info("%v", wxuser)
+	server.Info("get openID %s", wxu.OpenID)
 	user.OpenID = wxu.OpenID
-	uid, err := GetUIDByOpenID(s, obj, wxu.OpenID)
+
+	uid, err := server.Call(server.MIDLogic, cmd.MCLogicGetUIDByOpenID, utils.RandomInt32(0, 1024), wxu.OpenID)
 	if err != nil {
 		server.Info("get uid error %s", err.Error())
-		uid, err := server.Call(global.MIDSnowflakeClient, cmd.MCSFGetUID, utils.RandomInt32(0, 1024), int32(0))
-		if err != nil {
-			server.Info("get sf error %s", err.Error())
-			return nil, err
-		}
+
 		user.UID = uid.(uint64)
-		_, err = CreateUser(s, obj, user)
+		u, err := server.Call(server.MIDLogic, cmd.MCLogicGetUser, int32(user.UID), user)
 		if err != nil {
 			server.Error(err.Error())
 			return nil, err
 		}
-		server.Info("get sf uid %d", uid)
-	} else {
-		user.UID = uid
+		server.Info("get from snowflake success, uid %d", uid)
+		return u.(*model.User), nil
 	}
+	user.UID = uid.(uint64)
 
 	return user, nil
-	// user, err := server.Call(server.MIDRedis, common.CallIDGetUserInfoCmd, appID, code)
-	// if err == nil {
-	// 	server.Info("get from redis")
-	// 	return password.(string), err
-	// }
-	// password, err = server.Call(server.MIDDB, common.CallIDGetUserInfoCmd, int32(opt), uid)
-	// if err != nil {
-	// 	return "", err
-	// }
-	// updated, err := server.Call(server.MIDRedis, common.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
-	// if updated == false {
-	// 	server.Info("update redis failed %s %s", uid, password.(string))
-	// }
-	// server.Info("get from mysql")
-	//return nil, errors.New("no user")
+
 }
 
 // GetUIDByOpenID convert openid to uid
@@ -124,10 +109,17 @@ func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, e
 	}
 
 	uid, err = server.Call(server.MIDDB, cmd.MCDBGetUIDByOpenID, utils.RandomInt32(0, 1024), openID)
-	if err != nil {
+	if err == nil {
 		server.Info("get uid from db uid=%d", uid)
+		return uid.(uint64), err
+	}
+
+	uid, err = server.Call(global.MIDSnowflakeClient, cmd.MCSFGetUID, utils.RandomInt32(0, 1024), int32(0))
+	if err != nil {
+		server.Info("get from snowflake error %s", err.Error())
 		return 0, err
 	}
+
 	updated, err := server.Call(server.MIDDB, cmd.MCDBInsertOID2UID, int32(uid.(uint64)), openID, uid)
 	if updated == false {
 		server.Info("set db failed %s %d", openID, uid)
@@ -138,6 +130,29 @@ func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, e
 		server.Info("update redis failed %s %d", openID, uid)
 	}
 	return uid.(uint64), err
+}
+
+// GetUser get user
+// @Summary GetUser
+// @Tags LogicModule
+// @version 1.0
+// @Accept  plain
+// @Produce plain
+// @Param user query string true "user"
+// @Success 200 {string} string 成功后返回值
+// @Router /call/v [put]
+func GetUser(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
+	defer server.TraceCost("GetUser")()
+	user, err := server.Call(server.MIDRedis, cmd.MCDBGetUserByUID, int32(uid), uid)
+	if err == nil {
+		return user.(*model.User), nil
+	}
+	user, err = server.Call(server.MIDDB, cmd.MCDBGetUserByUID, int32(uid), uid)
+	if err == nil {
+		server.Call(server.MIDRedis, cmd.MCRedisUpdateUserInfo, int32(uid), user)
+		return user.(*model.User), nil
+	}
+	return nil, err
 }
 
 // CreateUser create user

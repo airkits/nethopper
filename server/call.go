@@ -113,8 +113,9 @@ type CallObject struct {
 
 // RetObject call return object
 type RetObject struct {
-	Ret interface{}
-	Err error
+	Ret  interface{}
+	Code int32
+	Err  error
 }
 
 // NewCallObject create call object

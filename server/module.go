@@ -98,6 +98,16 @@ type Module interface {
 	//SetName set module name
 	SetName(v string)
 
+	//Handlers set moudle handlers
+	Handlers() map[string]interface{}
+	//ReflectHandlers set moudle reflect handlers
+	ReflectHandlers() map[string]interface{}
+
+	// RegisterHandler register function before run
+	RegisterHandler(id interface{}, f interface{})
+	// RegisterReflectHandler register reflect function before run
+	RegisterReflectHandler(id interface{}, f interface{})
+
 	// MakeContext init base module queue and create context
 	MakeContext(p Module, queueSize int32)
 	// Context get module context
@@ -118,6 +128,7 @@ type Module interface {
 
 	// UserData module custom option, can you store you data and you must keep goruntine safe
 	UserData() int32
+
 	// Setup init custom module and pass config map to module
 	Setup(conf IConfig) (Module, error)
 	//Reload reload config
@@ -132,6 +143,10 @@ type Module interface {
 	PushBytes(option int32, buf []byte) error
 	//GetHandler get call handler
 	GetHandler(id interface{}) interface{}
+
+	//GetReflectHandler get reflect handler
+	GetReflectHandler(id interface{}) interface{}
+
 	// Processor process callobject
 	Processor(obj *CallObject) error
 
@@ -207,13 +222,24 @@ type BaseContext struct {
 	q          queue.Queue
 	name       string
 	id         int32
-	functions  map[interface{}]interface{}
+	funcs      map[interface{}]interface{} //handlers
+	rfuncs     map[interface{}]interface{} //reflect handlers
 	processers IWorkerPool
 	idleTimes  uint32
 }
 
+//Handlers set moudle handlers
+func (s *BaseContext) Handlers() map[string]interface{} {
+	return nil
+}
+
+//ReflectHandlers set moudle reflect handlers
+func (s *BaseContext) ReflectHandlers() map[string]interface{} {
+	return nil
+}
+
 // RegisterHandler register function before run
-func (a *BaseContext) RegisterHandler(id interface{}, f interface{}) {
+func (s *BaseContext) RegisterHandler(id interface{}, f interface{}) {
 
 	// switch f.(type) {
 	// case func(Module, *CallObject, string) (string, error):
@@ -221,60 +247,81 @@ func (a *BaseContext) RegisterHandler(id interface{}, f interface{}) {
 	// 	panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
 	// }
 
-	if _, ok := a.functions[id]; ok {
+	if _, ok := s.funcs[id]; ok {
 		panic(fmt.Sprintf("function id %v: already registered", id))
 	}
 
-	a.functions[id] = f
+	s.funcs[id] = f
+}
+
+// RegisterReflectHandler register reflect function before run
+func (s *BaseContext) RegisterReflectHandler(id interface{}, f interface{}) {
+
+	// switch f.(type) {
+	// case func(Module, *CallObject, string) (string, error):
+	// default:
+	// 	panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
+	// }
+
+	if _, ok := s.rfuncs[id]; ok {
+		panic(fmt.Sprintf("function id %v: already registered", id))
+	}
+
+	s.rfuncs[id] = f
 }
 
 // GetHandler get call handler
-func (a *BaseContext) GetHandler(id interface{}) interface{} {
-	return a.functions[id]
+func (s *BaseContext) GetHandler(id interface{}) interface{} {
+	return s.funcs[id]
+}
+
+// GetReflectHandler get call reflect handler
+func (s *BaseContext) GetReflectHandler(id interface{}) interface{} {
+	return s.rfuncs[id]
 }
 
 // IdleTimesReset reset idle times
-func (a *BaseContext) IdleTimesReset() {
-	atomic.StoreUint32(&a.idleTimes, 500)
+func (s *BaseContext) IdleTimesReset() {
+	atomic.StoreUint32(&s.idleTimes, 500)
 }
 
 // IdleTimes get idle times
-func (a *BaseContext) IdleTimes() uint32 {
-	return atomic.LoadUint32(&a.idleTimes)
+func (s *BaseContext) IdleTimes() uint32 {
+	return atomic.LoadUint32(&s.idleTimes)
 }
 
 // IdleTimesAdd add idle times
-func (a *BaseContext) IdleTimesAdd() {
-	t := a.IdleTimes()
+func (s *BaseContext) IdleTimesAdd() {
+	t := s.IdleTimes()
 	if t >= 20000000 { //2s
 		return
 	}
-	atomic.AddUint32(&a.idleTimes, 100)
+	atomic.AddUint32(&s.idleTimes, 100)
 }
 
 // MakeContext init base module queue and create context
-func (a *BaseContext) MakeContext(p Module, queueSize int32) {
-	a.parent = p
-	a.q = queue.NewChanQueue(queueSize)
-	a.functions = make(map[interface{}]interface{})
-
+func (s *BaseContext) MakeContext(p Module, queueSize int32) {
+	s.parent = p
+	s.q = queue.NewChanQueue(queueSize)
+	s.funcs = make(map[interface{}]interface{})
+	s.rfuncs = make(map[interface{}]interface{})
 	if p == nil {
-		a.ctx, a.cancel = context.WithCancel(context.Background())
+		s.ctx, s.cancel = context.WithCancel(context.Background())
 	} else {
-		a.ctx, a.cancel = context.WithCancel(p.Context())
+		s.ctx, s.cancel = context.WithCancel(p.Context())
 		p.ChildAdd()
 	}
 
 }
 
 // Processor process callobject
-func (a *BaseContext) Processor(obj *CallObject) error {
-	Debug("%s start do Processor,cmd = %s", a.Name(), obj.Cmd)
+func (s *BaseContext) Processor(obj *CallObject) error {
+	Debug("%s start do Processor,cmd = %s", s.Name(), obj.Cmd)
 	var err error
-	if a.processers == nil {
+	if s.processers == nil {
 		err = errors.New("no processor pool")
 	} else {
-		err = a.processers.Submit(obj)
+		err = s.processers.Submit(obj)
 	}
 	if err != nil {
 		obj.ChanRet <- RetObject{
@@ -286,91 +333,91 @@ func (a *BaseContext) Processor(obj *CallObject) error {
 }
 
 // Call async send message to module
-func (a *BaseContext) Call(option int32, obj *CallObject) error {
-	a.IdleTimesReset()
-	if err := a.q.AsyncPush(obj); err != nil {
+func (s *BaseContext) Call(option int32, obj *CallObject) error {
+	s.IdleTimesReset()
+	if err := s.q.AsyncPush(obj); err != nil {
 		Error(err.Error())
 	}
 	return nil
 }
 
 // CreateWorkerPool create processor pool
-func (a *BaseContext) CreateWorkerPool(s Module, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
-	if a.processers, err = NewFixedWorkerPool(s, cap, expired); err != nil {
+func (s *BaseContext) CreateWorkerPool(m Module, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
+	if s.processers, err = NewFixedWorkerPool(m, cap, expired); err != nil {
 		return err
 	}
 	return nil
 }
 
 // MQ return module queue
-func (a *BaseContext) MQ() queue.Queue {
-	return a.q
+func (s *BaseContext) MQ() queue.Queue {
+	return s.q
 }
 
 // Context get module context
-func (a *BaseContext) Context() context.Context {
-	return a.ctx
+func (s *BaseContext) Context() context.Context {
+	return s.ctx
 }
 
 // ChildAdd child module created and tell parent module, ref count +1
-func (a *BaseContext) ChildAdd() {
-	atomic.AddInt32(&a.childRef, 1)
+func (s *BaseContext) ChildAdd() {
+	atomic.AddInt32(&s.childRef, 1)
 }
 
 // ChildDone child module exit and tell parent module, ref count -1
-func (a *BaseContext) ChildDone() {
-	atomic.AddInt32(&a.childRef, -1)
+func (s *BaseContext) ChildDone() {
+	atomic.AddInt32(&s.childRef, -1)
 }
 
 // Close call context cancel ,self and all child module will receive context.Done()
-func (a *BaseContext) Close() {
-	a.cancel()
+func (s *BaseContext) Close() {
+	s.cancel()
 }
 
 //ID module ID
-func (a *BaseContext) ID() int32 {
-	return a.id
+func (s *BaseContext) ID() int32 {
+	return s.id
 }
 
 //SetID set module id
-func (a *BaseContext) SetID(v int32) {
-	a.id = v
+func (s *BaseContext) SetID(v int32) {
+	s.id = v
 }
 
 //Name module name
-func (a *BaseContext) Name() string {
-	return a.name
+func (s *BaseContext) Name() string {
+	return s.name
 }
 
 //SetName set module name
-func (a *BaseContext) SetName(v string) {
-	a.name = v
+func (s *BaseContext) SetName(v string) {
+	s.name = v
 }
 
 // TryExit check child ref count , if ref count == 0 then return true, if parent not nil, and will fire parent.ChildDone()
-func (a *BaseContext) TryExit() bool {
+func (s *BaseContext) TryExit() bool {
 
-	count := atomic.LoadInt32(&a.childRef)
+	count := atomic.LoadInt32(&s.childRef)
 	if count > 0 {
 		return false
 	}
-	if a.parent != nil {
-		a.parent.ChildDone()
+	if s.parent != nil {
+		s.parent.ChildDone()
 	}
 	return true
 }
 
 // CanExit if receive ctx.Done() and all child exit and queue is empty ,then return true
-func (a *BaseContext) CanExit(doneFlag bool) (bool, bool) {
+func (s *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 	if doneFlag {
-		if a.q.Length() == 0 && a.TryExit() {
+		if s.q.Length() == 0 && s.TryExit() {
 			return doneFlag, true
 		}
 	}
 	select {
-	case <-a.ctx.Done():
+	case <-s.ctx.Done():
 		doneFlag = true
-		if a.q.Length() == 0 && a.TryExit() {
+		if s.q.Length() == 0 && s.TryExit() {
 			return doneFlag, true
 		}
 	default:
@@ -379,37 +426,37 @@ func (a *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
-func (a *BaseContext) OnRun(dt time.Duration) {
-	fmt.Printf("module %s do Nothing \n", a.Name())
+func (s *BaseContext) OnRun(dt time.Duration) {
+	fmt.Printf("module %s do Nothing \n", s.Name())
 
 }
 
 // to override start
 
 //PushBytes push buffer
-func (a *BaseContext) PushBytes(option int32, buf []byte) error {
+func (s *BaseContext) PushBytes(option int32, buf []byte) error {
 	return nil
 }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
-func (a *BaseContext) UserData() int32 {
+func (s *BaseContext) UserData() int32 {
 	return 0
 }
 
 // ReadConfig config map
 // m := map[string]interface{}{
 // }
-func (a *BaseContext) ReadConfig(conf IConfig) error {
+func (s *BaseContext) ReadConfig(conf IConfig) error {
 	return nil
 }
 
 //Reload reload config
-func (a *BaseContext) Reload(conf IConfig) error {
+func (s *BaseContext) Reload(conf IConfig) error {
 	return nil
 }
 
 // Stop goruntine
-func (a *BaseContext) Stop() error {
+func (s *BaseContext) Stop() error {
 
 	return nil
 }
@@ -459,6 +506,21 @@ func NewNamedModule(MID int32, name string, createFunc func() (Module, error), p
 	}
 	return createModuleByID(MID, name, parent, conf)
 }
+
+func cmdRegister(s Module) {
+	cmds := s.Handlers()
+	if cmds != nil {
+		for k, v := range cmds {
+			s.RegisterHandler(k, v)
+		}
+	}
+	cmds = s.ReflectHandlers()
+	if cmds != nil {
+		for k, v := range cmds {
+			s.RegisterReflectHandler(k, v)
+		}
+	}
+}
 func createModuleByID(MID int32, name string, parent Module, conf IConfig) (Module, error) {
 	se, err := CreateModule(name)
 	if err != nil {
@@ -466,6 +528,7 @@ func createModuleByID(MID int32, name string, parent Module, conf IConfig) (Modu
 	}
 	se.MakeContext(nil, int32(conf.GetQueueSize()))
 	se.SetName(ModuleName(se))
+	cmdRegister(se)
 	se.Setup(conf)
 	se.SetID(MID)
 	App.Modules.Store(MID, se)

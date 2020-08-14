@@ -46,10 +46,17 @@ func ModuleCreate() (server.Module, error) {
 	return &Module{}, nil
 }
 
-// UserData module custom option, can you store you data and you must keep goruntine safe
-// func (s *Module) UserData() int32 {
-// 	return 0
-// }
+//Handlers set moudle handlers
+func (s *Module) Handlers() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+//ReflectHandlers set moudle reflect handlers
+func (s *Module) ReflectHandlers() map[string]interface{} {
+	return map[string]interface{}{
+		cmd.CallIDGetUserInfoCmd: GetUserInfoHander,
+	}
+}
 
 // Setup init custom module and pass config map to module
 // config
@@ -59,7 +66,6 @@ func ModuleCreate() (server.Module, error) {
 //  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	s.RegisterHandler(cmd.CallIDGetUserInfoCmd, GetUserInfoHander)
 	conn, err := sqlx.NewSQLConnection(conf)
 	if err != nil {
 		return nil, err

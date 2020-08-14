@@ -51,6 +51,20 @@ func ModuleCreate() (server.Module, error) {
 // 	return 0
 // }
 
+//Handlers set moudle handlers
+func (s *Module) Handlers() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+//ReflectHandlers set moudle reflect handlers
+func (s *Module) ReflectHandlers() map[string]interface{} {
+	return map[string]interface{}{
+		cmd.MCDBInsertOID2UID: InsertOID2UID,
+		cmd.MCDBCreateUser:    CreateUser,
+		cmd.MCDBGetUserByUID:  GetUserByUID,
+	}
+}
+
 // Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
@@ -59,10 +73,7 @@ func ModuleCreate() (server.Module, error) {
 //  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	//s.RegisterHandler(cmd.MCDBGetUIDByOpenID, GetUIDByOpenID)
-	s.RegisterHandler(cmd.MCDBInsertOID2UID, InsertOID2UID)
-	s.RegisterHandler(cmd.MCDBCreateUser, CreateUser)
-	s.RegisterHandler(cmd.MCDBGetUserByUID, GetUserByUID)
+
 	conn, err := sqlx.NewSQLConnection(conf)
 	if err != nil {
 		return nil, err

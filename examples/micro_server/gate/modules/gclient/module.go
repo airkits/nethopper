@@ -54,6 +54,18 @@ func (s *Module) UserData() int32 {
 	return 0
 }
 
+//Handlers set moudle handlers
+func (s *Module) Handlers() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+//ReflectHandlers set moudle reflect handlers
+func (s *Module) ReflectHandlers() map[string]interface{} {
+	return map[string]interface{}{
+		cmd.CallIDGetUserInfoCmd: RequestGetUserInfo,
+	}
+}
+
 // Setup init custom module and pass config map to module
 // config
 // m := map[string]interface{}{
@@ -64,7 +76,6 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	if err := s.ReadConfig(conf); err != nil {
 		panic(err)
 	}
-	s.RegisterHandler(cmd.CallIDGetUserInfoCmd, RequestGetUserInfo)
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 
 	s.Clients = skiplist.New()

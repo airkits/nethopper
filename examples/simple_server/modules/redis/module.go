@@ -46,10 +46,18 @@ func ModuleCreate() (server.Module, error) {
 	return &Module{}, nil
 }
 
-// UserData module custom option, can you store you data and you must keep goruntine safe
-// func (s *Module) UserData() int32 {
-// 	return 0
-// }
+//Handlers set moudle handlers
+func (s *Module) Handlers() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+//ReflectHandlers set moudle reflect handlers
+func (s *Module) ReflectHandlers() map[string]interface{} {
+	return map[string]interface{}{
+		cmd.CallIDGetUserInfoCmd:    GetUserInfoHander,
+		cmd.CallIDUpdateUserInfoCmd: UpdateUserInfoHandler,
+	}
+}
 
 // Setup init custom module and pass config map to module
 // config
@@ -63,10 +71,6 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 		return nil, err
 	}
 	s.rdb = cache
-
-	s.RegisterHandler(cmd.CallIDGetUserInfoCmd, GetUserInfoHander)
-	s.RegisterHandler(cmd.CallIDUpdateUserInfoCmd, UpdateUserInfoHandler)
-
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	return s, nil
 }

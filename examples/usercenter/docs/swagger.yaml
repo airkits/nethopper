@@ -122,6 +122,26 @@ paths:
       summary: WXLogin
       tags:
       - LogicModule
+  /call/v:
+    put:
+      consumes:
+      - text/plain
+      parameters:
+      - description: user
+        in: query
+        name: user
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: GetUser
+      tags:
+      - LogicModule
   /v1/call/:module/:cmd/:opt:
     post:
       consumes:

@@ -52,9 +52,16 @@ type Module struct {
 	Clients  *skiplist.SkipList
 }
 
-// UserData module custom option, can you store you data and you must keep goruntine safe
-func (s *Module) UserData() int32 {
-	return 0
+//Handlers set moudle handlers
+func (s *Module) Handlers() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+//ReflectHandlers set moudle reflect handlers
+func (s *Module) ReflectHandlers() map[string]interface{} {
+	return map[string]interface{}{
+		common.SSLoginCmd: NotifyLogin,
+	}
 }
 
 // Setup init custom module and pass config map to module
@@ -66,7 +73,7 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 	if err := s.ReadConfig(conf); err != nil {
 		panic(err)
 	}
-	s.RegisterHandler(common.CSLoginCmd, NotifyLogin)
+
 	s.CreateWorkerPool(s, 128, 10*time.Second, true)
 	s.Clients = skiplist.New()
 	s.wsClient = ws.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {

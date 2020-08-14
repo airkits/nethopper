@@ -112,7 +112,7 @@ func Process(s Module, obj *CallObject) (err error) {
 		}
 	}()
 
-	f := s.(Module).GetHandler(obj.Cmd)
+	f := s.(Module).GetReflectHandler(obj.Cmd)
 	if f == nil {
 		err = fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
 		panic(err)

@@ -61,7 +61,7 @@ import (
 // @Success 200 {string} string 成功后返回值
 // @Router /call/LoginHandler [put]
 func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
-	defer server.TraceCost("LoginHandler")()
+	defer server.TraceCost(server.RunModuleFuncName(s))()
 	opt, err := strconv.Atoi(uid)
 
 	password, err := server.Call(server.MIDGRPCClient, cmd.CallIDGetUserInfoCmd, int32(opt), uid, pwd)

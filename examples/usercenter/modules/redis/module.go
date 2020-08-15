@@ -54,10 +54,10 @@ func (s *Module) Handlers() map[string]interface{} {
 //ReflectHandlers set moudle reflect handlers
 func (s *Module) ReflectHandlers() map[string]interface{} {
 	return map[string]interface{}{
-		cmd.MCRedisGetUserInfo:    GetUserInfo,
-		cmd.MCRedisUpdateUserInfo: UpdateUserInfo,
-		cmd.MCRedisGetUIDByOpenID: GetUIDByOpenID,
-		cmd.MCRedisSetUIDByOpenID: SetUIDByOpenID,
+		cmd.RedisGetUserInfo:    GetUserInfo,
+		cmd.RedisUpdateUserInfo: UpdateUserInfo,
+		cmd.RedisGetUIDByOpenID: GetUIDByOpenID,
+		cmd.RedisSetUIDByOpenID: SetUIDByOpenID,
 	}
 }
 

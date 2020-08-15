@@ -44,46 +44,46 @@ func getOID2UIDTable(openID string) string {
 }
 
 // GetUIDByOpenID 获取uid
-func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, error) {
+func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, server.Result) {
 	sql := fmt.Sprintf("select uid from %s where openid=?", getOID2UIDTable(openID))
 	row := s.conn.QueryRow(sql, openID)
 	var uid uint64
 	var err error
 	if err = row.Scan(&uid); err == nil {
-		return uid, nil
+		return uid, server.Result{Code: 0, Err: nil}
 	}
-	return 0, err
+	return 0, server.Result{Code: -1, Err: err}
 }
 
 //InsertOID2UID insert oid and uid in mapping
-func InsertOID2UID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, error) {
+func InsertOID2UID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, server.Result) {
 	sql := fmt.Sprintf("insert into %s (openid,uid) value(?,?)", getOID2UIDTable(openID))
 	if _, err := s.conn.Exec(sql, openID, uid); err != nil {
-		return false, err
+		return false, server.Result{Code: -1, Err: err}
 	}
-	return true, nil
+	return true, server.Result{Code: 0, Err: nil}
 }
 
 // GetUserByUID 获取用户信息
-func GetUserByUID(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
+func GetUserByUID(s *Module, obj *server.CallObject, uid uint64) (*model.User, server.Result) {
 	sql := fmt.Sprintf("select uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,loginat,createat,status,loginip,channel from %s where uid= ?", getUserTableByUID(uid))
 	user := model.User{
 		UID: uid,
 	}
 	var err error
 	if err = s.conn.Select(&user, sql, uid); err == nil {
-		return &user, nil
+		return &user, server.Result{Code: 0, Err: nil}
 	}
-	return nil, err
+	return nil, server.Result{Code: -1, Err: err}
 }
 
 // CreateUser 创建用户信息
-func CreateUser(s *Module, obj *server.CallObject, u *model.User) (*model.User, error) {
+func CreateUser(s *Module, obj *server.CallObject, u *model.User) (*model.User, server.Result) {
 	sql := fmt.Sprintf("insert into %s(uid,appid,openid,uuid,avatar,name,password,phone,gender,age,gold,coin,status,channel,loginip,loginat,createat) value(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", getUserTableByUID(u.UID))
 	_, err := s.conn.Exec(sql, u.UID, u.AppID, u.OpenID, u.UUID, u.Avatar, u.Name, u.Password, u.Phone, u.Gender, u.Age, u.Gold, u.Coin, u.Status, u.Channel, u.LoginIP, u.LoginAt, u.CreateAt)
 
 	if err == nil {
-		return u, nil
+		return u, server.Result{Code: 0, Err: nil}
 	}
-	return nil, err
+	return nil, server.Result{Code: -1, Err: err}
 }

@@ -36,33 +36,36 @@ import (
 )
 
 func getUserInfoKey(uid uint64) string {
-	return fmt.Sprintf("userinfo_%d", uid)
+	return fmt.Sprintf("user_%d", uid)
 }
 func getOpenID2UIDKey(openID string) string {
-	return fmt.Sprintf("openid2uid_%s", openID)
+	return fmt.Sprintf("o2u_%s", openID)
 }
 
 //GetUIDByOpenID 通过openID映射为uid，没有就创建一个
-func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, error) {
-	defer server.TraceCost("ConvertOpenID2UID")()
+func GetUIDByOpenID(s *Module, obj *server.CallObject, openID string) (uint64, server.Result) {
+	defer server.TraceCost(server.RunModuleFuncName(s))()
 	key := getOpenID2UIDKey(openID)
 	uid, err := s.rdb.GetUint64(s.Context(), key)
-	return uid, err
+	if err != nil {
+		return 0, server.Result{Code: -1, Err: err}
+	}
+	return uid, server.Result{Code: 0, Err: nil}
 }
 
 // SetUIDByOpenID set openid to uid mapping
-func SetUIDByOpenID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, error) {
+func SetUIDByOpenID(s *Module, obj *server.CallObject, openID string, uid uint64) (bool, server.Result) {
 	var key = getOpenID2UIDKey(openID)
 	err := s.rdb.Set(s.Context(), key, uid, 0)
 	if err != nil {
-		return false, err
+		return false, server.Result{Code: -1, Err: err}
 	}
-	return true, nil
+	return true, server.Result{Code: 0, Err: nil}
 }
 
 // GetUserInfo 获取用户信息
-func GetUserInfo(s *Module, obj *server.CallObject, uid uint64) (*model.User, error) {
-	defer server.TraceCost("GetUserInfo")()
+func GetUserInfo(s *Module, obj *server.CallObject, uid uint64) (*model.User, server.Result) {
+	defer server.TraceCost(server.RunModuleFuncName(s))()
 	key := getUserInfoKey(uid)
 	results, err := s.rdb.HMGet(s.Context(), key, "uid", "appid", "openid", "uuid", "avatar", "name", "gender", "channel", "gold", "coin", "status")
 	if err == nil {
@@ -80,13 +83,13 @@ func GetUserInfo(s *Module, obj *server.CallObject, uid uint64) (*model.User, er
 			Coin:    conv.Str2Uint64(results["coin"]),
 			Status:  conv.Str2Int(results["status"]),
 		}
-		return user, err
+		return user, server.Result{Code: 0, Err: nil}
 	}
-	return nil, err
+	return nil, server.Result{Code: -1, Err: err}
 }
 
 // UpdateUserInfo update user info
-func UpdateUserInfo(s *Module, obj *server.CallObject, u *model.User) (bool, error) {
+func UpdateUserInfo(s *Module, obj *server.CallObject, u *model.User) (bool, server.Result) {
 	var key = getUserInfoKey(u.UID)
 	params := map[interface{}]interface{}{
 		"uid":      u.UID,
@@ -108,7 +111,7 @@ func UpdateUserInfo(s *Module, obj *server.CallObject, u *model.User) (bool, err
 		"createAt": u.CreateAt,
 	}
 	if err := s.rdb.HMSet(s.Context(), key, params); err != nil {
-		return false, err
+		return false, server.Result{Code: -1, Err: err}
 	}
-	return true, nil
+	return true, server.Result{Code: 0, Err: nil}
 }

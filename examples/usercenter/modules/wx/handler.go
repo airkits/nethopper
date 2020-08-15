@@ -34,7 +34,7 @@ import (
 )
 
 // Login 微信登陆
-func Login(s *Module, obj *server.CallObject, appID string, code string) (*model.WXUser, error) {
-	defer server.TraceCost("Login")()
+func Login(s *Module, obj *server.CallObject, appID string, code string) (*model.WXUser, server.Result) {
+	defer server.TraceCost(server.RunModuleFuncName(s))()
 	return sdk.Login(appID, s.AppSecret(appID), code)
 }

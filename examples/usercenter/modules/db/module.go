@@ -59,9 +59,9 @@ func (s *Module) Handlers() map[string]interface{} {
 //ReflectHandlers set moudle reflect handlers
 func (s *Module) ReflectHandlers() map[string]interface{} {
 	return map[string]interface{}{
-		cmd.MCDBInsertOID2UID: InsertOID2UID,
-		cmd.MCDBCreateUser:    CreateUser,
-		cmd.MCDBGetUserByUID:  GetUserByUID,
+		cmd.DBInsertOID2UID: InsertOID2UID,
+		cmd.DBCreateUser:    CreateUser,
+		cmd.DBGetUserByUID:  GetUserByUID,
 	}
 }
 

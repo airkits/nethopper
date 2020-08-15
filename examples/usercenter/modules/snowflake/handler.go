@@ -33,8 +33,8 @@ import (
 )
 
 // GetUID 获取UID
-func GetUID(s *Module, obj *server.CallObject, channel int32) (uint64, error) {
-	defer server.TraceCost("GetUID")()
+func GetUID(s *Module, obj *server.CallObject, channel int32) (uint64, server.Result) {
+	defer server.TraceCost(server.RunModuleFuncName(s))()
 	host := s.GetHost()
 	return sdk.GenUID(host, channel)
 }

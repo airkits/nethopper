@@ -28,6 +28,8 @@
 package logic
 
 import (
+	"errors"
+
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -41,9 +43,13 @@ import (
 // @Success 200 {uint64} uint64 成功后返回值
 // @Router /call/UUIDHandler [put]
 func UUIDHandler(s *Module, obj *server.CallObject, channel int32) (uint64, error) {
-	defer server.TraceCost("UUIDHandler")()
+	defer server.TraceCost(server.RunModuleFuncName(s))()
 	//	opt, err := strconv.Atoi(uid)
-	return s.GenerateUUID()
+	uid, err := s.GenerateUUID()
+	if err != nil {
+		return 0, err //server.Result{Code: -1, Err: err}
+	}
+	return uid, errors.New("type") // server.Result{Code: 0, Err: err}
 }
 
 // UUIDsHandler get one uniq id
@@ -55,8 +61,8 @@ func UUIDHandler(s *Module, obj *server.CallObject, channel int32) (uint64, erro
 // @Param channel query int64 1 "channel"
 // @Success 200 {uint64} uint64 成功后返回值
 // @Router /call/UUIDsHandler [put]
-func UUIDsHandler(s *Module, obj *server.CallObject, channel int32, num int32) ([]uint64, error) {
-	defer server.TraceCost("UUIDsHandler")()
+func UUIDsHandler(s *Module, obj *server.CallObject, channel int32, num int32) ([]uint64, server.Result) {
+	defer server.TraceCost(server.RunModuleFuncName(s))()
 	//	opt, err := strconv.Atoi(uid)
 	uids := make([]uint64, num)
 	var err error
@@ -65,8 +71,8 @@ func UUIDsHandler(s *Module, obj *server.CallObject, channel int32, num int32) (
 		if uid, err = s.GenerateUUID(); err == nil {
 			uids[i] = uid
 		} else {
-			return []uint64{}, err
+			return []uint64{}, server.Result{Code: -1, Err: err}
 		}
 	}
-	return uids, nil
+	return uids, server.Result{Err: nil, Code: 0}
 }

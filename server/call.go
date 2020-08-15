@@ -28,7 +28,9 @@
 package server
 
 import (
+	"fmt"
 	"reflect"
+	"runtime"
 )
 
 // CallUserFunc simply to dynamically call a function or a method on an object
@@ -103,6 +105,22 @@ func Future(f func() (interface{}, error)) func() (interface{}, error) {
 	}
 }
 
+// RunFuncName 获取正在运行的函数名
+func RunFuncName() string {
+	pc := make([]uintptr, 1)
+	runtime.Callers(2, pc)
+	f := runtime.FuncForPC(pc[0])
+	return f.Name()
+}
+
+// RunModuleFuncName 获取正在运行的module函数名
+func RunModuleFuncName(s Module) string {
+	pc := make([]uintptr, 1)
+	runtime.Callers(2, pc)
+	f := runtime.FuncForPC(pc[0])
+	return fmt.Sprintf("[%s] %s", s.Name(), f.Name())
+}
+
 // CallObject call struct
 type CallObject struct {
 	Cmd     string
@@ -111,11 +129,16 @@ type CallObject struct {
 	ChanRet chan RetObject
 }
 
-// RetObject call return object
-type RetObject struct {
-	Ret  interface{}
+//Result define code and error
+type Result struct {
 	Code int32
 	Err  error
+}
+
+// RetObject call return object
+type RetObject struct {
+	Ret    interface{}
+	Result Result
 }
 
 // NewCallObject create call object

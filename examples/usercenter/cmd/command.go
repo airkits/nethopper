@@ -3,43 +3,44 @@ package cmd
 //UserCenter module call cmd
 const (
 	// module http
-	// MCHTTPWXLogin weixin login cmd
-	MCHTTPWXLogin = "WXLogin"
+	// HTTPWXLogin weixin login cmd
+	HTTPWXLogin = "WXLogin"
 
 	// module grpc
 
 	// module logic
-	// MCLogicWXLogin
-	MCLogicWXLogin = "WXLogin"
-	// MCLogicGetUIDByOpenID
-	MCLogicGetUIDByOpenID = "GetUIDByOpenID"
-	//MCLogicGetUser get user
-	MCLogicGetUser = "GetUser"
-	//MCLogicCreateUser create user
-	MCLogicCreateUser = "CreateUser"
+	// LogicWXLogin
+	LogicWXLogin = "WXLogin"
+	// LogicGetUIDByOpenID
+	LogicGetUIDByOpenID = "GetUIDByOpenID"
+	//LogicGetUser get user
+	LogicGetUser = "GetUser"
+	//LogicCreateUser create user
+	LogicCreateUser = "CreateUser"
 	// module wx
-	MCWXLogin = "WXLogin"
+	WXLogin = "WXLogin"
 
 	// module redis
-	// MCRedisGetUserInfo
-	MCRedisGetUserInfo = "GetUserInfo"
-	// MCRedisUpdateUserInfo
-	MCRedisUpdateUserInfo = "UpdateUserInfo"
-	// MCRedisGetUIDByOpenID
-	MCRedisGetUIDByOpenID = "GetUIDByOpenID"
-	// MCRedisSetUIDByOpenID
-	MCRedisSetUIDByOpenID = "SetUIDByOpenID"
+	// RedisGetUserInfo
+	RedisGetUserInfo = "GetUserInfo"
+	// RedisUpdateUserInfo
+	RedisUpdateUserInfo = "UpdateUserInfo"
+	// RedisGetUIDByOpenID
+	RedisGetUIDByOpenID = "GetUIDByOpenID"
+	// RedisSetUIDByOpenID
+	RedisSetUIDByOpenID = "SetUIDByOpenID"
 
 	// module db
-	// MCDBGetUIDByOpenID get uid by openid
-	MCDBGetUIDByOpenID = "GetUserByOpenID"
-	// MCDBInsertOID2UID  make openid to uid mapping
-	MCDBInsertOID2UID = "InsertOID2UID"
-	// MCDBCreateUser
-	MCDBCreateUser = "CreateUser"
-	// MCDBGetUserByUID
-	MCDBGetUserByUID = "GetUserByUID"
+	// DBGetUIDByOpenID get uid by openid
+	DBGetUIDByOpenID = "GetUserByOpenID"
+	// DBInsertOID2UID  make openid to uid mapping
+	DBInsertOID2UID = "InsertOID2UID"
+	// DBCreateUser
+	DBCreateUser = "CreateUser"
+	// DBGetUserByUID
+	DBGetUserByUID = "GetUserByUID"
 
 	//module snowflake
-	MCSFGetUID = "GetUID"
+	//SFGetUID
+	SFGetUID = "GetUID"
 )

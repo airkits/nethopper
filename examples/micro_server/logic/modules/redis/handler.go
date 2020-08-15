@@ -35,7 +35,7 @@ import (
 
 // GetUserInfoHander 获取用户信息
 func GetUserInfoHander(s *Module, obj *server.CallObject, uid string) (string, error) {
-	defer server.TraceCost("GetUserInfoHander")()
+	defer server.TraceCost(server.RunModuleFuncName(s))()
 	password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%s", uid))
 	return password, err
 

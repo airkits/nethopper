@@ -52,9 +52,9 @@ func (s *Module) Handlers() map[string]interface{} {
 //ReflectHandlers set moudle reflect handlers
 func (s *Module) ReflectHandlers() map[string]interface{} {
 	return map[string]interface{}{
-		cmd.MCLogicWXLogin:        WXLogin,
-		cmd.MCLogicGetUIDByOpenID: GetUIDByOpenID,
-		cmd.MCLogicGetUser:        GetUser,
+		cmd.LogicWXLogin:        WXLogin,
+		cmd.LogicGetUIDByOpenID: GetUIDByOpenID,
+		cmd.LogicGetUser:        GetUser,
 	}
 }
 

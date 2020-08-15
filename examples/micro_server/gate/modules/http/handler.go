@@ -143,7 +143,7 @@ func ResponseSuccess(session *HTTPSession, data interface{}) {
 // @Success 200 object Response 成功后返回值
 // @Router /v1/ [post]
 func Index(c *gin.Context) {
-	defer server.TraceCost("Index")()
+	defer server.TraceCost(server.RunFuncName())()
 	session := NewHTTPSession(c)
 	model := &LoginReq{}
 	if err := c.BindJSON(model); err != nil {
@@ -176,7 +176,7 @@ func Index(c *gin.Context) {
 // @Success 200 object Response 成功后返回值
 // @Router /v1/call/:module/:cmd/:opt [post]
 func Call(c *gin.Context) {
-	defer server.TraceCost("Call")()
+	defer server.TraceCost(server.RunFuncName())()
 	session := NewHTTPSession(c)
 	var data string
 	var ok bool

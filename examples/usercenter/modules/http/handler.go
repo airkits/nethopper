@@ -102,7 +102,7 @@ func NewHTTPSession(c *gin.Context) *HTTPSession {
 	sess.Context = c
 
 	if sess.SessionID = utils.GenUUID(); sess.SessionID == "" {
-		server.Error("gen uuid failed")
+		server.Error("[http] gen uuid failed")
 		return nil
 	}
 
@@ -125,7 +125,7 @@ func ResponseError(session *HTTPSession, code int, msg error) {
 			Msg:  msg.Error(),
 			Data: nil,
 		})
-		server.Error("request [%s] response error. client address:[%s] errCode:[%d] msg:[%s]", session.Context.Request.URL.Path, session.Context.ClientIP(), code, msg)
+		server.Error("[http] request [%s] response error. client address:[%s] errCode:[%d] msg:[%s]", session.Context.Request.URL.Path, session.Context.ClientIP(), code, msg)
 	}
 
 }
@@ -139,7 +139,7 @@ func ResponseSuccess(session *HTTPSession, data interface{}) {
 			Msg:  "ok",
 			Data: data,
 		})
-		server.Error("request [%s] response success. client address:[%s] ", session.Context.Request.URL.Path, session.Context.ClientIP())
+		server.Debug("[http] request [%s] response success. client address:[%s] data:%v", session.Context.Request.URL.Path, session.Context.ClientIP(), data)
 
 	}
 
@@ -155,22 +155,19 @@ func ResponseSuccess(session *HTTPSession, data interface{}) {
 // @Success 200 object Response 成功后返回值
 // @Router /v1/wxlogin [post]
 func WXLogin(c *gin.Context) {
-	defer server.TraceCost("WXLogin")()
+	defer server.TraceCost(server.RunFuncName())()
 	session := NewHTTPSession(c)
 	req := &WXLoginReq{}
 	if err := c.BindJSON(req); err != nil {
 		ResponseError(session, CSErrorCodeClientError, err)
 		return
 	}
-
-	result, err2 := server.Call(server.MIDLogic, cmd.MCLogicWXLogin, utils.RandomInt32(0, 1024), req.AppID, req.Code, req.Channel, req.Nickname, req.Gender, req.Avatar)
-	if err2 != nil {
-		server.Info("message done, get err %s", err2.Error())
-		ResponseError(session, CSErrorCodeClientError, err2)
+	server.Info("[http] receive request and start login,appid=%s,code=%s,name:%s", req.AppID, req.Code, req.Nickname)
+	v, result := server.Call(server.MIDLogic, cmd.LogicWXLogin, utils.RandomInt32(0, 1024), req.AppID, req.Code, req.Channel, req.Nickname, req.Gender, req.Avatar)
+	if result.Err != nil {
+		ResponseError(session, CSErrorCodeClientError, result.Err)
 	} else {
-		server.Info("message done,get user  %v", (result.(*model.User)))
-
-		ResponseSuccess(session, LoginResp{User: *(result.(*model.User))})
+		ResponseSuccess(session, LoginResp{User: *(v.(*model.User))})
 	}
 
 }
@@ -188,7 +185,7 @@ func WXLogin(c *gin.Context) {
 // @Success 200 object Response 成功后返回值
 // @Router /v1/call/:module/:cmd/:opt [post]
 func Call(c *gin.Context) {
-	defer server.TraceCost("Call")()
+	defer server.TraceCost(server.RunFuncName())()
 	session := NewHTTPSession(c)
 	var data string
 	var ok bool
@@ -214,12 +211,12 @@ func Call(c *gin.Context) {
 		args = append(args, col)
 	}
 
-	result, err2 := server.Call(int32(moduleInt), cmd, int32(optionInt), args...)
-	if err2 != nil {
+	v, result := server.Call(int32(moduleInt), cmd, int32(optionInt), args...)
+	if result.Err != nil {
 		//server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
-		ResponseError(session, CSErrorCodeClientError, err2)
+		ResponseError(session, CSErrorCodeClientError, result.Err)
 	} else {
 		//server.Info("message done,get pwd  %v", result.(string))
-		ResponseSuccess(session, result)
+		ResponseSuccess(session, v)
 	}
 }

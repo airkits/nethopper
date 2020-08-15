@@ -181,7 +181,7 @@ func ModuleRun(s Module) {
 	ctxDone := false
 	exitFlag := false
 	start := time.Now()
-	Info("Start Module [%s]", s.Name())
+	Info("Module [%s] starting", s.Name())
 	for {
 		s.OnRun(time.Since(start))
 
@@ -316,7 +316,7 @@ func (s *BaseContext) MakeContext(p Module, queueSize int32) {
 
 // Processor process callobject
 func (s *BaseContext) Processor(obj *CallObject) error {
-	Debug("%s start do Processor,cmd = %s", s.Name(), obj.Cmd)
+	Debug("[%s] cmd [%s] process", s.Name(), obj.Cmd)
 	var err error
 	if s.processers == nil {
 		err = errors.New("no processor pool")
@@ -326,7 +326,10 @@ func (s *BaseContext) Processor(obj *CallObject) error {
 	if err != nil {
 		obj.ChanRet <- RetObject{
 			Ret: nil,
-			Err: err,
+			Result: Result{
+				Code: -1,
+				Err:  err,
+			},
 		}
 	}
 	return err
@@ -548,15 +551,15 @@ func NewModule(name string, parent Module, conf IConfig) (Module, error) {
 
 // Call get info from modules
 // same option will run in same processor
-func Call(destMID int32, cmd string, option int32, args ...interface{}) (interface{}, error) {
+func Call(destMID int32, cmd string, option int32, args ...interface{}) (interface{}, Result) {
 	var obj = NewCallObject(cmd, option, args...)
 	m, err := GetModuleByID(destMID)
 	if err != nil {
-		return nil, err
+		return nil, Result{Code: 0, Err: err}
 	}
 	if err = m.Call(option, obj); err != nil {
-		return nil, err
+		return nil, Result{Code: 0, Err: err}
 	}
 	result := <-obj.ChanRet
-	return result.Ret, result.Err
+	return result.Ret, result.Result
 }

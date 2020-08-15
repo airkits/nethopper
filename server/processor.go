@@ -101,47 +101,48 @@ type Processor struct {
 }
 
 // Process goruntine process pre call
-func Process(s Module, obj *CallObject) (err error) {
+func Process(s Module, obj *CallObject) (result Result) {
 	var ret = RetObject{
-		Ret: nil,
-		Err: nil,
+		Ret:    nil,
+		Result: Result{Err: nil, Code: 0},
 	}
+
 	defer func() {
 		if r := recover(); r != nil {
-			err = r.(error)
+			result.Err = r.(error)
+			result.Code = -1
 		}
 	}()
 
 	f := s.(Module).GetReflectHandler(obj.Cmd)
 	if f == nil {
-		err = fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
+		err := fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
 		panic(err)
 	} else {
 		args := []interface{}{s, obj}
 		args = append(args, obj.Args...)
 		values := CallUserFunc(f, args...)
 		if values == nil {
-			err = errors.New("unsupport handler,need return (interface{},error) or ([]interface{},error)")
+			err := errors.New("unsupport handler,need return (interface{},Result) or ([]interface{},Result)")
 			panic(err)
 		} else {
 			l := len(values)
 			if l == 2 {
 				ret.Ret = values[0].Interface()
 				if values[1].Interface() != nil {
-					err = values[1].Interface().(error)
-					panic(err)
+					result = values[1].Interface().(Result)
+					ret.Result.Code = result.Code
+					ret.Result.Err = result.Err
 				}
 			} else {
-				err = errors.New("unsupport params length")
+				err := errors.New("unsupport params length")
 				panic(err)
 			}
 		}
 	}
-	if err != nil {
-		ret.Err = err
-	}
+
 	obj.ChanRet <- ret
-	return err
+	return result
 }
 
 // Run Processor goruntine
@@ -158,8 +159,8 @@ func (w *Processor) Run() {
 				break
 			}
 			if err == nil {
-				if err = Process(w.owner.Owner(), obj.(*CallObject)); err != nil {
-					obj.(*CallObject).ChanRet <- RetObject{Ret: nil, Err: err}
+				if result := Process(w.owner.Owner(), obj.(*CallObject)); result.Err != nil {
+					obj.(*CallObject).ChanRet <- RetObject{Ret: nil, Result: result}
 				}
 			}
 			if w.q.Length() == 0 {

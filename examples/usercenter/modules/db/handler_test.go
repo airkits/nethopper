@@ -49,22 +49,22 @@ func TestGetOID2UIDTable(t *testing.T) {
 }
 func TestGetUIDByOpenID(t *testing.T) {
 	openID := "openID"
-	result, err := server.Call(server.MIDDB, cmd.MCDBGetUIDByOpenID, 0, openID)
-	if err != nil {
-		t.Error(err.Error())
+	v, result := server.Call(server.MIDDB, cmd.DBGetUIDByOpenID, 0, openID)
+	if result.Err != nil {
+		t.Error(result.Err.Error())
 		return
 	}
-	server.Info("get uid %d", result.(uint64))
+	server.Info("get uid %d", v.(uint64))
 
 }
 
 func TestInsertOID2UID(t *testing.T) {
 	openID := "openID"
 	uid := uint64(1123456)
-	result, err := server.Call(server.MIDDB, cmd.MCDBInsertOID2UID, 0, openID, uid)
-	if err != nil {
-		t.Error(err.Error())
+	v, result := server.Call(server.MIDDB, cmd.DBInsertOID2UID, 0, openID, uid)
+	if result.Err != nil {
+		t.Error(result.Err.Error())
 		return
 	}
-	t.Logf("get uid %v", result.(bool))
+	t.Logf("get uid %v", v.(bool))
 }

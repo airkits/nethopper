@@ -161,7 +161,7 @@ func ResponseSuccess(session *HTTPSession, data interface{}) {
 // @Success 200 object Response 成功后返回值
 // @Router /v1/genuid [post]
 func GenUID(c *gin.Context) {
-	defer server.TraceCost("GenUID")()
+	defer server.TraceCost(server.RunFuncName())()
 	session := NewHTTPSession(c)
 	model := &GenUIDReq{}
 	if err := c.BindJSON(model); err != nil {
@@ -169,14 +169,14 @@ func GenUID(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.MIDLogic, cmd.CallIDGenUIDCmd, utils.RandomInt32(0, 1024), model.Channel)
-	if err2 != nil {
-		server.Info("message done, get err %s", err2.Error())
-		ResponseError(session, CSErrorCodeClientError, err2)
+	v, result := server.Call(server.MIDLogic, cmd.CallIDGenUIDCmd, utils.RandomInt32(0, 1024), model.Channel)
+	if result.Err != nil {
+		server.Info("message done, get err %s", result.Err.Error())
+		ResponseError(session, CSErrorCodeClientError, result.Err)
 	} else {
-		server.Info("message done,get uid  %v", result.(uint64))
+		server.Info("message done,get uid  %v", v.(uint64))
 
-		ResponseSuccess(session, GenUIDResp{UID: result.(uint64)})
+		ResponseSuccess(session, GenUIDResp{UID: v.(uint64)})
 	}
 
 }
@@ -191,7 +191,7 @@ func GenUID(c *gin.Context) {
 // @Success 200 object Response 成功后返回值
 // @Router /v1/genuids [post]
 func GenUIDs(c *gin.Context) {
-	defer server.TraceCost("GenUIDs")()
+	defer server.TraceCost(server.RunFuncName())()
 	session := NewHTTPSession(c)
 	model := &GenUIDsReq{}
 	if err := c.BindJSON(model); err != nil {
@@ -199,14 +199,14 @@ func GenUIDs(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.MIDLogic, cmd.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), model.Channel, model.Num)
-	if err2 != nil {
-		server.Info("message done,get err %s", err2.Error())
-		ResponseError(session, CSErrorCodeClientError, err2)
+	v, result := server.Call(server.MIDLogic, cmd.CallIDGenUIDsCmd, utils.RandomInt32(0, 1024), model.Channel, model.Num)
+	if result.Err != nil {
+		server.Info("message done,get err %s", result.Err.Error())
+		ResponseError(session, CSErrorCodeClientError, result.Err)
 	} else {
-		server.Info("message done,get uid  %v", result.([]uint64))
+		server.Info("message done,get uid  %v", v.([]uint64))
 
-		ResponseSuccess(session, GenUIDsResp{UIDs: result.([]uint64)})
+		ResponseSuccess(session, GenUIDsResp{UIDs: v.([]uint64)})
 	}
 
 }
@@ -224,7 +224,7 @@ func GenUIDs(c *gin.Context) {
 // @Success 200 object Response 成功后返回值
 // @Router /v1/call/:module/:cmd/:opt [post]
 func Call(c *gin.Context) {
-	defer server.TraceCost("Call")()
+	defer server.TraceCost(server.RunFuncName())()
 	session := NewHTTPSession(c)
 	var data string
 	var ok bool
@@ -250,12 +250,12 @@ func Call(c *gin.Context) {
 		args = append(args, col)
 	}
 
-	result, err2 := server.Call(int32(moduleInt), cmd, int32(optionInt), args...)
-	if err2 != nil {
+	v, result := server.Call(int32(moduleInt), cmd, int32(optionInt), args...)
+	if result.Err != nil {
 		//server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
-		ResponseError(session, CSErrorCodeClientError, err2)
+		ResponseError(session, CSErrorCodeClientError, result.Err)
 	} else {
 		//server.Info("message done,get pwd  %v", result.(string))
-		ResponseSuccess(session, result)
+		ResponseSuccess(session, v)
 	}
 }

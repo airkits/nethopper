@@ -64,19 +64,19 @@ func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (st
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 
 	opt, err := strconv.Atoi(uid)
-	password, err := server.Call(server.MIDRedis, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
-	if err == nil {
+	v, result := server.Call(server.MIDRedis, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
+	if result.Err == nil {
 		server.Info("get from redis")
-		return password.(string), err
+		return v.(string), err
 	}
-	password, err = server.Call(server.MIDGRPCClient, cmd.CallIDGetUserInfoCmd, int32(opt), uid, pwd)
-	if err != nil {
+	v, result = server.Call(server.MIDGRPCClient, cmd.CallIDGetUserInfoCmd, int32(opt), uid, pwd)
+	if result.Err != nil {
 		return "", err
 	}
-	updated, err := server.Call(server.MIDRedis, cmd.CallIDUpdateUserInfoCmd, int32(opt), uid, password)
+	updated, result := server.Call(server.MIDRedis, cmd.CallIDUpdateUserInfoCmd, int32(opt), uid, v)
 	if updated == false {
-		server.Info("update redis failed %s %s", uid, password.(string))
+		server.Info("update redis failed %s %s", uid, v.(string))
 	}
 	server.Info("get from mysql")
-	return password.(string), err
+	return v.(string), err
 }

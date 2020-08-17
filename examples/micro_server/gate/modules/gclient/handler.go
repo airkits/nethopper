@@ -41,11 +41,11 @@ func RequestGetUserInfo(s *Module, obj *server.CallObject, uid string, pwd strin
 			Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},
 		}
 
-		if result, err := (agent.GetAdapter().(*AgentAdapter)).RPCCall(m); err == nil {
+		if v, result := (agent.GetAdapter().(*AgentAdapter)).RPCCall(m); result.Err == nil {
 
 			server.Info("LoginResponse get result %v", result)
 			resp := &s2s.LoginResp{}
-			if err := ptypes.UnmarshalAny(result.Body, resp); err != nil {
+			if err := ptypes.UnmarshalAny(v.Body, resp); err != nil {
 				fmt.Println(err)
 				return "", err
 			}

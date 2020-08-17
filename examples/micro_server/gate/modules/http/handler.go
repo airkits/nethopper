@@ -151,12 +151,12 @@ func Index(c *gin.Context) {
 		return
 	}
 
-	result, err2 := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(model.UID), strconv.FormatInt(model.UID, 10), model.Passwd)
-	if err2 != nil {
-		server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
-		ResponseError(session, CSErrorCodeClientError, err2)
+	v, result := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(model.UID), strconv.FormatInt(model.UID, 10), model.Passwd)
+	if result.Err != nil {
+		server.Info("message done,get pwd  %v ,err %s", v.(string), result.Err.Error())
+		ResponseError(session, CSErrorCodeClientError, result.Err)
 	} else {
-		server.Info("message done,get pwd  %v", result.(string))
+		server.Info("message done,get pwd  %v", v.(string))
 
 		ResponseSuccess(session, result)
 	}
@@ -202,12 +202,12 @@ func Call(c *gin.Context) {
 		args = append(args, col)
 	}
 
-	result, err2 := server.Call(int32(moduleInt), cmd, int32(optionInt), args...)
-	if err2 != nil {
+	v, result := server.Call(int32(moduleInt), cmd, int32(optionInt), args...)
+	if result.Err != nil {
 		//server.Info("message done,get pwd  %v ,err %s", result.(string), err2.Error())
-		ResponseError(session, CSErrorCodeClientError, err2)
+		ResponseError(session, CSErrorCodeClientError, result.Err)
 	} else {
 		//server.Info("message done,get pwd  %v", result.(string))
-		ResponseSuccess(session, result)
+		ResponseSuccess(session, v)
 	}
 }

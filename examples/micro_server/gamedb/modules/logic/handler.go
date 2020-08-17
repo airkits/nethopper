@@ -64,10 +64,10 @@ func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (st
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 	opt, err := strconv.Atoi(uid)
 
-	password, err := server.Call(server.MIDDB, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
-	if err != nil {
+	v, result := server.Call(server.MIDDB, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
+	if result.Err != nil {
 		return "", err
 	}
 	server.Info("get from mysql")
-	return password.(string), err
+	return v.(string), err
 }

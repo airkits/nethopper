@@ -51,7 +51,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 	server.Info("receive message %v", req)
 	userID := server.StringToInt64(req.Uid)
-	result, err := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
+	v, result := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
 	// header := m.(*ss.Header)
 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
 	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
@@ -62,12 +62,12 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 			Msg:  "ok",
 		},
 		Uid:    req.Uid,
-		Passwd: result.(string),
-		Name:   result.(string),
+		Passwd: v.(string),
+		Name:   v.(string),
 	}
-	if err != nil {
+	if result.Err != nil {
 		resp.Result.Code = 500
-		resp.Result.Msg = err.Error()
+		resp.Result.Msg = result.Err.Error()
 	}
 	body, err := proto.Marshal(resp)
 	if err != nil {

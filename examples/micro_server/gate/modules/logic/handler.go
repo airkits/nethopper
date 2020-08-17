@@ -50,8 +50,8 @@ import (
 // 	}
 // }
 
-// LoginHandler user to login
-// @Summary LoginHandler
+// Login user to login
+// @Summary Login
 // @Tags LogicModule
 // @version 1.0
 // @Accept  plain
@@ -59,16 +59,16 @@ import (
 // @Param uid query string true "UserID"
 // @Param pwd query string true "Password"
 // @Success 200 {string} string 成功后返回值
-// @Router /call/LoginHandler [put]
-func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
+// @Router /call/Login [put]
+func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 	opt, err := strconv.Atoi(uid)
 
-	v, result := server.Call(server.MIDGRPCClient, cmd.CallIDGetUserInfoCmd, int32(opt), uid, pwd)
+	v, result := server.Call(server.MIDGRPCClient, cmd.GRPCLogin, int32(opt), uid, pwd)
 	if err != nil {
-		return "", err
+		return "", result
 	}
 
 	server.Info("get from mysql")
-	return v.(string), result.Err
+	return v.(string), result
 }

@@ -53,7 +53,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 	server.Info("receive message %v", message)
 	userID := server.StringToInt64(req.Uid)
-	result, err := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
+	v, result := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
 
 	resp := &c2s.LoginResp{
 		Result: &c2s.Result{
@@ -61,12 +61,12 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 			Msg:  "ok",
 		},
 		Uid:    req.Uid,
-		Passwd: result.(string),
-		Name:   result.(string),
+		Passwd: v.(string),
+		Name:   v.(string),
 	}
-	if err != nil {
+	if result.Err != nil {
 		resp.Result.Code = 500
-		resp.Result.Msg = err.Error()
+		resp.Result.Msg = result.Err.Error()
 	}
 	body, err := proto.Marshal(resp)
 	if err != nil {

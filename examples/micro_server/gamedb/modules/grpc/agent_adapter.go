@@ -71,7 +71,7 @@ func (a *AgentAdapter) processRequestMessage(message *ss.Message) error {
 
 	switch message.Cmd {
 	case common.SSLoginCmd:
-		return LoginHandler(a, message)
+		return Login(a, message)
 	default:
 		return errors.New("unknown message")
 	}

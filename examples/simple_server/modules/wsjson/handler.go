@@ -42,17 +42,18 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	req := message.Body.(*csjson.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.UID)
-	result, err := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(userID), req.UID, req.Passwd)
+	v, result := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(userID), req.UID, req.Passwd)
 	resp := &csjson.LoginResp{
-		Data: result.(string),
+		Data: v.(string),
 	}
-	if err != nil {
-		resp.Error(500, err.Error())
+	if result.Err != nil {
+		resp.Error(500, result.Err.Error())
 	} else {
 		resp.OK()
 	}
 
 	var body []byte
+	var err error
 	if body, err = agent.Codec().Marshal(resp); err != nil {
 		return err
 	}

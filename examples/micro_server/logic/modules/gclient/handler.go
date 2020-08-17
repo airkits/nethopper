@@ -14,11 +14,11 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// RequestGetUserInfo user to login
-func RequestGetUserInfo(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
+// GetUser user to login
+func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
 	uidInt, err := strconv.Atoi(uid)
 	if err != nil {
-		return "", errors.New("convert uid failed")
+		return "", server.Result{Code: -1, Err: errors.New("convert uid failed")}
 	}
 	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 
@@ -30,7 +30,7 @@ func RequestGetUserInfo(s *Module, obj *server.CallObject, uid string, pwd strin
 		body, err := proto.Marshal(req)
 		if err != nil {
 			server.Error("Notify login send failed")
-			return "error", nil
+			return "error", server.Result{Code: 0, Err: nil}
 		}
 
 		m := &ss.Message{
@@ -47,15 +47,15 @@ func RequestGetUserInfo(s *Module, obj *server.CallObject, uid string, pwd strin
 			resp := &s2s.LoginResp{}
 			if err := ptypes.UnmarshalAny(v.Body, resp); err != nil {
 				fmt.Println(err)
-				return "", err
+				return "", result
 			}
 			server.Info("LoginResponse get body %v", resp)
 			if resp.Result.Code != 0 {
-				return "", errors.New(resp.Result.Msg)
+				return "", result
 			}
-			return resp.GetPasswd(), nil
+			return resp.GetPasswd(), result
 		}
 
 	}
-	return "", errors.New("cant get agent")
+	return "", server.Result{Code: 0, Err: errors.New("cant get agent")}
 }

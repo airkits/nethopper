@@ -50,8 +50,8 @@ import (
 // 	}
 // }
 
-// LoginHandler user to login
-// @Summary LoginHandler
+// Login user to login
+// @Summary Login
 // @Tags LogicModule
 // @version 1.0
 // @Accept  plain
@@ -59,24 +59,27 @@ import (
 // @Param uid query string true "UserID"
 // @Param pwd query string true "Password"
 // @Success 200 {string} string 成功后返回值
-// @Router /call/LoginHandler [put]
-func LoginHandler(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
+// @Router /call/Login [put]
+func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 
 	opt, err := strconv.Atoi(uid)
-	v, result := server.Call(server.MIDRedis, cmd.CallIDGetUserInfoCmd, int32(opt), uid)
+	if err != nil {
+		return "", server.Result{Code: -1, Err: err}
+	}
+	v, result := server.Call(server.MIDRedis, cmd.RedisGetUser, int32(opt), uid)
 	if result.Err == nil {
 		server.Info("get from redis")
-		return v.(string), err
+		return v.(string), result
 	}
-	v, result = server.Call(server.MIDGRPCClient, cmd.CallIDGetUserInfoCmd, int32(opt), uid, pwd)
+	v, result = server.Call(server.MIDGRPCClient, cmd.GClientGetUser, int32(opt), uid, pwd)
 	if result.Err != nil {
-		return "", err
+		return "", result
 	}
-	updated, result := server.Call(server.MIDRedis, cmd.CallIDUpdateUserInfoCmd, int32(opt), uid, v)
+	updated, result := server.Call(server.MIDRedis, cmd.RedisUpdateUser, int32(opt), uid, v)
 	if updated == false {
 		server.Info("update redis failed %s %s", uid, v.(string))
 	}
 	server.Info("get from mysql")
-	return v.(string), err
+	return v.(string), result
 }

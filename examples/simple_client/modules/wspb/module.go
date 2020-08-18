@@ -30,7 +30,7 @@ package wspb
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
+	"github.com/gonethopper/nethopper/examples/simple_client/cmd"
 	"github.com/gonethopper/nethopper/libs/skiplist"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/ws"
@@ -60,7 +60,7 @@ func (s *Module) Handlers() map[string]interface{} {
 //ReflectHandlers set moudle reflect handlers
 func (s *Module) ReflectHandlers() map[string]interface{} {
 	return map[string]interface{}{
-		common.SSLoginCmd: NotifyLogin,
+		cmd.WSPBLogin: Login,
 	}
 }
 

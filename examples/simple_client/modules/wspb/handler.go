@@ -1,7 +1,6 @@
 package wspb
 
 import (
-	"errors"
 	"strconv"
 	"time"
 
@@ -14,12 +13,12 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// NotifyLogin user to login
-func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (string, error) {
+// Login user to login
+func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
 
 	uidInt, err := strconv.Atoi(uid)
 	if err != nil {
-		return "", errors.New("convert uid failed")
+		return "", server.Result{Code: -1, Err: err}
 	}
 	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 		req := &c2s.LoginReq{
@@ -30,7 +29,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 		var body []byte
 		var err error
 		if body, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
-			return "", err
+			return "", server.Result{Code: -1, Err: err}
 		}
 		msg := &cs.Message{
 			ID:      1,
@@ -41,7 +40,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 		}
 		var payload []byte
 		if payload, err = agent.GetAdapter().Codec().Marshal(msg); err != nil {
-			return "", err
+			return "", server.Result{Code: -1, Err: err}
 		}
 		if err := agent.SendMessage(payload); err != nil {
 			server.Error("Notify login send failed %s ", err.Error())
@@ -51,7 +50,7 @@ func NotifyLogin(s *Module, obj *server.CallObject, uid string, pwd string) (str
 		}
 
 	}
-	return "ok", nil
+	return "ok", server.Result{Code: 0, Err: nil}
 }
 
 //LoginResponse request login

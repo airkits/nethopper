@@ -7,10 +7,6 @@ const (
 	SSLoginCmd = "ss_login"
 	// SSGetUserInfoCmd get userinfo
 	SSGetUserInfoCmd = "ss_get_userinfo"
-	//SSGenUIDCmd gen uid
-	SSGenUIDCmd = "ss_gen_uid"
-	//SSGenUIDsCmd gen uids
-	SSGenUIDsCmd = "ss_gen_uids"
 )
 
 const (

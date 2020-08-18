@@ -31,9 +31,8 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// GetUserInfoHander 获取用户信息
-//func GetUserInfoHander(s *Module, obj *server.CallObject, u string) (string, error) {
-func GetUserInfoHander(s *Module, obj *server.CallObject, u string) (string, error) {
+// GetUser 获取用户信息
+func GetUser(s *Module, obj *server.CallObject, u string) (string, server.Result) {
 
 	//var uid = (obj.Args[0]).(string)
 	//uid := 1
@@ -42,10 +41,10 @@ func GetUserInfoHander(s *Module, obj *server.CallObject, u string) (string, err
 	var password string
 	var err error
 	if err = row.Scan(&password); err == nil {
-		return password, nil
+		return password, server.Result{Code: 0, Err: err}
 	}
 
-	return "", err
+	return "", server.Result{Code: -1, Err: err}
 
 }
 

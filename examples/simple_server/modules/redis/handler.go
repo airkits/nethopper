@@ -33,21 +33,21 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// GetUserInfoHander 获取用户信息
-func GetUserInfoHander(s *Module, obj *server.CallObject, uid string) (string, error) {
+// GetUser 获取用户信息
+func GetUser(s *Module, obj *server.CallObject, uid string) (string, server.Result) {
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 	password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%s", uid))
-	return password, err
+	return password, server.Result{Code: 0, Err: err}
 
 }
 
-// UpdateUserInfoHandler update user info
-func UpdateUserInfoHandler(s *Module, obj *server.CallObject, uid string, pwd string) (bool, error) {
+// UpdateUser update user info
+func UpdateUser(s *Module, obj *server.CallObject, uid string, pwd string) (bool, server.Result) {
 
 	var key = fmt.Sprintf("uid_%s", uid)
 	err := s.rdb.Set(s.Context(), key, pwd, 0)
 	if err != nil {
-		return false, err
+		return false, server.Result{Code: -1, Err: err}
 	}
-	return true, nil
+	return true, server.Result{Code: 0, Err: nil}
 }

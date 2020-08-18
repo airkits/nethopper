@@ -54,8 +54,8 @@ func (s *Module) Handlers() map[string]interface{} {
 //ReflectHandlers set moudle reflect handlers
 func (s *Module) ReflectHandlers() map[string]interface{} {
 	return map[string]interface{}{
-		cmd.CallIDGetUserInfoCmd:    GetUserInfoHander,
-		cmd.CallIDUpdateUserInfoCmd: UpdateUserInfoHandler,
+		cmd.RedisGetUser:    GetUser,
+		cmd.RedisUpdateUser: UpdateUser,
 	}
 }
 

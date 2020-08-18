@@ -49,7 +49,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 	server.Info("receive message %v", req)
 	userID := server.StringToInt64(req.Uid)
-	v, result := server.Call(server.MIDLogic, cmd.CallIDLoginCmd, int32(userID), req.Uid, req.Passwd)
+	v, result := server.Call(server.MIDLogic, cmd.LogicLogin, int32(userID), req.Uid, req.Passwd)
 	// header := m.(*ss.Header)
 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
 	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)

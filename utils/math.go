@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -38,6 +40,13 @@ func CreateRandArray(max int, length int) []int {
 		}
 	}
 
+}
+
+//RoundN 小数点保留N位
+func RoundN(f float64, n int) float64 {
+	floatStr := fmt.Sprintf("%."+strconv.Itoa(n)+"f", f)
+	inst, _ := strconv.ParseFloat(floatStr, 64)
+	return inst
 }
 
 //Round int32取整 四舍五入

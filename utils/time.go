@@ -28,6 +28,7 @@
 package utils
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -81,4 +82,54 @@ func GetTomorrowTime() time.Time {
 	t := time.Now()
 	tm1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 	return tm1.Add(24 * time.Hour)
+}
+
+//Today 获取当前年月日
+func Today() string {
+
+	year, month, day := time.Now().Date()
+	str := fmt.Sprintf("%d-%d-%d 00:00:00", year, month, day)
+	return str
+}
+
+//HourNow 现在小时字符串
+func HourNow() string {
+	year, month, day := time.Now().Date()
+	str := fmt.Sprintf("%d-%d-%d %d:00:00", year, month, day, time.Now().Hour())
+	return str
+}
+
+//Tomorrow 获取明天年月日
+func Tomorrow() string {
+	tomorrow := time.Now().Add(24 * time.Hour)
+	year, month, day := tomorrow.Date()
+	str := fmt.Sprintf("%d-%d-%d 00:00:00", year, month, day)
+	return str
+}
+
+//TodayTimestamp 获取今天最早的时间戳毫秒
+func TodayTimestamp() int64 {
+	now := time.Now()
+	year, month, day := now.Date()
+	todaytime := time.Date(year, month, day, 0, 0, 0, 0, time.Local)
+	return todaytime.UnixNano() / 1e6
+}
+
+//TimeFormat 时间戳格式化
+func TimeFormat(t time.Time) string {
+	return t.Format("2006-01-02 15:04:05")
+}
+
+//HourTimestamp 获取整点时间戳
+func HourTimestamp() int64 {
+	now := time.Now()
+	timestamp := now.Unix() - int64(now.Second()) - int64((60 * now.Minute()))
+
+	return timestamp
+}
+
+//Hour 获取整点时间戳
+func Hour(t time.Time) int64 {
+	timestamp := t.Unix() - int64(t.Second()) - int64((60 * t.Minute()))
+	return timestamp
 }

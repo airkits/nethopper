@@ -91,35 +91,7 @@ func (s *Module) web() {
 	s.wsServer.ListenAndServe()
 }
 
-// config map
-// m := map[string]interface{}{
-// }
-// func (s *Module) ReadConfig(m map[string]interface{}) error {
-// 	return nil
-// }
-
-// //Reload reload config
-// func (s *Module) Reload(m map[string]interface{}) error {
-// 	return nil
-// }
-
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
 	server.RunSimpleFrame(s, 128)
 }
-
-// // Stop goruntine
-// func (s *Module) Stop() error {
-
-// 	return nil
-// }
-
-// // Call async send message to module
-// func (s *Module) Call(option int32, obj *server.CallObject) error {
-// 	return nil
-// }
-
-// PushBytes async send string or bytes to queue
-// func (s *Module) PushBytes(option int32, buf []byte) error {
-// 	return nil
-// }

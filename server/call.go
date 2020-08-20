@@ -88,22 +88,22 @@ func GOWithContext(v ...interface{}) {
 	}()
 }
 
-// Future async call function
-func Future(f func() (interface{}, error)) func() (interface{}, error) {
-	var result interface{}
-	var err error
+// // Future async call function
+// func Future(f func() (interface{}, error)) func() (interface{}, error) {
+// 	var result interface{}
+// 	var err error
 
-	c := make(chan struct{}, 1)
-	go func() {
-		defer close(c)
-		result, err = f()
-	}()
+// 	c := make(chan struct{}, 1)
+// 	go func() {
+// 		defer close(c)
+// 		result, err = f()
+// 	}()
 
-	return func() (interface{}, error) {
-		<-c
-		return result, err
-	}
-}
+// 	return func() (interface{}, error) {
+// 		<-c
+// 		return result, err
+// 	}
+// }
 
 // RunFuncName 获取正在运行的函数名
 func RunFuncName() string {
@@ -149,4 +149,29 @@ func NewCallObject(cmd string, opt int32, args ...interface{}) *CallObject {
 		Args:    args,
 		ChanRet: make(chan RetObject, 1),
 	}
+}
+
+// AsyncCall async get data from modules,return call object
+// same option value will run in same processor
+func AsyncCall(destMID int32, cmd string, option int32, args ...interface{}) (*CallObject, error) {
+	m, err := GetModuleByID(destMID)
+	if err != nil {
+		return nil, err
+	}
+	var obj = NewCallObject(cmd, option, args...)
+	if err = m.Call(option, obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// Call sync get data from modules
+// same option value will run in same processor
+func Call(destMID int32, cmd string, option int32, args ...interface{}) (interface{}, Result) {
+	obj, err := AsyncCall(destMID, cmd, option, args...)
+	if err != nil {
+		return nil, Result{Code: -1, Err: err}
+	}
+	result := <-obj.ChanRet
+	return result.Ret, result.Result
 }

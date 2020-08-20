@@ -80,16 +80,3 @@ func (s *Module) OnRun(dt time.Duration) {
 func (s *Module) Stop() error {
 	return nil
 }
-
-// Call async send message to module
-// func (s *Module) Call(option int32, obj *server.CallObject) error {
-// 	if err := s.MQ().AsyncPush(obj); err != nil {
-// 		server.Error(err.Error())
-// 	}
-// 	return nil
-// }
-
-// PushBytes async send string or bytes to queue
-// func (s *Module) PushBytes(option int32, buf []byte) error {
-// 	return nil
-// }

@@ -34,22 +34,6 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// func CreateUserHander(s *Module, obj *server.CallObject) {
-// 	var uid = (obj.Args[0]).(string)
-
-// 	var redisObj = server.NewCallObject(common.CallIDGetUserInfoCmd, uid)
-// 	server.Call(server.MIDRedis, 0, redisObj)
-// 	result := <-redisObj.ChanRet
-// 	if result.Err == nil {
-// 		var ret = server.RetObject{
-// 			Ret: result.Ret,
-// 			Err: nil,
-// 		}
-// 		obj.ChanRet <- ret
-// 		return
-// 	}
-// }
-
 // Login user to login
 // @Summary Login
 // @Tags LogicModule

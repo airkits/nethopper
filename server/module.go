@@ -549,17 +549,4 @@ func NewModule(name string, parent Module, conf IConfig) (Module, error) {
 	return createModuleByID(MID, name, parent, conf)
 }
 
-// Call get info from modules
-// same option will run in same processor
-func Call(destMID int32, cmd string, option int32, args ...interface{}) (interface{}, Result) {
-	var obj = NewCallObject(cmd, option, args...)
-	m, err := GetModuleByID(destMID)
-	if err != nil {
-		return nil, Result{Code: 0, Err: err}
-	}
-	if err = m.Call(option, obj); err != nil {
-		return nil, Result{Code: 0, Err: err}
-	}
-	result := <-obj.ChanRet
-	return result.Ret, result.Result
-}
+

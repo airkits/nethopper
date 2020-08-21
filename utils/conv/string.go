@@ -2,26 +2,16 @@ package conv
 
 import (
 	"math/big"
-	"reflect"
 	"strconv"
 
 	"github.com/gonethopper/nethopper/server"
 )
 
-//Struct2Map struct 2 map
-func Struct2Map(obj interface{}) map[string]interface{} {
-	t := reflect.TypeOf(obj)
-	v := reflect.ValueOf(obj)
-
-	var data = make(map[string]interface{})
-	for i := 0; i < t.NumField(); i++ {
-		data[t.Field(i).Name] = v.Field(i).Interface()
-	}
-	return data
-}
-
 //Str2Bool string convert to bool
 func Str2Bool(s string) bool {
+	if len(s) <= 0 {
+		return false
+	}
 	v, err := strconv.ParseBool(s)
 	if err != nil {
 		server.Info("Str2Bool convert error %s", err.Error())
@@ -32,6 +22,9 @@ func Str2Bool(s string) bool {
 
 //Str2Int string convert to Int
 func Str2Int(s string) int {
+	if len(s) <= 0 {
+		return int(0)
+	}
 	v, err := strconv.ParseInt(s, 10, 32)
 	if err != nil {
 		server.Info("Str2Int convert error %s", err.Error())
@@ -42,6 +35,9 @@ func Str2Int(s string) int {
 
 //Str2Int8 string convert to Int8
 func Str2Int8(s string) int8 {
+	if len(s) <= 0 {
+		return int8(0)
+	}
 	v, e := strconv.ParseInt(s, 10, 8)
 	if e != nil {
 		server.Info("Str2Int8 convert error %s", e.Error())
@@ -52,6 +48,9 @@ func Str2Int8(s string) int8 {
 
 //Str2Int16 string convert to Int16
 func Str2Int16(s string) int16 {
+	if len(s) <= 0 {
+		return int16(0)
+	}
 	v, e := strconv.ParseInt(s, 10, 16)
 	if e != nil {
 		server.Info("Str2Int16 convert error %s", e.Error())
@@ -62,6 +61,9 @@ func Str2Int16(s string) int16 {
 
 //Str2Int32 string convert to Int32
 func Str2Int32(s string) int32 {
+	if len(s) <= 0 {
+		return int32(0)
+	}
 	v, e := strconv.ParseInt(s, 10, 32)
 	if e != nil {
 		server.Info("Str2Int32 convert error %s", e.Error())
@@ -72,6 +74,9 @@ func Str2Int32(s string) int32 {
 
 //Str2Int64 string convert to Int64
 func Str2Int64(s string) int64 {
+	if len(s) <= 0 {
+		return int64(0)
+	}
 	v, e := strconv.ParseInt(s, 10, 64)
 	if e != nil {
 		bigInt := &big.Int{}
@@ -87,6 +92,9 @@ func Str2Int64(s string) int64 {
 
 //Str2Uint string convert to Uint
 func Str2Uint(s string) uint {
+	if len(s) <= 0 {
+		return uint(0)
+	}
 	v, e := strconv.ParseUint(s, 10, 64)
 	if e != nil {
 		server.Info("Str2Uint convert error %s", e.Error())
@@ -97,6 +105,9 @@ func Str2Uint(s string) uint {
 
 //Str2Uint8 string convert to Uint8
 func Str2Uint8(s string) uint8 {
+	if len(s) <= 0 {
+		return uint8(0)
+	}
 	v, e := strconv.ParseUint(s, 10, 8)
 	if e != nil {
 		server.Info("Str2Uint8 convert error %s", e.Error())
@@ -107,6 +118,9 @@ func Str2Uint8(s string) uint8 {
 
 //Str2Uint16 string convert to Uint16
 func Str2Uint16(s string) uint16 {
+	if len(s) <= 0 {
+		return uint16(0)
+	}
 	v, e := strconv.ParseUint(s, 10, 16)
 	if e != nil {
 		server.Info("Str2Uint16 convert error %s", e.Error())
@@ -117,6 +131,9 @@ func Str2Uint16(s string) uint16 {
 
 //Str2Uint32 string convert to Uint32
 func Str2Uint32(s string) uint32 {
+	if len(s) <= 0 {
+		return uint32(0)
+	}
 	v, e := strconv.ParseUint(s, 10, 32)
 	if e != nil {
 		server.Info("Str2Uint32 convert error %s", e.Error())
@@ -127,6 +144,9 @@ func Str2Uint32(s string) uint32 {
 
 //Str2Uint64 string convert to Uint64
 func Str2Uint64(s string) uint64 {
+	if len(s) <= 0 {
+		return uint64(0)
+	}
 	v, e := strconv.ParseUint(s, 10, 64)
 	if e != nil {
 		bigInt := &big.Int{}
@@ -142,6 +162,9 @@ func Str2Uint64(s string) uint64 {
 
 //Str2Float32 string convert to Float32
 func Str2Float32(s string) float32 {
+	if len(s) <= 0 {
+		return float32(0)
+	}
 	v, e := strconv.ParseFloat(s, 32)
 	if e != nil {
 		server.Info("Str2Float32 convert error %s", e.Error())
@@ -152,6 +175,9 @@ func Str2Float32(s string) float32 {
 
 //Str2Float64 string convert to Float64
 func Str2Float64(s string) float64 {
+	if len(s) <= 0 {
+		return float64(0)
+	}
 	v, e := strconv.ParseFloat(s, 3642)
 	if e != nil {
 		server.Info("Str2Float64 convert error %s", e.Error())

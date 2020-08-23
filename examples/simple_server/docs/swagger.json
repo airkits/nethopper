@@ -17,7 +17,7 @@
     },
     "host": "localhost:11080",
     "paths": {
-        "/call/LoginHandler": {
+        "/call/Login": {
             "put": {
                 "consumes": [
                     "text/plain"
@@ -28,7 +28,7 @@
                 "tags": [
                     "LogicModule"
                 ],
-                "summary": "LoginHandler",
+                "summary": "Login",
                 "parameters": [
                     {
                         "type": "string",

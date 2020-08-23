@@ -29,7 +29,7 @@ info:
   title: Nethopper Simple Server
   version: 1.0.2
 paths:
-  /call/LoginHandler:
+  /call/Login:
     put:
       consumes:
       - text/plain
@@ -51,7 +51,7 @@ paths:
           description: OK
           schema:
             type: string
-      summary: LoginHandler
+      summary: Login
       tags:
       - LogicModule
   /v1/:

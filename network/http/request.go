@@ -48,6 +48,10 @@ const (
 	POST = "POST"
 	// GET method
 	GET = "GET"
+
+	//DELETE method
+	DELETE = "DELETE"
+
 	//RequestTypeText text format
 	RequestTypeText = 0x01
 	//RequestTypeJSON json format

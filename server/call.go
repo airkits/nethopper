@@ -129,16 +129,16 @@ type CallObject struct {
 	ChanRet chan RetObject
 }
 
-//Result define code and error
-type Result struct {
+//Ret define code and error
+type Ret struct {
 	Code int32
 	Err  error
 }
 
 // RetObject call return object
 type RetObject struct {
-	Ret    interface{}
-	Result Result
+	Data interface{}
+	Ret  Ret
 }
 
 // NewCallObject create call object
@@ -167,11 +167,11 @@ func AsyncCall(destMID int32, cmd string, option int32, args ...interface{}) (*C
 
 // Call sync get data from modules
 // same option value will run in same processor
-func Call(destMID int32, cmd string, option int32, args ...interface{}) (interface{}, Result) {
+func Call(destMID int32, cmd string, option int32, args ...interface{}) (interface{}, Ret) {
 	obj, err := AsyncCall(destMID, cmd, option, args...)
 	if err != nil {
-		return nil, Result{Code: -1, Err: err}
+		return nil, Ret{Code: -1, Err: err}
 	}
 	result := <-obj.ChanRet
-	return result.Ret, result.Result
+	return result.Data, result.Ret
 }

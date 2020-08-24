@@ -105,7 +105,7 @@ func FormatLog(level int32, v ...interface{}) string {
 //WriteLog send log to queue
 func WriteLog(level int32, v ...interface{}) error {
 	// UserData return logger level
-	if level > GLoggerModule.UserData() {
+	if GLoggerModule == nil || level > GLoggerModule.UserData() {
 		return nil
 	}
 	msg := FormatLog(level, v...)

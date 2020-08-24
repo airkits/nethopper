@@ -17,11 +17,11 @@ import (
 )
 
 // Login user to login
-func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
+func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
 
 	uidInt, err := strconv.Atoi(uid)
 	if err != nil {
-		return "", server.Result{Code: -1, Err: err}
+		return "", server.Ret{Code: -1, Err: err}
 	}
 	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 		req := &s2s.LoginReq{
@@ -32,7 +32,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 		body, err := proto.Marshal(req)
 		if err != nil {
 			server.Error("Notify login send failed")
-			return "error", server.Result{Code: -1, Err: err}
+			return "error", server.Ret{Code: -1, Err: err}
 		}
 
 		m := &ss.Message{
@@ -51,7 +51,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 		}
 
 	}
-	return "ok", server.Result{Code: 0, Err: nil}
+	return "ok", server.Ret{Code: 0, Err: nil}
 }
 
 //LoginResponse request login

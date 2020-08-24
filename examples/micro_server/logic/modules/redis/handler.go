@@ -34,20 +34,20 @@ import (
 )
 
 // GetUser 获取用户信息
-func GetUser(s *Module, obj *server.CallObject, uid string) (string, server.Result) {
+func GetUser(s *Module, obj *server.CallObject, uid string) (string, server.Ret) {
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 	password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%s", uid))
-	return password, server.Result{Code: 0, Err: err}
+	return password, server.Ret{Code: 0, Err: err}
 
 }
 
 // UpdateUser update user info
-func UpdateUser(s *Module, obj *server.CallObject, uid string, pwd string) (bool, server.Result) {
+func UpdateUser(s *Module, obj *server.CallObject, uid string, pwd string) (bool, server.Ret) {
 
 	var key = fmt.Sprintf("uid_%s", uid)
 	err := s.rdb.Set(s.Context(), key, pwd, 0)
 	if err != nil {
-		return false, server.Result{Code: -1, Err: err}
+		return false, server.Ret{Code: -1, Err: err}
 	}
-	return true, server.Result{Code: 0, Err: nil}
+	return true, server.Ret{Code: 0, Err: nil}
 }

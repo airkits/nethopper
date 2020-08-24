@@ -14,11 +14,11 @@ import (
 )
 
 // Login user to login
-func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
+func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
 
 	uidInt, err := strconv.Atoi(uid)
 	if err != nil {
-		return "", server.Result{Code: -1, Err: err}
+		return "", server.Ret{Code: -1, Err: err}
 	}
 	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 		req := &c2s.LoginReq{
@@ -29,7 +29,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 		var body []byte
 		var err error
 		if body, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
-			return "", server.Result{Code: -1, Err: err}
+			return "", server.Ret{Code: -1, Err: err}
 		}
 		msg := &cs.Message{
 			ID:      1,
@@ -40,7 +40,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 		}
 		var payload []byte
 		if payload, err = agent.GetAdapter().Codec().Marshal(msg); err != nil {
-			return "", server.Result{Code: -1, Err: err}
+			return "", server.Ret{Code: -1, Err: err}
 		}
 		if err := agent.SendMessage(payload); err != nil {
 			server.Error("Notify login send failed %s ", err.Error())
@@ -50,7 +50,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 		}
 
 	}
-	return "ok", server.Result{Code: 0, Err: nil}
+	return "ok", server.Ret{Code: 0, Err: nil}
 }
 
 //LoginResponse request login

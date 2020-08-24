@@ -97,8 +97,8 @@ func (a *AgentAdapter) processResponseMessage(m *ss.Message) error {
 	if v != nil {
 		obj := v.Value().(*server.CallObject)
 		obj.ChanRet <- server.RetObject{
-			Ret:    m,
-			Result: server.Result{Code: 0, Err: nil},
+			Data: m,
+			Ret:  server.Ret{Code: 0, Err: nil},
 		}
 		return nil
 	}
@@ -112,12 +112,12 @@ func (a *AgentAdapter) processBroadcastMessage(m *ss.Message) error {
 }
 
 //RPCCall remote call
-func (a *AgentAdapter) RPCCall(msg *ss.Message) (*ss.Message, server.Result) {
+func (a *AgentAdapter) RPCCall(msg *ss.Message) (*ss.Message, server.Ret) {
 	var obj = server.NewCallObject(msg.GetCmd(), 0, msg)
 	a.Cache.Set(float64(msg.GetID()), obj)
 	a.WriteMessage(msg)
 	result := <-obj.ChanRet
-	return (result.Ret).(*ss.Message), result.Result
+	return (result.Data).(*ss.Message), result.Ret
 }
 
 //WriteMessage to connection

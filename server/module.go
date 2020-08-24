@@ -325,8 +325,8 @@ func (s *BaseContext) Processor(obj *CallObject) error {
 	}
 	if err != nil {
 		obj.ChanRet <- RetObject{
-			Ret: nil,
-			Result: Result{
+			Data: nil,
+			Ret: Ret{
 				Code: -1,
 				Err:  err,
 			},
@@ -548,5 +548,3 @@ func NewModule(name string, parent Module, conf IConfig) (Module, error) {
 	MID := atomic.AddInt32(&AnonymousMID, 1)
 	return createModuleByID(MID, name, parent, conf)
 }
-
-

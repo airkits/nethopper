@@ -15,7 +15,7 @@ import (
 )
 
 // Login user to login
-func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
+func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
 
 	if id := conv.Str2Uint64(uid); id > 0 {
 		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
@@ -28,7 +28,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 			body, err := codec.PBCodec.Marshal(req)
 			if err != nil {
 				server.Error("Notify login send failed")
-				return "error", server.Result{Code: -1, Err: err}
+				return "error", server.Ret{Code: -1, Err: err}
 			}
 
 			m := &raw.Message{
@@ -47,7 +47,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 			}
 		}
 	}
-	return "ok", server.Result{Code: 0, Err: nil}
+	return "ok", server.Ret{Code: 0, Err: nil}
 }
 
 //LoginResponse request login

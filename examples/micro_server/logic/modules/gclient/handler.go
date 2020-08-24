@@ -15,10 +15,10 @@ import (
 )
 
 // GetUser user to login
-func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
+func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
 	uidInt, err := strconv.Atoi(uid)
 	if err != nil {
-		return "", server.Result{Code: -1, Err: errors.New("convert uid failed")}
+		return "", server.Ret{Code: -1, Err: errors.New("convert uid failed")}
 	}
 	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 
@@ -30,7 +30,7 @@ func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string,
 		body, err := proto.Marshal(req)
 		if err != nil {
 			server.Error("Notify login send failed")
-			return "error", server.Result{Code: 0, Err: nil}
+			return "error", server.Ret{Code: 0, Err: nil}
 		}
 
 		m := &ss.Message{
@@ -57,5 +57,5 @@ func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string,
 		}
 
 	}
-	return "", server.Result{Code: 0, Err: errors.New("cant get agent")}
+	return "", server.Ret{Code: 0, Err: errors.New("cant get agent")}
 }

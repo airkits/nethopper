@@ -32,7 +32,7 @@ import (
 )
 
 // GetUser 获取用户信息
-func GetUser(s *Module, obj *server.CallObject, u string) (string, server.Result) {
+func GetUser(s *Module, obj *server.CallObject, u string) (string, server.Ret) {
 
 	//var uid = (obj.Args[0]).(string)
 	//uid := 1
@@ -41,55 +41,9 @@ func GetUser(s *Module, obj *server.CallObject, u string) (string, server.Result
 	var password string
 	var err error
 	if err = row.Scan(&password); err == nil {
-		return password, server.Result{Code: 0, Err: err}
+		return password, server.Ret{Code: 0, Err: err}
 	}
 
-	return "", server.Result{Code: -1, Err: err}
+	return "", server.Ret{Code: -1, Err: err}
 
 }
-
-// InsertUserInfoHander 获取用户信息
-// func InsertUserInfoHander(s *Module, obj *server.CallObject) {
-// 	var uid = (obj.Args[0]).(string)
-// 	var password = (obj.Args[1]).(string)
-// 	sql := "insert into user.user(uid,password) value(?,?)"
-// 	_, err := s.conn.Exec(sql, password, uid)
-
-// 	if err == nil {
-// 		var ret = server.RetObject{
-// 			Ret: password,
-// 			Err: nil,
-// 		}
-// 		obj.ChanRet <- ret
-// 	} else {
-// 		var ret = server.RetObject{
-// 			Ret: nil,
-// 			Err: err,
-// 		}
-// 		obj.ChanRet <- ret
-// 	}
-
-// }
-
-// UpdateUserInfoHander 获取用户信息
-// func UpdateUserInfoHander(s *Module, obj *server.CallObject) {
-// 	var uid = (obj.Args[0]).(string)
-// 	var password = (obj.Args[1]).(string)
-// 	sql := "update user.user set password=? where uid=?"
-// 	_, err := s.conn.Exec(sql, password, uid)
-
-// 	if err == nil {
-// 		var ret = server.RetObject{
-// 			Ret: password,
-// 			Err: nil,
-// 		}
-// 		obj.ChanRet <- ret
-// 	} else {
-// 		var ret = server.RetObject{
-// 			Ret: nil,
-// 			Err: err,
-// 		}
-// 		obj.ChanRet <- ret
-// 	}
-
-// }

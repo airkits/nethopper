@@ -44,11 +44,11 @@ import (
 // @Param pwd query string true "Password"
 // @Success 200 {string} string 成功后返回值
 // @Router /call/Login [put]
-func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
+func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 	opt, err := strconv.Atoi(uid)
 	if err != nil {
-		return "", server.Result{Code: -1, Err: err}
+		return "", server.Ret{Code: -1, Err: err}
 	}
 
 	v, result := server.Call(server.MIDDB, cmd.DBGetUser, int32(opt), uid)
@@ -56,5 +56,5 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 		return "", result
 	}
 	server.Info("get from mysql")
-	return v.(string), server.Result{Code: 0, Err: nil}
+	return v.(string), server.Ret{Code: 0, Err: nil}
 }

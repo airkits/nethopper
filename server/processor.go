@@ -101,10 +101,10 @@ type Processor struct {
 }
 
 // Process goruntine process pre call
-func Process(s Module, obj *CallObject) (result Result) {
+func Process(s Module, obj *CallObject) (result Ret) {
 	var ret = RetObject{
-		Ret:    nil,
-		Result: Result{Err: nil, Code: 0},
+		Data: nil,
+		Ret:  Ret{Err: nil, Code: 0},
 	}
 
 	defer func() {
@@ -128,11 +128,11 @@ func Process(s Module, obj *CallObject) (result Result) {
 		} else {
 			l := len(values)
 			if l == 2 {
-				ret.Ret = values[0].Interface()
+				ret.Data = values[0].Interface()
 				if values[1].Interface() != nil {
-					result = values[1].Interface().(Result)
-					ret.Result.Code = result.Code
-					ret.Result.Err = result.Err
+					result = values[1].Interface().(Ret)
+					ret.Ret.Code = result.Code
+					ret.Ret.Err = result.Err
 				}
 			} else {
 				err := errors.New("unsupport params length")
@@ -160,7 +160,7 @@ func (w *Processor) Run() {
 			}
 			if err == nil {
 				if result := Process(w.owner.Owner(), obj.(*CallObject)); result.Err != nil {
-					obj.(*CallObject).ChanRet <- RetObject{Ret: nil, Result: result}
+					obj.(*CallObject).ChanRet <- RetObject{Data: nil, Ret: result}
 				}
 			}
 			if w.q.Length() == 0 {

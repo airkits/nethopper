@@ -13,10 +13,10 @@ import (
 )
 
 // Login user to login
-func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
+func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
 	uidInt, err := strconv.Atoi(uid)
 	if err != nil {
-		return "", server.Result{Code: -1, Err: err}
+		return "", server.Ret{Code: -1, Err: err}
 	}
 	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 
@@ -28,7 +28,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 		var payload []byte
 		var err error
 		if payload, err = agent.GetAdapter().Codec().Marshal(req); err != nil {
-			return "", server.Result{Code: -1, Err: err}
+			return "", server.Ret{Code: -1, Err: err}
 		}
 		m := &json.Message{
 			ID:      1,
@@ -38,7 +38,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 			Body:    string(payload),
 		}
 		if payload, err = agent.GetAdapter().Codec().Marshal(m); err != nil {
-			return "", server.Result{Code: -1, Err: err}
+			return "", server.Ret{Code: -1, Err: err}
 		}
 
 		if err := agent.SendMessage(payload); err != nil {
@@ -49,7 +49,7 @@ func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, s
 		}
 
 	}
-	return "ok", server.Result{Code: 0, Err: nil}
+	return "ok", server.Ret{Code: 0, Err: nil}
 }
 
 //LoginResponse request login

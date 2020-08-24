@@ -15,11 +15,11 @@ import (
 )
 
 // GetUser user to login
-func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Result) {
+func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
 
 	uidInt, err := strconv.Atoi(uid)
 	if err != nil {
-		return "", server.Result{Code: -1, Err: err}
+		return "", server.Ret{Code: -1, Err: err}
 	}
 	if agent := s.GetAgent(uint32(uidInt)); agent != nil {
 		req := &s2s.LoginReq{
@@ -30,7 +30,7 @@ func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string,
 		body, err := proto.Marshal(req)
 		if err != nil {
 			server.Error("Notify login send failed")
-			return "error", server.Result{Code: -2, Err: err}
+			return "error", server.Ret{Code: -2, Err: err}
 		}
 
 		m := &ss.Message{
@@ -47,7 +47,7 @@ func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string,
 			resp := &s2s.LoginResp{}
 			if err := ptypes.UnmarshalAny(v.Body, resp); err != nil {
 				fmt.Println(err)
-				return "", server.Result{Code: -1, Err: err}
+				return "", server.Ret{Code: -1, Err: err}
 			}
 			server.Info("LoginResponse get body %v", resp)
 			if resp.Result.Code != 0 {
@@ -57,5 +57,5 @@ func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string,
 		}
 
 	}
-	return "", server.Result{Code: -1, Err: errors.New("cant get agent")}
+	return "", server.Ret{Code: -1, Err: errors.New("cant get agent")}
 }

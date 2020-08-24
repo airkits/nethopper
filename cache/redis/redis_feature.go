@@ -11,6 +11,13 @@ func (c *RedisCache) Keys(ctx context.Context, key string) ([]string, error) {
 	return redis.Strings(c.Do(ctx, "keys", key))
 }
 
+//HGetAll get OBJECT from redis
+func (c *RedisCache) HGetAll(ctx context.Context, key interface{}, obj interface{}) error {
+	//获取缓存
+	value, _ := redis.Values(c.Do(ctx, "HGETALL", key))
+	return redis.ScanStruct(value, obj)
+}
+
 //HMGet 批量获取字段
 func (c *RedisCache) HMGet(ctx context.Context, key interface{}, fieldNames ...interface{}) (map[string]string, error) {
 

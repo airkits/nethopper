@@ -32,7 +32,7 @@ import (
 )
 
 // GetUser 获取用户信息
-func GetUser(s *Module, obj *server.CallObject, u string) (string, server.Ret) {
+func GetUser(s *Module, u string) (string, server.Ret) {
 
 	//var uid = (obj.Args[0]).(string)
 	//uid := 1

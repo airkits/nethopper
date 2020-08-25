@@ -34,7 +34,7 @@ import (
 )
 
 // GetUser 获取用户信息
-func GetUser(s *Module, obj *server.CallObject, uid string) (string, server.Ret) {
+func GetUser(s *Module, uid string) (string, server.Ret) {
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 	password, err := s.rdb.GetString(s.Context(), fmt.Sprintf("uid_%s", uid))
 	return password, server.Ret{Code: 0, Err: err}
@@ -42,7 +42,7 @@ func GetUser(s *Module, obj *server.CallObject, uid string) (string, server.Ret)
 }
 
 // UpdateUser update user info
-func UpdateUser(s *Module, obj *server.CallObject, uid string, pwd string) (bool, server.Ret) {
+func UpdateUser(s *Module, uid string, pwd string) (bool, server.Ret) {
 
 	var key = fmt.Sprintf("uid_%s", uid)
 	err := s.rdb.Set(s.Context(), key, pwd, 0)

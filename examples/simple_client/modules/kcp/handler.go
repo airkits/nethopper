@@ -15,7 +15,7 @@ import (
 )
 
 // Login user to login
-func Login(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
+func Login(s *Module, uid string, pwd string) (string, server.Ret) {
 	if id := conv.Str2Uint64(uid); id > 0 {
 		if agent, ok := network.GetInstance().GetAuthAgent(id); ok {
 

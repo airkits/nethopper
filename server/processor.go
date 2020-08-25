@@ -119,7 +119,7 @@ func Process(s Module, obj *CallObject) (result Ret) {
 		err := fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
 		panic(err)
 	} else {
-		args := []interface{}{s, obj}
+		args := []interface{}{s}
 		args = append(args, obj.Args...)
 		values := CallUserFunc(f, args...)
 		if values == nil {

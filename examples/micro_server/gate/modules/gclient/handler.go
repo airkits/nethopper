@@ -15,7 +15,7 @@ import (
 )
 
 // GetUser user to login
-func GetUser(s *Module, obj *server.CallObject, uid string, pwd string) (string, server.Ret) {
+func GetUser(s *Module, uid string, pwd string) (string, server.Ret) {
 
 	uidInt, err := strconv.Atoi(uid)
 	if err != nil {

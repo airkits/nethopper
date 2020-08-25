@@ -184,6 +184,11 @@ func RandomInt32(from, to int32) int32 {
 	return int32(i)
 }
 
+//RandomOpt 获取随机opt
+func RandomOpt() int32 {
+	return RandomInt32(0, 1024)
+}
+
 //Shuffle 随机乱序,洗牌
 func Shuffle(list []interface{}) {
 	var c = len(list)

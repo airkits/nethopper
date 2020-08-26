@@ -184,8 +184,8 @@ func RandomInt32(from, to int32) int32 {
 	return int32(i)
 }
 
-//RandomOpt 获取随机opt
-func RandomOpt() int32 {
+//CallOpt 获取随机opt
+func CallOpt() int32 {
 	return RandomInt32(0, 1024)
 }
 

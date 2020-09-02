@@ -30,6 +30,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -114,29 +115,53 @@ func Process(s Module, obj *CallObject) (result Ret) {
 		}
 	}()
 
-	f := s.(Module).GetReflectHandler(obj.Cmd)
-	if f == nil {
-		err := fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
-		panic(err)
+	f := s.(Module).GetHandler(obj.Cmd)
+	if f != nil {
+		switch f.(type) {
+		case func(interface{}) (interface{}, Ret):
+			data, result := f.(func(interface{}) (interface{}, Ret))(s)
+			ret.Data = data
+			ret.Ret = result
+		case func(interface{}, interface{}) (interface{}, Ret):
+			data, result := f.(func(interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0])
+			ret.Data = data
+			ret.Ret = result
+		case func(interface{}, interface{}, interface{}) (interface{}, Ret):
+			data, result := f.(func(interface{}, interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0], obj.Args[1])
+			ret.Data = data
+			ret.Ret = result
+		case func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret):
+			data, result := f.(func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0], obj.Args[1], obj.Args[2])
+			ret.Data = data
+			ret.Ret = result
+		default:
+			panic(fmt.Sprintf("function cmd %v: definition of function is invalid,%v", obj.Cmd, reflect.TypeOf(f)))
+		}
 	} else {
-		args := []interface{}{s}
-		args = append(args, obj.Args...)
-		values := CallUserFunc(f, args...)
-		if values == nil {
-			err := errors.New("unsupport handler,need return (interface{},Result) or ([]interface{},Result)")
+		f = s.(Module).GetReflectHandler(obj.Cmd)
+		if f == nil {
+			err := fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
 			panic(err)
 		} else {
-			l := len(values)
-			if l == 2 {
-				ret.Data = values[0].Interface()
-				if values[1].Interface() != nil {
-					result = values[1].Interface().(Ret)
-					ret.Ret.Code = result.Code
-					ret.Ret.Err = result.Err
-				}
-			} else {
-				err := errors.New("unsupport params length")
+			args := []interface{}{s}
+			args = append(args, obj.Args...)
+			values := CallUserFunc(f, args...)
+			if values == nil {
+				err := errors.New("unsupport handler,need return (interface{},Result) or ([]interface{},Result)")
 				panic(err)
+			} else {
+				l := len(values)
+				if l == 2 {
+					ret.Data = values[0].Interface()
+					if values[1].Interface() != nil {
+						result = values[1].Interface().(Ret)
+						ret.Ret.Code = result.Code
+						ret.Ret.Err = result.Err
+					}
+				} else {
+					err := errors.New("unsupport params length")
+					panic(err)
+				}
 			}
 		}
 	}

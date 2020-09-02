@@ -241,11 +241,14 @@ func (s *BaseContext) ReflectHandlers() map[string]interface{} {
 // RegisterHandler register function before run
 func (s *BaseContext) RegisterHandler(id interface{}, f interface{}) {
 
-	// switch f.(type) {
-	// case func(Module, *CallObject, string) (string, error):
-	// default:
-	// 	panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
-	// }
+	switch f.(type) {
+	case func(interface{}) (interface{}, Ret):
+	case func(interface{}, interface{}) (interface{}, Ret):
+	case func(interface{}, interface{}, interface{}) (interface{}, Ret):
+	case func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret):
+	default:
+		panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
+	}
 
 	if _, ok := s.funcs[id]; ok {
 		panic(fmt.Sprintf("function id %v: already registered", id))
@@ -316,7 +319,7 @@ func (s *BaseContext) MakeContext(p Module, queueSize int32) {
 
 // Processor process callobject
 func (s *BaseContext) Processor(obj *CallObject) error {
-	Debug("[%s] cmd [%s] process", s.Name(), obj.Cmd)
+	//Debug("[%s] cmd [%s] process", s.Name(), obj.Cmd)
 	var err error
 	if s.processers == nil {
 		err = errors.New("no processor pool")

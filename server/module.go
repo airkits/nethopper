@@ -260,12 +260,6 @@ func (s *BaseContext) RegisterHandler(id interface{}, f interface{}) {
 // RegisterReflectHandler register reflect function before run
 func (s *BaseContext) RegisterReflectHandler(id interface{}, f interface{}) {
 
-	// switch f.(type) {
-	// case func(Module, *CallObject, string) (string, error):
-	// default:
-	// 	panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
-	// }
-
 	if _, ok := s.rfuncs[id]; ok {
 		panic(fmt.Sprintf("function id %v: already registered", id))
 	}

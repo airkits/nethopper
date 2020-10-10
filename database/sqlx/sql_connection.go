@@ -36,28 +36,28 @@ import (
 )
 
 // NewSQLConnection create redis cache instance
-func NewSQLConnection(conf server.IConfig) (*SQLConnection, error) {
+func NewSQLConnection(nodes []database.NodeInfo) (*SQLConnection, error) {
 	conn := &SQLConnection{}
-	return conn.Setup(conf)
+	return conn.Setup(nodes)
 
 }
 
 // SQLConnection connect to db by dsn
 type SQLConnection struct {
 	pools []*sqlx.DB
-	Conf  *database.Config
+	Nodes []database.NodeInfo
 }
 
 // Setup init cache with config
-func (s *SQLConnection) Setup(conf server.IConfig) (*SQLConnection, error) {
-	s.Conf = conf.(*database.Config)
-	s.pools = make([]*sqlx.DB, len(s.Conf.Nodes))
+func (s *SQLConnection) Setup(nodes []database.NodeInfo) (*SQLConnection, error) {
+	s.Nodes = nodes
+	s.pools = make([]*sqlx.DB, len(nodes))
 	return s, nil
 }
 
 //Open connect and ping
 func (s *SQLConnection) Open() error {
-	for index, info := range s.Conf.Nodes {
+	for index, info := range s.Nodes {
 		db, err := sqlx.Connect(info.Driver, info.DSN)
 		if err != nil {
 			panic(err.Error())
@@ -74,7 +74,7 @@ func (s *SQLConnection) Ping() error {
 	for index, db := range s.pools {
 		err := db.Ping()
 		if err != nil {
-			server.Error("couldn't connect to database: %s %s", s.Conf.Nodes[index].Driver, s.Conf.Nodes[index].DSN)
+			server.Error("couldn't connect to database: %s %s", s.Nodes[index].Driver, s.Nodes[index].DSN)
 			panic(err.Error())
 		}
 		return err
@@ -87,7 +87,7 @@ func (s *SQLConnection) Close() {
 	for index, db := range s.pools {
 		if db != nil {
 			db.Close()
-			server.Info("close db connection: %s %s", s.Conf.Nodes[index].Driver, s.Conf.Nodes[index].DSN)
+			server.Info("close db connection: %s %s", s.Nodes[index].Driver, s.Nodes[index].DSN)
 		}
 	}
 

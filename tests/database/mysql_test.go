@@ -46,7 +46,7 @@ func TestSQLConnection(t *testing.T) {
 		Nodes:     []database.NodeInfo{node},
 		QueueSize: 1000,
 	}
-	if conn, err := sqlx.NewSQLConnection(&conf); err == nil {
+	if conn, err := sqlx.NewSQLConnection(conf.Nodes); err == nil {
 		if err := conn.Open(); err != nil {
 			t.Error(err)
 			Error("error")

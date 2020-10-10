@@ -175,6 +175,7 @@ func I64Clamp(value, min, max int64) int64 {
 
 //RandomInt 随机范围取值[from, to]
 func RandomInt(from, to int) int {
+	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(to-from+1) + from
 }
 

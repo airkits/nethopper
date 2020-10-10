@@ -106,6 +106,11 @@ func (s *SQLConnection) Select(dest interface{}, query string, args ...interface
 	return s.db().Select(dest, query, args...)
 }
 
+//Get get struct
+func (s *SQLConnection) Get(dest interface{}, query string, args ...interface{}) error {
+	return s.db().Get(dest, query, args...)
+}
+
 //Exec process sql and get result
 func (s *SQLConnection) Exec(query string, args ...interface{}) (sql.Result, error) {
 	result, err := s.db().Exec(query, args...)
@@ -124,4 +129,18 @@ func (s *SQLConnection) QueryRow(query string, args ...interface{}) *sqlx.Row {
 //Query sql and return rows
 func (s *SQLConnection) Query(query string, args ...interface{}) (*sqlx.Rows, error) {
 	return s.db().Queryx(query, args...)
+}
+
+//CreateTx create sqlx tx
+func (s *SQLConnection) CreateTx() (*sqlx.Tx, error) {
+	return s.db().Beginx()
+}
+
+//ExecTX exec tx
+func (s *SQLConnection) ExecTX(querys []string) error {
+	tx := s.db().MustBegin()
+	for _, sql := range querys {
+		tx.MustExec(sql)
+	}
+	return tx.Commit()
 }

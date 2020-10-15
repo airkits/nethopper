@@ -30,6 +30,7 @@ package db
 import (
 	"time"
 
+	"github.com/gonethopper/nethopper/database"
 	"github.com/gonethopper/nethopper/database/sqlx"
 	"github.com/gonethopper/nethopper/examples/simple_server/cmd"
 	"github.com/gonethopper/nethopper/server"
@@ -66,7 +67,8 @@ func (s *Module) ReflectHandlers() map[string]interface{} {
 //  "dsn":"root:123456@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 // }
 func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
-	conn, err := sqlx.NewSQLConnection(conf)
+	cfg := conf.(*database.Config)
+	conn, err := sqlx.NewSQLConnection(cfg.Nodes)
 	if err != nil {
 		return nil, err
 	}

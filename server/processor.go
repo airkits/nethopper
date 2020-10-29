@@ -103,6 +103,7 @@ type Processor struct {
 
 // Process goruntine process pre call
 func Process(s Module, obj *CallObject) (result Ret) {
+	defer TraceCost(s.Name() + ":" + obj.Cmd)()
 	var ret = RetObject{
 		Data: nil,
 		Ret:  Ret{Err: nil, Code: 0},

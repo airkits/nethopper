@@ -19,20 +19,34 @@ func (c *RedisCache) HGetAll(ctx context.Context, key interface{}, obj interface
 }
 
 //HMGet 批量获取字段
-func (c *RedisCache) HMGet(ctx context.Context, key interface{}, fieldNames ...interface{}) (map[string]string, error) {
+func (c *RedisCache) HMGet(ctx context.Context, key interface{}, fieldNames ...interface{}) (map[string]interface{}, error) {
 
 	params := []interface{}{key}
 	params = append(params, fieldNames...)
 
-	values, err := redis.Strings(c.Do(ctx, "HMGET", params...))
+	values, err := redis.Values(c.Do(ctx, "HMGET", params...))
 	if err != nil {
 		return nil, err
 	}
-	results := make(map[string]string)
+	results := make(map[string]interface{})
 	for index, value := range values {
 		results[fieldNames[index].(string)] = value
 	}
 	return results, nil
+}
+
+//HMGetObj 获取结构体
+func (c *RedisCache) HMGetObj(ctx context.Context, out interface{}, key string, fieldNames ...string) (notFound bool, err error) {
+
+	values, err := redis.Values(c.Do(ctx, "HMGET", redis.Args{}.Add(key).AddFlat(fieldNames)...))
+	if err != nil {
+		return false, err
+	}
+	// if _, ok := values[0].(string); ok {
+	// 	return true, nil
+	// }
+
+	return false, redis.ScanStruct(values, out)
 }
 
 //HMSet 批量添加字段

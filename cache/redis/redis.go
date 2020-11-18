@@ -37,15 +37,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// const (
-// // redisNilCacheExpire  = 1                      //避免缓存击穿，空记录在redis中的过期时间(秒)
-// // redisEmptyRecordText = "empty-txt-1234567890" //空记录在redis中的内容
-// // redisEmptyHashField  = "empty-field-1234567890"
-// // redisEmptyHashValue  = "empty-value-1234567890"
-// // redisMustExistField  = "must-exist-1234567890"
-// // redisMustExistValue  = "must-exist-value-1234567890"
-// )
-
 // NewRedisCache create redis cache instance
 func NewRedisCache(conf server.IConfig) (*RedisCache, error) {
 	cache := &RedisCache{}

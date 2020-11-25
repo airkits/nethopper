@@ -30,7 +30,7 @@ package wsjson
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/simple_client/cmd"
+	"github.com/gonethopper/nethopper/examples/simple_client/protocol"
 	"github.com/gonethopper/nethopper/libs/skiplist"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/ws"
@@ -60,7 +60,7 @@ func (s *Module) Handlers() map[string]interface{} {
 //ReflectHandlers set moudle reflect handlers
 func (s *Module) ReflectHandlers() map[string]interface{} {
 	return map[string]interface{}{
-		cmd.WSJSONLogin: Login,
+		protocol.WSJSONLogin: Login,
 	}
 }
 

@@ -33,7 +33,7 @@ const (
 	MessageCmd_Login MessageCmd = 1
 )
 
-// Enum value maps for MessageCmd.
+// Enum value maps for Messageprotocol
 var (
 	MessageCmd_name = map[int32]string{
 		0: "NULL",
@@ -67,7 +67,7 @@ func (x MessageCmd) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use MessageCmd.Descriptor instead.
+// Deprecated: Use MessageprotocolDescriptor instead.
 func (MessageCmd) EnumDescriptor() ([]byte, []int) {
 	return file_c2s_proto_rawDescGZIP(), []int{0}
 }

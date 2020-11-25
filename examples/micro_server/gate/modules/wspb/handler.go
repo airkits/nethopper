@@ -33,7 +33,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/cmd"
+	"github.com/gonethopper/nethopper/examples/micro_server/gate/protocol"
 	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport"
@@ -53,7 +53,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 	server.Info("receive message %v", message)
 	userID := server.StringToInt64(req.Uid)
-	v, result := server.Call(server.MIDLogic, cmd.LogicLogin, int32(userID), req.Uid, req.Passwd)
+	v, result := server.Call(server.MIDLogic, protocol.LogicLogin, int32(userID), req.Uid, req.Passwd)
 
 	resp := &c2s.LoginResp{
 		Result: &c2s.Result{

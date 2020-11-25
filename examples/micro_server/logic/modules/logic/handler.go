@@ -30,7 +30,7 @@ package logic
 import (
 	"strconv"
 
-	"github.com/gonethopper/nethopper/examples/micro_server/logic/cmd"
+	"github.com/gonethopper/nethopper/examples/micro_server/logic/protocol"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -51,16 +51,16 @@ func Login(s *Module, uid string, pwd string) (string, server.Ret) {
 	if err != nil {
 		return "", server.Ret{Code: -1, Err: err}
 	}
-	v, result := server.Call(server.MIDRedis, cmd.RedisGetUser, int32(opt), uid)
+	v, result := server.Call(server.MIDRedis, protocol.RedisGetUser, int32(opt), uid)
 	if result.Err == nil {
 		server.Info("get from redis")
 		return v.(string), result
 	}
-	v, result = server.Call(server.MIDGRPCClient, cmd.GClientGetUser, int32(opt), uid, pwd)
+	v, result = server.Call(server.MIDGRPCClient, protocol.GClientGetUser, int32(opt), uid, pwd)
 	if result.Err != nil {
 		return "", result
 	}
-	updated, result := server.Call(server.MIDRedis, cmd.RedisUpdateUser, int32(opt), uid, v)
+	updated, result := server.Call(server.MIDRedis, protocol.RedisUpdateUser, int32(opt), uid, v)
 	if updated == false {
 		server.Info("update redis failed %s %s", uid, v.(string))
 	}

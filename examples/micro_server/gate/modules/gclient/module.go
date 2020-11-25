@@ -30,7 +30,7 @@ package gclient
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/cmd"
+	"github.com/gonethopper/nethopper/examples/micro_server/gate/protocol"
 	"github.com/gonethopper/nethopper/libs/skiplist"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/grpc"
@@ -62,7 +62,7 @@ func (s *Module) Handlers() map[string]interface{} {
 //ReflectHandlers set moudle reflect handlers
 func (s *Module) ReflectHandlers() map[string]interface{} {
 	return map[string]interface{}{
-		cmd.GClientGetUser: GetUser,
+		protocol.GClientGetUser: GetUser,
 	}
 }
 

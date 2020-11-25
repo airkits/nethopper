@@ -35,7 +35,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/cmd"
+	"github.com/gonethopper/nethopper/examples/micro_server/gate/protocol"
 	"github.com/gonethopper/nethopper/server"
 	"github.com/gonethopper/nethopper/utils"
 )
@@ -151,7 +151,7 @@ func Index(c *gin.Context) {
 		return
 	}
 
-	v, result := server.Call(server.MIDLogic, cmd.LogicLogin, int32(model.UID), strconv.FormatInt(model.UID, 10), model.Passwd)
+	v, result := server.Call(server.MIDLogic, protocol.LogicLogin, int32(model.UID), strconv.FormatInt(model.UID, 10), model.Passwd)
 	if result.Err != nil {
 		server.Info("message done,get pwd  %v ,err %s", v.(string), result.Err.Error())
 		ResponseError(session, CSErrorCodeClientError, result.Err)

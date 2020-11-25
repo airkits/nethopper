@@ -30,7 +30,7 @@ package logic
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/micro_server/logic/cmd"
+	"github.com/gonethopper/nethopper/examples/micro_server/logic/protocol"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -52,7 +52,7 @@ func (s *Module) Handlers() map[string]interface{} {
 //ReflectHandlers set moudle reflect handlers
 func (s *Module) ReflectHandlers() map[string]interface{} {
 	return map[string]interface{}{
-		cmd.LogicLogin: Login,
+		protocol.LogicLogin: Login,
 	}
 }
 

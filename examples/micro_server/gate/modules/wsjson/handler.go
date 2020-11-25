@@ -28,7 +28,7 @@
 package wsjson
 
 import (
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/cmd"
+	"github.com/gonethopper/nethopper/examples/micro_server/gate/protocol"
 	csjson "github.com/gonethopper/nethopper/examples/model/json"
 	"github.com/gonethopper/nethopper/network"
 	"github.com/gonethopper/nethopper/network/transport"
@@ -42,7 +42,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	req := message.Body.(*csjson.LoginReq)
 	server.Info("receive message %v", m)
 	userID := server.StringToInt64(req.UID)
-	v, result := server.Call(server.MIDLogic, cmd.LogicLogin, int32(userID), req.UID, req.Passwd)
+	v, result := server.Call(server.MIDLogic, protocol.LogicLogin, int32(userID), req.UID, req.Passwd)
 	resp := &csjson.LoginResp{
 		Data: v.(string),
 	}

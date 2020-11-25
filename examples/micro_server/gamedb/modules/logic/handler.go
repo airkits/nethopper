@@ -30,7 +30,7 @@ package logic
 import (
 	"strconv"
 
-	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/cmd"
+	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/protocol"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -51,7 +51,7 @@ func Login(s *Module, uid string, pwd string) (string, server.Ret) {
 		return "", server.Ret{Code: -1, Err: err}
 	}
 
-	v, result := server.Call(server.MIDDB, cmd.DBGetUser, int32(opt), uid)
+	v, result := server.Call(server.MIDDB, protocol.DBGetUser, int32(opt), uid)
 	if result.Err != nil {
 		return "", result
 	}

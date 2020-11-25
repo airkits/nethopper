@@ -30,7 +30,7 @@ package logic
 import (
 	"strconv"
 
-	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/cmd"
+	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/protocol"
 	"github.com/gonethopper/nethopper/server"
 )
 
@@ -48,7 +48,7 @@ func Login(s *Module, uid string, pwd string) (string, server.Ret) {
 	defer server.TraceCost(server.RunModuleFuncName(s))()
 	opt, err := strconv.Atoi(uid)
 
-	v, result := server.Call(server.MIDGRPCClient, cmd.GRPCLogin, int32(opt), uid, pwd)
+	v, result := server.Call(server.MIDGRPCClient, protocol.GRPCLogin, int32(opt), uid, pwd)
 	if err != nil {
 		return "", result
 	}

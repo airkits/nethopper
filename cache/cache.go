@@ -33,12 +33,12 @@ import (
 	"github.com/gonethopper/nethopper/server"
 )
 
-// Cache interface
-type Cache interface {
+// ICache interface
+type ICache interface {
 	// Version cache version
 	Version() string
 	// Setup init cache with config
-	Setup(conf server.IConfig) (Cache, error)
+	Setup(conf server.IConfig) (ICache, error)
 	// Ping to check connection is alive
 	Ping() error
 	// Get command to get value from cache, control with context

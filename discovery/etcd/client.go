@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coreos/etcd/clientv3"
 	"github.com/gonethopper/nethopper/server"
-	"go.etcd.io/etcd/clientv3"
 )
 
 var (
@@ -174,3 +174,28 @@ func (c *Client) Set(key, val string) error {
 func (c *Client) Close() error {
 	return c.etcdClient.Close()
 }
+
+//Lock Lock
+// func (c *Client) Lock() error {
+// 	s, err := concurrency.NewSession(c.etcdClient)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	c.session = s
+// 	c.mu = concurrency.NewMutex(s, c.key)
+
+// 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+// 	c.ctx = ctx
+// 	c.cancel = cancel
+
+// 	err = c.mu.Lock(c.ctx)
+// 	return err
+// }
+
+//Unlock Unlock
+// func (c *Client) Unlock() error {
+// 	err := c.mu.Unlock(c.ctx)
+// 	c.cancel()
+// 	c.session.Close()
+// 	return err
+// }

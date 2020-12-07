@@ -122,3 +122,27 @@ func (c *Client) Close() {
 	c.Unlock()
 	c.wg.Wait()
 }
+
+//Call sync get response
+func (c *Client) Call(serverID int, name string, address string) *ss.Message {
+	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
+	if err != nil {
+		server.Fatal("grpc client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		if c.Conf.AutoReconnect {
+			time.Sleep(c.Conf.ConnectInterval * time.Second)
+			server.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
+			return nil
+		}
+	}
+
+	client := ss.NewRPCClient(conn)
+	md := metadata.New(map[string]string{"token": "token", "UID": strconv.Itoa(serverID)})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	ctx, _ = context.WithCancel(ctx) // context.WithTimeout(context.Background(), 10*time.Second)
+
+	r, err := client.Call(ctx, &ss.Message{})
+	if err != nil {
+		log.Fatalf("could not greet: %v", err)
+	}
+	return r
+}

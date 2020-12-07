@@ -35,10 +35,9 @@ import (
 	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
 	"github.com/gonethopper/nethopper/examples/simple_server/global"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/http"
+	"github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
 	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/wsjson"
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
 )
@@ -75,10 +74,10 @@ func main() {
 	NewNamedModule(MIDDB, "mysql", db.ModuleCreate, nil, &cfg.Mysql)
 	NewNamedModule(MIDRedis, "redis", redis.ModuleCreate, nil, &cfg.Redis)
 	NewNamedModule(MIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
-	NewNamedModule(MIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
-	NewNamedModule(MIDWSServer, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
+	// NewNamedModule(MIDHTTP, "http", http.ModuleCreate, nil, &cfg.HTTP)
+	// NewNamedModule(MIDWSServer, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
 	//NewNamedModule(MIDWSServer, "wspb", wspb.ModuleCreate, nil,&cfg.Log)
-	//NewNamedModule(MIDGRPCServer, "grpc", grpc_server.ModuleCreate, nil, &cfg.GPRC)
+	NewNamedModule(MIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
 	//NewNamedModule(MIDTCP, "tcp",tcp.ModuleCreate, nil, &cfg.Tcp)
 	//NewNamedModule(MIDKCP, "kcp",kcp.ModuleCreate, nil, &cfg.Kcp)
 	//NewNamedModule(MIDQUIC, "quic", quic_server.ModuleCreate, nil, &cfg.QUIC)

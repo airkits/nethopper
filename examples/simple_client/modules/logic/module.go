@@ -28,7 +28,6 @@
 package logic
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gonethopper/nethopper/examples/model/common"
@@ -69,8 +68,8 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
 	time.Sleep(1 * time.Second)
-	server.Call(server.MIDWSClient, common.CSLoginCmd, 1, fmt.Sprintf("%d", s.Conf.UID), s.Conf.Password)
-	//server.Call(server.MIDGRPCClient, common.SSLoginCmd, 1, "1", "game")
+	//	server.Call(server.MIDWSClient, common.CSLoginCmd, 1, fmt.Sprintf("%d", s.Conf.UID), s.Conf.Password)
+	server.Call(server.MIDGRPCClient, common.SSLoginCmd, 1, "1", "game")
 
 	//server.Call(server.MIDTCPClient, common.SSLoginCmd, 1, "1", "game")
 	//server.Call(server.MIDKCPClient, common.SSLoginCmd, 1, "1", "game")

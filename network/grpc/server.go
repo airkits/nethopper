@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"context"
 	"net"
 	"sync"
 
@@ -111,4 +112,9 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 	s.CloseAgent(agent)
 	agent.OnClose()
 	return nil
+}
+
+// Call implements call function
+func (s *Server) Call(ctx context.Context, in *ss.Message) (*ss.Message, error) {
+	return &ss.Message{}, nil
 }

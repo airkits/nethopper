@@ -33,8 +33,8 @@ import (
 	"github.com/gonethopper/nethopper/examples/simple_client/global"
 
 	"github.com/gonethopper/nethopper/config"
+	"github.com/gonethopper/nethopper/examples/simple_client/modules/grpc"
 	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/wsjson"
 
 	"github.com/gonethopper/nethopper/log"
 	. "github.com/gonethopper/nethopper/server"
@@ -55,8 +55,8 @@ func main() {
 	NewNamedModule(MIDLog, "log", log.LogModuleCreate, nil, &cfg.Log)
 	NewNamedModule(MIDLogic, "logic", logic.ModuleCreate, nil, &cfg.Logic)
 	//NewNamedModule(MIDWSClient, "wspb",wspb.ModuleCreate, nil, &cfg.WS)
-	NewNamedModule(MIDWSClient, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
-	//NewNamedModule(MIDGRPCClient, "grpc", grpc_client.ModuleCreate, nil, &cfg.GPRC)
+	//NewNamedModule(MIDWSClient, "wsjson", wsjson.ModuleCreate, nil, &cfg.WS)
+	NewNamedModule(MIDGRPCClient, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
 	// NewNamedModule(MIDTCPClient, "tcp", tcp_client.ModuleCreate, nil, &cfg.TCP)
 	// NewNamedModule(MIDKCPClient, "kcp", kcp_client.ModuleCreate, nil, &cfg.KCP)
 	// NewNamedModule(MIDQUICClient, "quic", quic_client.ModuleCreate, nil, &cfg.QUIC)

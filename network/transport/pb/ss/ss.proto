@@ -16,5 +16,6 @@ message Message{
 
 service RPC {
   rpc Transport (stream Message) returns (stream Message){}
+  rpc Call (Message) returns (Message){}
 }
 

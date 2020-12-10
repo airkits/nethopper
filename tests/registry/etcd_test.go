@@ -1,11 +1,11 @@
-package discovery_test
+package registry_test
 
 import (
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/gonethopper/nethopper/discovery/etcd"
+	"github.com/gonethopper/nethopper/registry/etcd"
 )
 
 func TestEtcdClient(t *testing.T) {

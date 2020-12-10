@@ -1,4 +1,4 @@
-package discovery
+package registry
 
 import (
 	"time"
@@ -15,8 +15,8 @@ const (
 	ActionDel = "DELETE"
 )
 
-//IDiscovery services discovery interface
-type IDiscovery interface {
+//IRegistry services discovery interface
+type IRegistry interface {
 	// Register 注册service地址到ETCD组件中
 	Register(serviceKey string, val string, interval time.Duration, ttl time.Duration)
 	// WithAlive 创建租约

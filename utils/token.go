@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -26,7 +27,7 @@ func ValidToken(secret string, token string) (string, error) {
 	}
 	claims := jwtToken.Claims.(jwt.MapClaims)
 	if !claims.VerifyExpiresAt(time.Now().Unix(), true) {
-		return "", errors.new("token expired")
+		return "", errors.New("token expired")
 	}
 	return claims["sub"].(string), nil
 }

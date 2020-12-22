@@ -4,9 +4,10 @@ go 1.15
 
 //replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.3
 
-replace google.golang.org/grpc => google.golang.org/grpc v1.26.0 // indirect
-
-//replace github.com/golang/protobuf/protoc-gen-go => github.com/golang/protobuf/protoc-gen-go v1.2.0
+replace (
+	github.com/coreos/etcd => github.com/ozonru/etcd v3.3.20-grpc1.27-origmodule+incompatible
+	google.golang.org/grpc => google.golang.org/grpc v1.27.0
+)
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751

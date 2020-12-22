@@ -22,6 +22,7 @@ func InitViperDefault(app string, path string, pack bool) error {
 	v.SetConfigType(configType)                    // 如果配置文件的名称中没有扩展名，则需要配置此项
 	v.AddConfigPath(fmt.Sprintf("/etc/%s/", app))  // 查找配置文件所在的路径
 	v.AddConfigPath(fmt.Sprintf("$HOME/.%s", app)) // 多次调用以添加多个搜索路径
+	v.AddConfigPath("./bin/conf")                  // 还可以在工作目录中查找配置
 	v.AddConfigPath(".")                           // 还可以在工作目录中查找配置
 	//read default config
 	v.SetConfigName(defaultName)
@@ -66,6 +67,7 @@ func InitViper(app string, path string, env string, config interface{}, pack boo
 	viper.SetConfigType(configType)                    // 如果配置文件的名称中没有扩展名，则需要配置此项
 	viper.AddConfigPath(fmt.Sprintf("/etc/%s/", app))  // 查找配置文件所在的路径
 	viper.AddConfigPath(fmt.Sprintf("$HOME/.%s", app)) // 多次调用以添加多个搜索路径
+	viper.AddConfigPath("./bin/conf")
 	viper.AddConfigPath(".")
 	viper.SetConfigName(name)
 	if pack {

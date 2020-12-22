@@ -253,6 +253,12 @@ func ToTime(m time.Time) Time {
 	return Time{Time: m}
 }
 
+//StrToTime string format to time struct
+func StrToTime(source string) Time {
+	t, _ := StrToJSONTime(source, "")
+	return t
+}
+
 //StrToJSONTime 字符串转换为JSONTime layout为""时默认使用2006-01-02 15:04:05格式 其他时候使用layout的format
 func StrToJSONTime(source string, layout string) (Time, error) {
 	var times time.Time

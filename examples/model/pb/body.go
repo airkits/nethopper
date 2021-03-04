@@ -3,11 +3,11 @@ package pb
 import (
 	"errors"
 
+	"github.com/airkits/nethopper/examples/model/common"
+	"github.com/airkits/nethopper/examples/model/pb/c2s"
+	"github.com/airkits/nethopper/examples/model/pb/s2s"
+	"github.com/airkits/nethopper/server"
 	"github.com/golang/protobuf/proto"
-	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb/c2s"
-	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
-	"github.com/gonethopper/nethopper/server"
 )
 
 //CreateBody create message body

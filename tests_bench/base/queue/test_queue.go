@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gonethopper/nethopper/base/queue"
+	"github.com/airkits/nethopper/base/queue"
 )
 
 func bench_sync(q queue.Queue) {

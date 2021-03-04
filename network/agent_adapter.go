@@ -30,8 +30,8 @@ package network
 import (
 	"sync/atomic"
 
-	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/codec"
+	"github.com/airkits/nethopper/server"
 )
 
 //AgentAdapter agent adapter

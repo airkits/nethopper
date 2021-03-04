@@ -3,13 +3,13 @@ package global
 import (
 	"sync"
 
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
-	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/network/kcp"
-	"github.com/gonethopper/nethopper/network/quic"
-	"github.com/gonethopper/nethopper/network/tcp"
-	"github.com/gonethopper/nethopper/network/ws"
+	"github.com/airkits/nethopper/examples/simple_client/modules/logic"
+	"github.com/airkits/nethopper/log"
+	"github.com/airkits/nethopper/network/grpc"
+	"github.com/airkits/nethopper/network/kcp"
+	"github.com/airkits/nethopper/network/quic"
+	"github.com/airkits/nethopper/network/tcp"
+	"github.com/airkits/nethopper/network/ws"
 )
 
 //UserConfig use config user info

@@ -3,7 +3,7 @@ package tcp
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/network/common"
+	"github.com/airkits/nethopper/network/common"
 )
 
 //ClientConfig tcp client config

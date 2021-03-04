@@ -31,8 +31,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gonethopper/nethopper/cache"
-	"github.com/gonethopper/nethopper/cache/redis"
+	"github.com/airkits/nethopper/cache"
+	"github.com/airkits/nethopper/cache/redis"
 )
 
 func TestRedis(t *testing.T) {

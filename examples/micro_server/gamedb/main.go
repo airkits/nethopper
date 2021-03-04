@@ -30,16 +30,16 @@ package main
 import (
 	"flag"
 
+	"github.com/airkits/nethopper/config"
+	_ "github.com/airkits/nethopper/examples/micro_server/gamedb/docs"
+	"github.com/airkits/nethopper/examples/micro_server/gamedb/global"
+	"github.com/airkits/nethopper/examples/micro_server/gamedb/modules/db"
+	"github.com/airkits/nethopper/examples/micro_server/gamedb/modules/grpc"
+	"github.com/airkits/nethopper/examples/micro_server/gamedb/modules/logic"
+	"github.com/airkits/nethopper/log"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gonethopper/nethopper/config"
-	_ "github.com/gonethopper/nethopper/examples/micro_server/gamedb/docs"
-	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/global"
-	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/db"
-	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/grpc"
-	"github.com/gonethopper/nethopper/examples/micro_server/gamedb/modules/logic"
-	"github.com/gonethopper/nethopper/log"
 
-	. "github.com/gonethopper/nethopper/server"
+	. "github.com/airkits/nethopper/server"
 )
 
 func init() {

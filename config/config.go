@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/airkits/nethopper/server"
 	"github.com/gobuffalo/packr"
-	"github.com/gonethopper/nethopper/server"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
 )

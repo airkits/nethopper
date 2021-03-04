@@ -27,7 +27,7 @@
 
 package orm
 
-import "github.com/gonethopper/nethopper/database"
+import "github.com/airkits/nethopper/database"
 
 // Database use redis as cache
 type Database struct {

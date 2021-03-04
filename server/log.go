@@ -31,7 +31,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gonethopper/nethopper/utils"
+	"github.com/airkits/nethopper/utils"
 )
 
 // Log Levels Define

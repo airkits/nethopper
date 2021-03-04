@@ -33,11 +33,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/airkits/nethopper/codec"
+	"github.com/airkits/nethopper/examples/micro_server/gate/protocol"
+	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/protocol"
-	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
 )
 
 const TIMEOUT = time.Second * 15

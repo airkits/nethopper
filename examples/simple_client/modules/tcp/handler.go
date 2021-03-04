@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
-	"github.com/gonethopper/nethopper/network/transport/raw"
-	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils/conv"
+	"github.com/airkits/nethopper/codec"
+	"github.com/airkits/nethopper/examples/model/common"
+	"github.com/airkits/nethopper/examples/model/pb/s2s"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/transport"
+	"github.com/airkits/nethopper/network/transport/raw"
+	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/utils/conv"
 )
 
 // Login user to login

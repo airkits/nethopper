@@ -30,11 +30,11 @@ package gclient
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/protocol"
-	"github.com/gonethopper/nethopper/libs/skiplist"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/examples/micro_server/gate/protocol"
+	"github.com/airkits/nethopper/libs/skiplist"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/grpc"
+	"github.com/airkits/nethopper/server"
 )
 
 // ModuleCreate  module create function

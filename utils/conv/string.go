@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 //Str2Bool string convert to bool

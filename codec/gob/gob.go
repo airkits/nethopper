@@ -31,7 +31,7 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/gonethopper/nethopper/codec/common"
+	"github.com/airkits/nethopper/codec/common"
 )
 
 // GobCodec use gob encode/decode

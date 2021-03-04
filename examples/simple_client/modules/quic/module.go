@@ -30,10 +30,10 @@ package quic
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/simple_client/protocol"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/quic"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/examples/simple_client/protocol"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/quic"
+	"github.com/airkits/nethopper/server"
 )
 
 // ModuleCreate  module create function

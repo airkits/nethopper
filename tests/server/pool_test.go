@@ -30,7 +30,7 @@ package server_test
 import (
 	"testing"
 
-	. "github.com/gonethopper/nethopper/server"
+	. "github.com/airkits/nethopper/server"
 )
 
 func TestCalcPower(t *testing.T) {

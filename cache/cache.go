@@ -30,7 +30,7 @@ package cache
 import (
 	"context"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 // ICache interface

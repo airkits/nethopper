@@ -29,18 +29,18 @@ package main
 
 import (
 
-	//"github.com/gonethopper/nethopper/cache/redis"
+	//"github.com/airkits/nethopper/cache/redis"
 	"flag"
 
-	"github.com/gonethopper/nethopper/config"
-	_ "github.com/gonethopper/nethopper/examples/micro_server/gate/docs"
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/global"
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/modules/gclient"
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/modules/http"
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/modules/logic"
-	"github.com/gonethopper/nethopper/examples/micro_server/gate/modules/wsjson"
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/config"
+	_ "github.com/airkits/nethopper/examples/micro_server/gate/docs"
+	"github.com/airkits/nethopper/examples/micro_server/gate/global"
+	"github.com/airkits/nethopper/examples/micro_server/gate/modules/gclient"
+	"github.com/airkits/nethopper/examples/micro_server/gate/modules/http"
+	"github.com/airkits/nethopper/examples/micro_server/gate/modules/logic"
+	"github.com/airkits/nethopper/examples/micro_server/gate/modules/wsjson"
+	"github.com/airkits/nethopper/log"
+	. "github.com/airkits/nethopper/server"
 )
 
 func init() {

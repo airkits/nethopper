@@ -30,14 +30,14 @@ package main
 import (
 	"flag"
 
-	"github.com/gonethopper/nethopper/examples/simple_client/global"
+	"github.com/airkits/nethopper/examples/simple_client/global"
 
-	"github.com/gonethopper/nethopper/config"
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/grpc"
-	"github.com/gonethopper/nethopper/examples/simple_client/modules/logic"
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/examples/simple_client/modules/grpc"
+	"github.com/airkits/nethopper/examples/simple_client/modules/logic"
 
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/log"
+	. "github.com/airkits/nethopper/server"
 )
 
 func init() {

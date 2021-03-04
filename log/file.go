@@ -36,8 +36,8 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
+	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/utils"
 )
 
 // NewFileLogger create FileLog instance

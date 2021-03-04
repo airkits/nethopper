@@ -3,7 +3,7 @@ package crypto_test
 import (
 	"testing"
 
-	"github.com/gonethopper/nethopper/utils/crypto/md5"
+	"github.com/airkits/nethopper/utils/crypto/md5"
 )
 
 func TestMd5Encrypt(t *testing.T) {

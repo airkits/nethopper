@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gonethopper/nethopper/registry/etcd"
+	"github.com/airkits/nethopper/registry/etcd"
 )
 
 func TestEtcdClient(t *testing.T) {

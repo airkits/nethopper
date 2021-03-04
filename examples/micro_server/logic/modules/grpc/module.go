@@ -30,9 +30,9 @@ package grpc
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/grpc"
+	"github.com/airkits/nethopper/server"
 )
 
 // ModuleCreate  module create function

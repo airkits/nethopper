@@ -30,12 +30,12 @@ package wspb
 import (
 	"errors"
 
-	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport/pb/cs"
+	"github.com/airkits/nethopper/codec"
+	"github.com/airkits/nethopper/examples/model/common"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/transport/pb/cs"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 //NewAgentAdapter create agent adapter

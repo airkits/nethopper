@@ -30,7 +30,7 @@ package network
 import (
 	"net"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 //NewAgent create new agent

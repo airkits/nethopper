@@ -8,4 +8,4 @@ go build
 # swaggerFiles "github.com/swaggo/files"
 # ginSwagger "github.com/swaggo/gin-swagger"
 # main 
-# _ "github.com/gonethopper/nethopper/examples/simple_server/docs"
+# _ "github.com/airkits/nethopper/examples/simple_server/docs"

@@ -30,7 +30,7 @@ package orm
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 // OrmModule struct to define module

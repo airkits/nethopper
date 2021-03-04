@@ -1,4 +1,4 @@
-module github.com/gonethopper/nethopper
+module github.com/airkits/nethopper
 
 go 1.15
 

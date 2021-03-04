@@ -30,9 +30,9 @@ package kcp
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/kcp"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/kcp"
+	"github.com/airkits/nethopper/server"
 )
 
 // ModuleCreate  module create function

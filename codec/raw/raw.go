@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"math"
 
-	"github.com/gonethopper/nethopper/codec/common"
+	"github.com/airkits/nethopper/codec/common"
 )
 
 const initialBufferSize = 1024

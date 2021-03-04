@@ -37,7 +37,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gonethopper/nethopper/base/queue"
+	"github.com/airkits/nethopper/base/queue"
 )
 
 const (

@@ -30,8 +30,8 @@ package logic
 import (
 	"strconv"
 
-	"github.com/gonethopper/nethopper/examples/simple_server/protocol"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/examples/simple_server/protocol"
+	"github.com/airkits/nethopper/server"
 )
 
 // Login user to login

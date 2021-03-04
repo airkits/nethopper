@@ -28,12 +28,12 @@
 package wsjson
 
 import (
-	csjson "github.com/gonethopper/nethopper/examples/model/json"
-	"github.com/gonethopper/nethopper/examples/simple_server/protocol"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
-	"github.com/gonethopper/nethopper/network/transport/json"
-	"github.com/gonethopper/nethopper/server"
+	csjson "github.com/airkits/nethopper/examples/model/json"
+	"github.com/airkits/nethopper/examples/simple_server/protocol"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/transport"
+	"github.com/airkits/nethopper/network/transport/json"
+	"github.com/airkits/nethopper/server"
 )
 
 //LoginHandler request login

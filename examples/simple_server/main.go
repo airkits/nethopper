@@ -30,16 +30,16 @@ package main
 import (
 	"flag"
 
+	"github.com/airkits/nethopper/config"
+	_ "github.com/airkits/nethopper/examples/simple_server/docs"
+	"github.com/airkits/nethopper/examples/simple_server/global"
+	"github.com/airkits/nethopper/examples/simple_server/modules/db"
+	"github.com/airkits/nethopper/examples/simple_server/modules/grpc"
+	"github.com/airkits/nethopper/examples/simple_server/modules/logic"
+	"github.com/airkits/nethopper/examples/simple_server/modules/redis"
+	"github.com/airkits/nethopper/log"
+	. "github.com/airkits/nethopper/server"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gonethopper/nethopper/config"
-	_ "github.com/gonethopper/nethopper/examples/simple_server/docs"
-	"github.com/gonethopper/nethopper/examples/simple_server/global"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/db"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/grpc"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/logic"
-	"github.com/gonethopper/nethopper/examples/simple_server/modules/redis"
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
 )
 
 func init() {

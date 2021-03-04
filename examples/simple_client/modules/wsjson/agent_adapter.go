@@ -31,13 +31,13 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model/common"
-	csjson "github.com/gonethopper/nethopper/examples/model/json"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
-	"github.com/gonethopper/nethopper/network/transport/json"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/codec"
+	"github.com/airkits/nethopper/examples/model/common"
+	csjson "github.com/airkits/nethopper/examples/model/json"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/transport"
+	"github.com/airkits/nethopper/network/transport/json"
+	"github.com/airkits/nethopper/server"
 )
 
 //NewAgentAdapter create agent adapter

@@ -30,9 +30,9 @@ package wspb
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/ws"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/ws"
+	"github.com/airkits/nethopper/server"
 )
 
 // HTTPTimeout http timeout (second)

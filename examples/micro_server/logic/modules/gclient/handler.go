@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/airkits/nethopper/examples/model/common"
+	"github.com/airkits/nethopper/examples/model/pb/s2s"
+	"github.com/airkits/nethopper/network/transport/pb/ss"
+	"github.com/airkits/nethopper/server"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
-	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
-	"github.com/gonethopper/nethopper/network/transport/pb/ss"
-	"github.com/gonethopper/nethopper/server"
 )
 
 // GetUser user to login

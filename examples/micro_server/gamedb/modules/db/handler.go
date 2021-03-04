@@ -28,7 +28,7 @@
 package db
 
 import (
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 // GetUser 获取用户信息

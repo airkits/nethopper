@@ -30,8 +30,8 @@ package server_test
 import (
 	"testing"
 
-	"github.com/gonethopper/nethopper/log"
-	. "github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/log"
+	. "github.com/airkits/nethopper/server"
 )
 
 type Factory struct {

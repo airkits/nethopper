@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/common"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/common"
+	"github.com/airkits/nethopper/server"
 	quic "github.com/lucas-clemente/quic-go"
 )
 

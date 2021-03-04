@@ -30,10 +30,10 @@ package db
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/database"
-	"github.com/gonethopper/nethopper/database/sqlx"
-	"github.com/gonethopper/nethopper/examples/simple_server/protocol"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/database"
+	"github.com/airkits/nethopper/database/sqlx"
+	"github.com/airkits/nethopper/examples/simple_server/protocol"
+	"github.com/airkits/nethopper/server"
 )
 
 // Module struct to define module

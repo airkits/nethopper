@@ -36,7 +36,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gonethopper/nethopper/codec"
+	"github.com/airkits/nethopper/codec"
 )
 
 //ConnSet http conn set

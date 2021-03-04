@@ -30,8 +30,8 @@ package sqlx
 import (
 	"database/sql"
 
-	"github.com/gonethopper/nethopper/database"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/database"
+	"github.com/airkits/nethopper/server"
 	"github.com/jmoiron/sqlx"
 )
 

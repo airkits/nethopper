@@ -30,7 +30,7 @@ package sERVICE
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 // SERVICEModule struct to define module

@@ -1,7 +1,7 @@
 package raw
 
 import (
-	"github.com/gonethopper/nethopper/codec/raw"
+	"github.com/airkits/nethopper/codec/raw"
 )
 
 //Message raw struct

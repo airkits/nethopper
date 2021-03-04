@@ -30,7 +30,7 @@ package rpc_test
 import (
 	"testing"
 
-	"github.com/gonethopper/nethopper/network/http"
+	"github.com/airkits/nethopper/network/http"
 )
 
 func TestHTTPRequest(t *testing.T) {

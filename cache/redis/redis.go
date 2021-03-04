@@ -31,9 +31,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/airkits/nethopper/cache"
+	"github.com/airkits/nethopper/server"
 	"github.com/gomodule/redigo/redis"
-	"github.com/gonethopper/nethopper/cache"
-	"github.com/gonethopper/nethopper/server"
 	"github.com/pkg/errors"
 )
 

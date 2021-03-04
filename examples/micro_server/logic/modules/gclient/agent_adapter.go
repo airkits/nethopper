@@ -30,12 +30,12 @@ package gclient
 import (
 	"errors"
 
-	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/libs/skiplist"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport/pb/ss"
+	"github.com/airkits/nethopper/codec"
+	"github.com/airkits/nethopper/libs/skiplist"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/transport/pb/ss"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 //NewAgentAdapter create agent adapter

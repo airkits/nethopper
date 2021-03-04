@@ -30,8 +30,8 @@ package logic
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/examples/model/common"
+	"github.com/airkits/nethopper/server"
 )
 
 // Module struct to define module

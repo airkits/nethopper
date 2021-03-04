@@ -30,10 +30,10 @@ package database_test
 import (
 	"testing"
 
+	"github.com/airkits/nethopper/database"
+	"github.com/airkits/nethopper/database/sqlx"
+	. "github.com/airkits/nethopper/server"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gonethopper/nethopper/database"
-	"github.com/gonethopper/nethopper/database/sqlx"
-	. "github.com/gonethopper/nethopper/server"
 )
 
 func TestSQLConnection(t *testing.T) {

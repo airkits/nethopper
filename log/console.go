@@ -33,7 +33,7 @@ import (
 	"os"
 	"sync/atomic"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 // NewConsoleLogger create FileLog instance

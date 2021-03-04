@@ -3,9 +3,9 @@ package http
 import (
 	"sync"
 
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/server"
 	"github.com/gin-gonic/gin"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/server"
 )
 
 //NewServer create http server

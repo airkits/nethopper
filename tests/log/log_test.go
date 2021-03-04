@@ -32,9 +32,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
+	"github.com/airkits/nethopper/log"
+	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/utils"
 )
 
 func TestFormatLog(t *testing.T) {

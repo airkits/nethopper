@@ -31,9 +31,9 @@ import (
 	"net"
 	"sync"
 
-	"github.com/gonethopper/nethopper/base/set"
-	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/libs/skiplist"
+	"github.com/airkits/nethopper/base/set"
+	"github.com/airkits/nethopper/codec"
+	"github.com/airkits/nethopper/libs/skiplist"
 )
 
 // IClient network client interface

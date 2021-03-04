@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/airkits/nethopper/server"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/gonethopper/nethopper/server"
 )
 
 var (

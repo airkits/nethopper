@@ -5,9 +5,9 @@ import (
 	"net"
 	"sync"
 
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport/pb/ss"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/transport/pb/ss"
+	"github.com/airkits/nethopper/server"
 	"google.golang.org/grpc/peer"
 )
 

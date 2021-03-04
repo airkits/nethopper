@@ -3,8 +3,8 @@ package json
 import (
 	"errors"
 
-	"github.com/gonethopper/nethopper/examples/model/common"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/examples/model/common"
+	"github.com/airkits/nethopper/server"
 )
 
 //CreateBody create message body

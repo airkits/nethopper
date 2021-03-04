@@ -30,9 +30,9 @@ package tcp
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/tcp"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/tcp"
+	"github.com/airkits/nethopper/server"
 )
 
 // ModuleCreate  module create function

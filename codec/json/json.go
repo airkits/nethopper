@@ -30,7 +30,7 @@ package json
 import (
 	"encoding/json"
 
-	"github.com/gonethopper/nethopper/codec/common"
+	"github.com/airkits/nethopper/codec/common"
 )
 
 // JSONCodec use gob encode/decode

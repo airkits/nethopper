@@ -30,9 +30,9 @@ package redis
 import (
 	"time"
 
-	"github.com/gonethopper/nethopper/cache/redis"
-	"github.com/gonethopper/nethopper/examples/micro_server/logic/protocol"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/cache/redis"
+	"github.com/airkits/nethopper/examples/micro_server/logic/protocol"
+	"github.com/airkits/nethopper/server"
 )
 
 // Module struct to define module

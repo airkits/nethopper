@@ -31,8 +31,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gonethopper/nethopper/server"
-	"github.com/gonethopper/nethopper/utils"
+	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/utils"
 )
 
 func TestGetWorkDirectory(t *testing.T) {

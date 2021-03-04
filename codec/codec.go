@@ -28,10 +28,10 @@
 package codec
 
 import (
-	"github.com/gonethopper/nethopper/codec/gob"
-	"github.com/gonethopper/nethopper/codec/json"
-	"github.com/gonethopper/nethopper/codec/pb"
-	"github.com/gonethopper/nethopper/codec/raw"
+	"github.com/airkits/nethopper/codec/gob"
+	"github.com/airkits/nethopper/codec/json"
+	"github.com/airkits/nethopper/codec/pb"
+	"github.com/airkits/nethopper/codec/raw"
 )
 
 // Codec encodes/decodes

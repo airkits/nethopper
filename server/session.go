@@ -1,6 +1,6 @@
-// MIT License 
+// MIT License
 
-// Copyright (c) 2019 gonethopper 
+// Copyright (c) 2019 gonethopper
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,19 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// * @Author: ankye  
-// * @Date: 2019-12-11 10:13:40  
-// * @Last Modified by:   ankye  
-// * @Last Modified time: 2019-12-11 10:13:40  
+// * @Author: ankye
+// * @Date: 2019-12-11 10:13:40
+// * @Last Modified by:   ankye
+// * @Last Modified time: 2019-12-11 10:13:40
 
 package server
 
 import (
+	"github.com/airkits/nethopper/base/queue"
+	proto "github.com/golang/protobuf/proto"
+	uuid "github.com/satori/go.uuid"
 	"net"
 	"sync"
-	proto "github.com/golang/protobuf/proto"
-	"github.com/gonethopper/nethopper/base/queue"
-	uuid "github.com/satori/go.uuid"
 )
 
 // IDStack store srcIDs,max

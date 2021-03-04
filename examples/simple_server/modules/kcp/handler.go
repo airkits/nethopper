@@ -30,13 +30,13 @@ package kcp
 import (
 	"fmt"
 
-	"github.com/gonethopper/nethopper/codec"
-	"github.com/gonethopper/nethopper/examples/model/pb/s2s"
-	"github.com/gonethopper/nethopper/examples/simple_server/protocol"
-	"github.com/gonethopper/nethopper/network"
-	"github.com/gonethopper/nethopper/network/transport"
-	"github.com/gonethopper/nethopper/network/transport/raw"
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/codec"
+	"github.com/airkits/nethopper/examples/model/pb/s2s"
+	"github.com/airkits/nethopper/examples/simple_server/protocol"
+	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/network/transport"
+	"github.com/airkits/nethopper/network/transport/raw"
+	"github.com/airkits/nethopper/server"
 )
 
 //LoginHandler request login

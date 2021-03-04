@@ -3,11 +3,11 @@ package global
 import (
 	"sync"
 
-	"github.com/gonethopper/nethopper/cache"
-	"github.com/gonethopper/nethopper/log"
-	"github.com/gonethopper/nethopper/network/common"
-	"github.com/gonethopper/nethopper/network/grpc"
-	"github.com/gonethopper/nethopper/network/http"
+	"github.com/airkits/nethopper/cache"
+	"github.com/airkits/nethopper/log"
+	"github.com/airkits/nethopper/network/common"
+	"github.com/airkits/nethopper/network/grpc"
+	"github.com/airkits/nethopper/network/http"
 )
 
 // Config server config

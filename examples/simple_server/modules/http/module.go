@@ -32,9 +32,9 @@ import (
 	"strings"
 	"time"
 
+	http_server "github.com/airkits/nethopper/network/http"
+	"github.com/airkits/nethopper/server"
 	"github.com/gin-gonic/gin"
-	http_server "github.com/gonethopper/nethopper/network/http"
-	"github.com/gonethopper/nethopper/server"
 	"github.com/gorilla/context"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"

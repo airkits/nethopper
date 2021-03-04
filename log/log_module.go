@@ -31,7 +31,7 @@ import (
 	"bytes"
 	"time"
 
-	"github.com/gonethopper/nethopper/server"
+	"github.com/airkits/nethopper/server"
 )
 
 // LogModule struct implements the interface Module

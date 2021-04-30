@@ -1,8 +1,8 @@
 module github.com/airkits/nethopper
 
-go 1.15
+go 1.16
 
-//replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.3
+replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.3
 
 replace (
 	github.com/coreos/etcd => github.com/ozonru/etcd v3.3.20-grpc1.27-origmodule+incompatible

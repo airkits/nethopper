@@ -1,7 +1,16 @@
 syntax = "proto3";
 package cs;
 import "google/protobuf/any.proto";
-option go_package = ".;cs";
+option go_package = "github.com/airkits/nethopper/network/pb/cs;cs";
+
+enum MessageType //枚举消息类型
+{
+  None = 0;
+	Request = 1;
+	Response = 2;
+	Notify = 3;
+	Broadcast = 4;
+}
 message Message{
   uint32 ID = 1;
   uint64 UID = 2;

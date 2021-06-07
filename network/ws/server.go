@@ -66,23 +66,36 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	s.conns[conn] = struct{}{}
 	s.mutexConns.Unlock()
-	token := r.Header.Get(common.HeaderToken)
-	uid := r.Header.Get(common.HeaderUID)
+	query := r.URL.Query()
+	token := query.Get(common.HeaderToken)
+	uid := query.Get(common.HeaderUID)
+	if len(token) <= 0 {
+		token = r.Header.Get(common.HeaderToken)
+		uid = r.Header.Get(common.HeaderUID)
+	}
 	userID := conv.Str2Uint64(uid)
-	var agent network.IAgent
+	if len(token) > 0 && userID > 0 {
 
-	wsConn := NewConn(conn, s.Conf.SocketQueueSize, s.Conf.MaxMessageSize)
-	agent = s.NewAgent(wsConn, userID, token)
+		var agent network.IAgent
 
-	agent.Run()
+		wsConn := NewConn(conn, s.Conf.SocketQueueSize, s.Conf.MaxMessageSize)
+		agent = s.NewAgent(wsConn, userID, token)
 
-	// cleanup
-	wsConn.Close()
-	s.mutexConns.Lock()
-	delete(s.conns, conn)
-	s.mutexConns.Unlock()
-	s.CloseAgent(agent)
-	agent.OnClose()
+		agent.Run()
+
+		// cleanup
+		wsConn.Close()
+		s.mutexConns.Lock()
+		delete(s.conns, conn)
+		s.mutexConns.Unlock()
+		s.CloseAgent(agent)
+		agent.OnClose()
+	} else {
+		s.mutexConns.Lock()
+		delete(s.conns, conn)
+		s.mutexConns.Unlock()
+		conn.Close()
+	}
 
 }
 

@@ -102,6 +102,7 @@ func (a *Agent) Run() {
 			break
 		}
 		a.adapter.ProcessMessage(data)
+
 	}
 }
 

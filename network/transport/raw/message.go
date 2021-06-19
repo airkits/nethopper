@@ -8,7 +8,7 @@ import (
 type Message struct {
 	ID      uint32
 	UID     uint64
-	Cmd     string
+	MsgID   uint32
 	MsgType uint32
 	Seq     uint32
 	Options string
@@ -22,7 +22,7 @@ func (m *Message) Pack() []byte {
 	coder.SkipUint16()
 	coder.WriteUint32(uint32(m.ID))
 	coder.WriteUint64(m.UID)
-	coder.WriteString(m.Cmd)
+	coder.WriteUint32(m.MsgID)
 	coder.WriteUint32(uint32(m.MsgType))
 	coder.WriteUint32(uint32(m.Seq))
 	coder.WriteString(m.Options)
@@ -36,7 +36,7 @@ func (m *Message) Unpack(buffer []byte) error {
 	coder := raw.NewCoder(buffer, true)
 	m.ID = coder.ReadUint32()
 	m.UID = coder.ReadUint64()
-	m.Cmd = coder.ReadString()
+	m.MsgID = coder.ReadUint32()
 	m.MsgType = coder.ReadUint32()
 	m.Seq = coder.ReadUint32()
 	m.Options = coder.ReadString()
@@ -54,9 +54,9 @@ func (m *Message) GetUID() uint64 {
 	return m.UID
 }
 
-//GetCmd >
-func (m *Message) GetCmd() string {
-	return m.Cmd
+//GetMsgID >
+func (m *Message) GetMsgID() uint32 {
+	return m.MsgID
 }
 
 //GetMsgType >

@@ -34,8 +34,8 @@ import (
 	"github.com/airkits/nethopper/examples/model/pb/s2s"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/network/transport"
-	"github.com/airkits/nethopper/network/transport/pb/ss"
 	"github.com/airkits/nethopper/server"
+	"github.com/airkits/proto/ss"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -54,7 +54,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	v, result := server.Call(server.MIDLogic, protocol.LogicLogin, int32(userID), req.Uid, req.Passwd)
 	// header := m.(*ss.Header)
 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
-	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
+	// outM.Header = outM.NewHeader(header.GetID(), header.GetMsgID(), server.MTResponse)
 
 	resp := &s2s.LoginResp{
 		Result: &s2s.Result{
@@ -77,7 +77,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	respMsg := &ss.Message{
 		ID:      message.GetID(),
 		UID:     uint64(userID),
-		Cmd:     message.GetCmd(),
+		MsgID:   message.GetMsgID(),
 		MsgType: server.MTResponse,
 		Body:    &any.Any{TypeUrl: "./s2s.LoginResp", Value: body},
 	}

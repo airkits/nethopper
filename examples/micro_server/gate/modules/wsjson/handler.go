@@ -58,7 +58,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	}
 	respMsg := &json.Message{
 		UID:     uint64(userID),
-		Cmd:     message.GetCmd(),
+		MsgID:   message.GetMsgID(),
 		MsgType: server.MTResponse,
 		ID:      message.GetID(),
 		Body:    string(body),

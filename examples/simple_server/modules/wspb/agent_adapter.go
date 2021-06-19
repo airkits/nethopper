@@ -30,10 +30,10 @@ package wspb
 import (
 	"errors"
 
+	"github.com/airkits/csproto/cs"
 	"github.com/airkits/nethopper/codec"
 	"github.com/airkits/nethopper/examples/model/common"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/network/transport/pb/cs"
 
 	"github.com/airkits/nethopper/server"
 )
@@ -73,7 +73,7 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 
 func (a *AgentAdapter) processRequestMessage(m *cs.Message) error {
 
-	switch m.Cmd {
+	switch m.MsgID {
 	case common.CSLoginCmd:
 		return LoginHandler(a, m)
 	default:

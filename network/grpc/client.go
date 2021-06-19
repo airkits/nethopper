@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/network/transport/pb/ss"
 	"github.com/airkits/nethopper/server"
+	"github.com/airkits/proto/ss"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

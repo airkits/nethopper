@@ -30,13 +30,13 @@ package wspb
 import (
 	"fmt"
 
+	"github.com/airkits/csproto/cs"
 	"github.com/airkits/nethopper/examples/micro_server/gate/protocol"
 	"github.com/airkits/nethopper/examples/model/pb/c2s"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/network/transport"
-	"github.com/airkits/nethopper/network/transport/pb/cs"
-	"github.com/airkits/nethopper/network/transport/pb/ss"
 	"github.com/airkits/nethopper/server"
+	"github.com/airkits/proto/ss"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -76,7 +76,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	respMsg := &ss.Message{
 		ID:      message.GetID(),
 		UID:     uint64(userID),
-		Cmd:     message.GetCmd(),
+		MsgID:   message.GetMsgID(),
 		MsgType: server.MTResponse,
 		Body:    &any.Any{TypeUrl: "./c2s.LoginResp", Value: body},
 	}

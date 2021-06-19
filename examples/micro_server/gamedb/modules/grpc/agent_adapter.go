@@ -33,7 +33,7 @@ import (
 	"github.com/airkits/nethopper/codec"
 	"github.com/airkits/nethopper/examples/model/common"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/network/transport/pb/ss"
+	"github.com/airkits/proto/ss"
 
 	"github.com/airkits/nethopper/server"
 )
@@ -69,7 +69,7 @@ func (a *AgentAdapter) ProcessMessage(payload interface{}) error {
 
 func (a *AgentAdapter) processRequestMessage(message *ss.Message) error {
 
-	switch message.Cmd {
+	switch message.MsgID {
 	case common.SSLoginCmd:
 		return Login(a, message)
 	default:

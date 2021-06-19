@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/airkits/csproto/cs"
 	"github.com/airkits/nethopper/examples/model/common"
 	"github.com/airkits/nethopper/examples/model/pb/c2s"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/network/transport/pb/cs"
 	"github.com/airkits/nethopper/server"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -34,7 +34,7 @@ func Login(s *Module, uid string, pwd string) (string, server.Ret) {
 		msg := &cs.Message{
 			ID:      1,
 			UID:     uint64(uidInt),
-			Cmd:     common.CSLoginCmd,
+			MsgID:   common.CSLoginCmd,
 			MsgType: server.MTRequest,
 			Body:    &any.Any{TypeUrl: "./c2s.LoginReq", Value: body},
 		}

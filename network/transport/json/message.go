@@ -4,7 +4,7 @@ package json
 type Message struct {
 	ID      uint32      `form:"id" json:"id"`
 	UID     uint64      `form:"uid" json:"uid"`
-	Cmd     string      `form:"cmd" json:"cmd"`
+	MsgID   uint32      `form:"msgID" json:"msgID"`
 	MsgType uint32      `form:"msgType" json:"msgType"`
 	Seq     uint32      `form:"seq" json:"seq"`
 	Options string      `form:"options" json:"options"`
@@ -16,9 +16,9 @@ func (m *Message) GetMsgType() uint32 {
 	return m.MsgType
 }
 
-//GetCmd >
-func (m *Message) GetCmd() string {
-	return m.Cmd
+//GetMsgID >
+func (m *Message) GetMsgID() uint32 {
+	return m.MsgID
 }
 
 //GetID >

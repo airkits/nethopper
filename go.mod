@@ -10,6 +10,8 @@ replace (
 )
 
 require (
+	github.com/airkits/csproto v0.0.0-00010101000000-000000000000
+	github.com/airkits/proto v0.0.0-00010101000000-000000000000
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -19,9 +21,8 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gobuffalo/packr v1.30.1
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.0
 	github.com/gomodule/redigo v1.8.3
-	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/websocket v1.4.2
@@ -49,8 +50,12 @@ require (
 	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb // indirect
 	golang.org/x/sys v0.0.0-20201202213521-69691e467435 // indirect
 	golang.org/x/tools v0.0.0-20201202200335-bef1c476418a // indirect
-	google.golang.org/grpc v1.26.0
-	google.golang.org/protobuf v1.23.0
+	google.golang.org/grpc v1.38.0
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
+
+replace github.com/airkits/csproto => ../csproto/
+
+replace github.com/airkits/proto => ../proto/

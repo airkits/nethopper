@@ -33,7 +33,7 @@ import (
 	"github.com/airkits/nethopper/codec"
 	"github.com/airkits/nethopper/libs/skiplist"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/network/transport/pb/ss"
+	"github.com/airkits/proto/ss"
 
 	"github.com/airkits/nethopper/server"
 )
@@ -113,7 +113,7 @@ func (a *AgentAdapter) processBroadcastMessage(m *ss.Message) error {
 
 //RPCCall remote call
 func (a *AgentAdapter) RPCCall(msg *ss.Message) (*ss.Message, server.Ret) {
-	var obj = server.NewCallObject(msg.GetCmd(), 0, msg)
+	var obj = server.NewCallObject(msg.GetMsgID(), 0, msg)
 	a.Cache.Set(float64(msg.GetID()), obj)
 	a.WriteMessage(msg)
 	result := <-obj.ChanRet

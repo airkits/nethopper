@@ -7,8 +7,8 @@ import (
 
 	"github.com/airkits/nethopper/examples/model/common"
 	"github.com/airkits/nethopper/examples/model/pb/s2s"
-	"github.com/airkits/nethopper/network/transport/pb/ss"
 	"github.com/airkits/nethopper/server"
+	"github.com/airkits/proto/ss"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -36,7 +36,7 @@ func GetUser(s *Module, uid string, pwd string) (string, server.Ret) {
 		m := &ss.Message{
 			ID:      agent.GetAdapter().GetSequence(),
 			UID:     uint64(uidInt),
-			Cmd:     common.SSLoginCmd,
+			MsgID:   common.SSLoginCmd,
 			MsgType: server.MTRequest,
 			Body:    &any.Any{TypeUrl: "./s2s.LoginReq", Value: body},
 		}

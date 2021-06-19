@@ -52,7 +52,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	v, result := server.Call(server.MIDLogic, protocol.LogicLogin, int32(userID), req.Uid, req.Passwd)
 	// header := m.(*ss.Header)
 	// outM := transport.NewMessage(transport.HeaderTypeGRPCPB, agent.Codec())
-	// outM.Header = outM.NewHeader(header.GetID(), header.GetCmd(), server.MTResponse)
+	// outM.Header = outM.NewHeader(header.GetID(), header.GetMsgID(), server.MTResponse)
 
 	resp := &s2s.LoginResp{
 		Result: &s2s.Result{
@@ -75,7 +75,7 @@ func LoginHandler(agent network.IAgentAdapter, m transport.IMessage) error {
 	respMsg := &raw.Message{
 		ID:      message.GetID(),
 		UID:     uint64(userID),
-		Cmd:     message.GetCmd(),
+		MsgID:   message.GetMsgID(),
 		MsgType: server.MTResponse,
 		Body:    body,
 	}

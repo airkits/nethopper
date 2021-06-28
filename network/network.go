@@ -136,7 +136,7 @@ type AgentManager struct {
 func (am *AgentManager) AddAgent(a IAgent) {
 	if a.IsAuth() {
 		v := am.authAgents.Get(float64(a.UID()))
-		if v != nil {
+		if v == nil {
 			am.authAgents.Set(float64(a.UID()), a)
 		}
 

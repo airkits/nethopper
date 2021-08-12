@@ -14,12 +14,12 @@ require (
 	github.com/airkits/proto v0.0.0-00010101000000-000000000000
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/coreos/etcd v3.3.25+incompatible
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.3
 	github.com/go-openapi/spec v0.19.15 // indirect
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gobuffalo/packr v1.30.1
+	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/gomodule/redigo v1.8.3

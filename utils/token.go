@@ -1,10 +1,18 @@
+/*
+ * @Author: your name
+ * @Date: 2021-06-07 09:13:06
+ * @LastEditTime: 2021-08-12 17:13:29
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: /nethopper/utils/token.go
+ */
 package utils
 
 import (
 	"errors"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 //CreateToken token create

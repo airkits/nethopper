@@ -33,6 +33,10 @@ github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tN
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
+github.com/airkits/csproto v0.0.0-20210812092337-2b41fc01a4c0 h1:xxpXppFmKnzxbeIyOq8kTqleuY5JTb3cUb3XouBW+zw=
+github.com/airkits/csproto v0.0.0-20210812092337-2b41fc01a4c0/go.mod h1:F0Rzh8Oc3JJYR0faqU4LqroIbNX2bJzwJEXK/boONyM=
+github.com/airkits/proto v0.0.0-20210619150606-c288b939130c h1:mIoCp6XCqDlxrGxLYYJorwpxq/EA3rMcGPdmsTBmv6Q=
+github.com/airkits/proto v0.0.0-20210619150606-c288b939130c/go.mod h1:ptsQHgbV7RqATOZR9WhfyoA9UI53RzKuQbk1JhaooYg=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=

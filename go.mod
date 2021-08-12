@@ -10,8 +10,8 @@ replace (
 )
 
 require (
-	github.com/airkits/csproto v0.0.0-00010101000000-000000000000
-	github.com/airkits/proto v0.0.0-00010101000000-000000000000
+	github.com/airkits/csproto v0.0.0-20210812092337-2b41fc01a4c0 // indirect
+	github.com/airkits/proto v0.0.0-20210619150606-c288b939130c // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/gin-gonic/gin v1.7.3
@@ -55,6 +55,6 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-replace github.com/airkits/csproto => ../csproto/
+// replace github.com/airkits/csproto => ../csproto/
 
-replace github.com/airkits/proto => ../proto/
+// replace github.com/airkits/proto => ../proto/

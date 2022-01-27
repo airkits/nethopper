@@ -2,7 +2,7 @@ package utils
 
 import (
 	uuid "github.com/satori/go.uuid"
-	"github.com/zheng-ji/goSnowFlake"
+	"github.com/yitter/idgenerator-go/idgen"
 )
 
 //GenUUID create uuid based on random numbers
@@ -12,11 +12,13 @@ func GenUUID() string {
 	return u.String()
 }
 
-//GenUID uidGenerater workerID between 1-255
-func GenUID(workID int64) (int64, error) {
-	iw, err := goSnowFlake.NewIdWorker(workID)
-	if err != nil {
-		return 0, err
-	}
-	return iw.NextId()
+// InitUID uidGenerater workerID between 1-255
+func InitUID(workID uint16) {
+	options := idgen.NewIdGeneratorOptions(workID)
+	idgen.SetIdGenerator(options)
+}
+
+//GenUID
+func GenUID() uint64 {
+	return idgen.NextId()
 }

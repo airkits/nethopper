@@ -129,6 +129,8 @@ type CallObject struct {
 	ChanRet chan RetObject
 }
 
+type Callback func(interface{}, Ret)
+
 //Ret define code and error
 type Ret struct {
 	Code int32
@@ -153,7 +155,19 @@ func NewCallObject(cmd string, opt int32, args ...interface{}) *CallObject {
 
 // AsyncCall async get data from modules,return call object
 // same option value will run in same processor
-func AsyncCall(destMID int32, cmd string, option int32, args ...interface{}) (*CallObject, error) {
+func AsyncCall(destMID int32, cmd string, option int32, callback Callback, args ...interface{}) error {
+	obj, err := processCall(destMID, cmd, option, args...)
+	if err != nil {
+		return err
+	}
+	go func(obj *CallObject) {
+		result := <-obj.ChanRet
+		callback(result.Data, result.Ret)
+	}(obj)
+	return err
+}
+
+func processCall(destMID int32, cmd string, option int32, args ...interface{}) (*CallObject, error) {
 	m, err := GetModuleByID(destMID)
 	if err != nil {
 		return nil, err
@@ -168,7 +182,7 @@ func AsyncCall(destMID int32, cmd string, option int32, args ...interface{}) (*C
 // Call sync get data from modules
 // same option value will run in same processor
 func Call(destMID int32, cmd string, option int32, args ...interface{}) (interface{}, Ret) {
-	obj, err := AsyncCall(destMID, cmd, option, args...)
+	obj, err := processCall(destMID, cmd, option, args...)
 	if err != nil {
 		return nil, Ret{Code: -1, Err: err}
 	}

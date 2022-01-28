@@ -103,7 +103,7 @@ type Processor struct {
 
 // Process goruntine process pre call
 func Process(s Module, obj *CallObject) (result Ret) {
-	defer TraceCost(s.Name() + ":" + obj.Cmd)()
+	//defer TraceCost(s.Name() + ":" + obj.Cmd)()
 	var ret = RetObject{
 		Data: nil,
 		Ret:  Ret{Err: nil, Code: 0},
@@ -118,26 +118,22 @@ func Process(s Module, obj *CallObject) (result Ret) {
 
 	f := s.(Module).GetHandler(obj.Cmd)
 	if f != nil {
+		var data interface{}
+		var result Ret
 		switch f.(type) {
 		case func(interface{}) (interface{}, Ret):
-			data, result := f.(func(interface{}) (interface{}, Ret))(s)
-			ret.Data = data
-			ret.Ret = result
+			data, result = f.(func(interface{}) (interface{}, Ret))(s)
 		case func(interface{}, interface{}) (interface{}, Ret):
-			data, result := f.(func(interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0])
-			ret.Data = data
-			ret.Ret = result
+			data, result = f.(func(interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0])
 		case func(interface{}, interface{}, interface{}) (interface{}, Ret):
-			data, result := f.(func(interface{}, interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0], obj.Args[1])
-			ret.Data = data
-			ret.Ret = result
+			data, result = f.(func(interface{}, interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0], obj.Args[1])
 		case func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret):
-			data, result := f.(func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0], obj.Args[1], obj.Args[2])
-			ret.Data = data
-			ret.Ret = result
+			data, result = f.(func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0], obj.Args[1], obj.Args[2])
 		default:
 			panic(fmt.Sprintf("function cmd %v: definition of function is invalid,%v", obj.Cmd, reflect.TypeOf(f)))
 		}
+		ret.Data = data
+		ret.Ret = result
 	} else {
 		f = s.(Module).GetReflectHandler(obj.Cmd)
 		if f == nil {

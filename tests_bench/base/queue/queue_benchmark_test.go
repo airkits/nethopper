@@ -39,6 +39,52 @@ func Benchmark_ChanQueue(b *testing.B) {
 	q := queue.NewChanQueue(1000)
 	bench_sync(q)
 }
+
+func BenchmarkPush(b *testing.B) {
+	b.ResetTimer()
+	q := queue.NewChanQueue(1000)
+	p := queue.NewChanQueue(1000)
+	o := queue.NewChanQueue(1000)
+	var wg sync.WaitGroup
+	wg.Add(4)
+	go func() {
+		for j := 0; j < b.N; j++ {
+			q.Push(j)
+		}
+		wg.Done()
+	}()
+	go func() {
+		for j := 0; j < b.N; j++ {
+			v, _ := q.Pop()
+			if v.(int) != j {
+				b.Error("push error %ld", j)
+			}
+			p.Push(v)
+		}
+		wg.Done()
+	}()
+	go func() {
+		for j := 0; j < b.N; j++ {
+			v, _ := p.Pop()
+			if v.(int) != j {
+				b.Error("push error %ld", j)
+			}
+			o.Push(v)
+		}
+		wg.Done()
+	}()
+	go func() {
+		for j := 0; j < b.N; j++ {
+			v, _ := o.Pop()
+			if v.(int) != j {
+				b.Error("push error %ld", j)
+			}
+
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+}
 func genRandomList(size int) []int {
 	list := make([]int, size)
 	for i, _ := range list {

@@ -82,7 +82,7 @@ func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *Module) OnRun(dt time.Duration) {
-	server.RunSimpleFrame(s, 128)
+	server.RunSimpleFrame(s)
 }
 
 // Stop goruntine

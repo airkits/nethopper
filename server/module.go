@@ -32,7 +32,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"runtime"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -150,18 +149,31 @@ type Module interface {
 	// Processor process callobject
 	Processor(obj *CallObject) error
 
-	// IdleTimesReset reset idle times
-	IdleTimesReset()
+	//IdleTimesReset reset idle times
+	// IdleTimesReset()
 
-	// IdleTimes get idle times
-	IdleTimes() uint32
+	// // IdleTimes get idle times
+	// IdleTimes() uint32
 
-	// IdleTimesAdd add idle times
-	IdleTimesAdd()
+	// // IdleTimesAdd add idle times
+	// IdleTimesAdd()
 }
 
 // RunSimpleFrame wrapper simple run function
-func RunSimpleFrame(s Module, packageSize int) {
+func RunSimpleFrame(s Module) {
+	m, err := s.MQ().Pop()
+	if err != nil {
+		return
+	}
+	obj := m.(*CallObject)
+	if err := s.Processor(obj); err != nil {
+		Error("%s error %s", s.Name(), err.Error())
+	}
+
+}
+
+// RunAsyncFrame wrapper simple run function
+func RunAsyncFrame(s Module, packageSize int) {
 	for i := 0; i < packageSize; i++ {
 		m, err := s.MQ().AsyncPop()
 		if err != nil {
@@ -189,14 +201,14 @@ func ModuleRun(s Module) {
 			return
 		}
 
-		start = time.Now()
-		if s.MQ().Length() == 0 {
-			t := time.Duration(s.IdleTimes()) * time.Nanosecond
-			time.Sleep(t)
-			s.IdleTimesAdd()
+		//start = time.Now()
+		//if s.MQ().Length() == 0 {
+		// t := time.Duration(s.IdleTimes()) * time.Nanosecond
+		// time.Sleep(t)
+		// s.IdleTimesAdd()
 
-		}
-		runtime.Gosched()
+		//}
+		//runtime.Gosched()
 	}
 }
 
@@ -278,23 +290,23 @@ func (s *BaseContext) GetReflectHandler(id interface{}) interface{} {
 }
 
 // IdleTimesReset reset idle times
-func (s *BaseContext) IdleTimesReset() {
-	atomic.StoreUint32(&s.idleTimes, 500)
-}
+// func (s *BaseContext) IdleTimesReset() {
+// 	atomic.StoreUint32(&s.idleTimes, 500)
+// }
 
 // IdleTimes get idle times
-func (s *BaseContext) IdleTimes() uint32 {
-	return atomic.LoadUint32(&s.idleTimes)
-}
+// func (s *BaseContext) IdleTimes() uint32 {
+// 	return atomic.LoadUint32(&s.idleTimes)
+// }
 
-// IdleTimesAdd add idle times
-func (s *BaseContext) IdleTimesAdd() {
-	t := s.IdleTimes()
-	if t >= 20000000 { //2s
-		return
-	}
-	atomic.AddUint32(&s.idleTimes, 100)
-}
+// // IdleTimesAdd add idle times
+// func (s *BaseContext) IdleTimesAdd() {
+// 	t := s.IdleTimes()
+// 	if t >= 20000000 { //2s
+// 		return
+// 	}
+// 	atomic.AddUint32(&s.idleTimes, 100)
+// }
 
 // MakeContext init base module queue and create context
 func (s *BaseContext) MakeContext(p Module, queueSize int32) {
@@ -334,10 +346,11 @@ func (s *BaseContext) Processor(obj *CallObject) error {
 
 // Call async send message to module
 func (s *BaseContext) Call(option int32, obj *CallObject) error {
-	s.IdleTimesReset()
+	//	s.IdleTimesReset()
 	if err := s.q.AsyncPush(obj); err != nil {
 		Error(err.Error())
 	}
+
 	return nil
 }
 
@@ -522,21 +535,21 @@ func cmdRegister(s Module) {
 	}
 }
 func createModuleByID(MID int32, name string, parent Module, conf IConfig) (Module, error) {
-	se, err := CreateModule(name)
+	m, err := CreateModule(name)
 	if err != nil {
 		return nil, err
 	}
-	se.MakeContext(nil, int32(conf.GetQueueSize()))
-	se.SetName(ModuleName(se))
-	cmdRegister(se)
-	se.Setup(conf)
-	se.SetID(MID)
-	App.Modules.Store(MID, se)
+	m.MakeContext(nil, int32(conf.GetQueueSize()))
+	m.SetName(ModuleName(m))
+	cmdRegister(m)
+	m.Setup(conf)
+	m.SetID(MID)
+	App.Modules.Store(MID, m)
 	if MID == MIDLog {
-		GLoggerModule = se
+		GLoggerModule = m
 	}
-	GOWithContext(ModuleRun, se)
-	return se, nil
+	GOWithContext(ModuleRun, m)
+	return m, nil
 }
 
 // NewModule create anonymous module

@@ -89,7 +89,7 @@ func (s *LogModule) OnRun(dt time.Duration) {
 	s.count = 0
 	for i := 0; i < 128; i++ {
 
-		if v, err := s.MQ().AsyncPop(); err == nil {
+		if v, err := s.MQ().Pop(); err == nil {
 			if n, e := s.buf.Write(v.([]byte)); e == nil {
 				s.msgSize += int32(n)
 				s.count++

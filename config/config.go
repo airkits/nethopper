@@ -3,8 +3,9 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 
-	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/log"
 	"github.com/gobuffalo/packr"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
@@ -13,6 +14,12 @@ import (
 var configType = "yml"
 var defaultName = "default"
 var configNmae = "config"
+
+//IConfig config interface
+type IConfig interface {
+	//GetQueueSize get module queue size
+	GetQueueSize() int
+}
 
 //InitViperDefault read default config
 func InitViperDefault(app string, path string, pack bool) error {
@@ -94,7 +101,7 @@ func InitViper(app string, path string, env string, config interface{}, pack boo
 	// 	server.Info("Config file changed:", e.Name)
 	// })
 	if err := viper.Unmarshal(&config); err != nil {
-		server.Error(err)
+		log.Error(err)
 		return err
 	}
 	return nil
@@ -114,4 +121,31 @@ func ReadRemoteConfig(address string, key string) {
 			// 配置文件被找到，但产生了另外的错误
 		}
 	}
+}
+
+//HasConfigKey check config key,if exist return true, else return false
+func HasConfigKey(m map[string]interface{}, key string) bool {
+	_, ok := m[key]
+	if !ok {
+		return false
+	}
+	return true
+}
+
+// ParseConfigValue read config from map,if not exist return default value,support string,int,bool
+func ParseConfigValue(m map[string]interface{}, key string, opt interface{}, result interface{}) error {
+	rv := reflect.ValueOf(result)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return fmt.Errorf("Invalid type %s", reflect.TypeOf(result))
+	}
+
+	value, ok := m[key]
+	if !ok {
+		value = opt
+	}
+	if reflect.TypeOf(value) != reflect.TypeOf(opt) {
+		return fmt.Errorf("config %s type failed", key)
+	}
+	rv.Elem().Set(reflect.ValueOf(value).Convert(rv.Elem().Type()))
+	return nil
 }

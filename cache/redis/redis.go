@@ -32,13 +32,13 @@ import (
 	"time"
 
 	"github.com/airkits/nethopper/cache"
-	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/config"
 	"github.com/gomodule/redigo/redis"
 	"github.com/pkg/errors"
 )
 
 // NewRedisCache create redis cache instance
-func NewRedisCache(conf server.IConfig) (*RedisCache, error) {
+func NewRedisCache(conf config.IConfig) (*RedisCache, error) {
 	cache := &RedisCache{}
 	return cache.Setup(conf)
 
@@ -86,7 +86,7 @@ type RedisCache struct {
 }
 
 // Setup init cache with config
-func (c *RedisCache) Setup(conf server.IConfig) (*RedisCache, error) {
+func (c *RedisCache) Setup(conf config.IConfig) (*RedisCache, error) {
 	c.Conf = conf.(*cache.Config)
 	c.pools = make([]*redis.Pool, len(c.Conf.Nodes))
 	for index, info := range c.Conf.Nodes {

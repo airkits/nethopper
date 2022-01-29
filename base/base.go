@@ -26,3 +26,49 @@
 // * @Last Modified time: 2019-12-18 10:50:34
 
 package base
+
+import (
+	"sync/atomic"
+)
+
+type IRef interface {
+	AddRef() int32
+	DecRef() int32
+	Count() int32
+}
+
+type IClass interface {
+	Name() string
+}
+
+// NewRef create Ref instance
+func NewRef() IRef {
+	r := &Ref{}
+	r.init()
+	return r
+}
+
+type Ref struct {
+	refCount int32
+}
+
+func (r *Ref) init() {
+	atomic.StoreInt32(&r.refCount, 0)
+}
+
+// modifyRef update goruntine use count ,+/- is all ok
+func (r *Ref) modifyRef(value int32) int32 {
+	return atomic.AddInt32(&r.refCount, value)
+}
+
+func (r *Ref) AddRef() int32 {
+	return r.modifyRef(1)
+}
+
+func (r *Ref) DecRef() int32 {
+	return r.modifyRef(-1)
+}
+
+func (r *Ref) Count() int32 {
+	return atomic.LoadInt32(&r.refCount)
+}

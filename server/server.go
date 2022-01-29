@@ -29,73 +29,28 @@ package server
 
 import (
 	"fmt"
-	"sync"
-	"sync/atomic"
-	"time"
+
+	"github.com/airkits/nethopper/base"
+	"github.com/airkits/nethopper/log"
 )
 
-// GBytesPool pre-create []byte pool
-var GBytesPool *BytesPool
-
-// GMessagePool pre-create message pool
-var GMessagePool *MessagePool
-
-// GSessionPool pre-create session
-var GSessionPool *SessionPool
-
-// log variable start
-
-// GLoggerModule global log module
-var GLoggerModule Module
-
-// WG global goruntine wait group
-var WG sync.WaitGroup
-
-// module variable start
-
-// AnonymousMID Anonymous Module Counter
-var AnonymousMID int32 = MIDNamedMax
-
-// relModules relate name to create module function
-var relModules = make(map[string]func() (Module, error))
-
-// module variable end
-
-// App server instance
-var App *Server
+// global app context
+var AppContext *base.AppContext
 
 func init() {
-	GBytesPool = NewBytesPool()
-	GMessagePool = NewMessagePool()
-	GSessionPool = NewSessionPool()
-	App = &Server{
-		GoCount: 0,
-	}
-
+	AppContext = base.NewAppContext()
 	fmt.Println("Nethopper Framework init")
 }
 
 // GracefulExit server exit by call root context close
 func GracefulExit() {
-	WG.Wait()
-	GLoggerModule.Close()
+	AppContext.WG.Wait()
+	log.GLoggerModule.Close()
 	// wait root context done
-	for {
-		if _, exitFlag := GLoggerModule.CanExit(true); exitFlag {
-			return
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
-
-// Server server entity, only one instance
-type Server struct {
-	// GoCount total goruntine count
-	GoCount  int32
-	Modules sync.Map
-}
-
-// ModifyGoCount update goruntine use count ,+/- is all ok
-func (s *Server) ModifyGoCount(value int32) {
-	atomic.AddInt32(&s.GoCount, value)
+	// for {
+	// 	if _, exitFlag := log.GLoggerModule.CanExit(true); exitFlag {
+	// 		return
+	// 	}
+	// 	time.Sleep(1 * time.Second)
+	// }
 }

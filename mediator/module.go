@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-14 14:15:06
 
-package server
+package mediator
 
 import (
 	"context"
@@ -37,56 +37,12 @@ import (
 	"time"
 
 	"github.com/airkits/nethopper/base/queue"
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 )
 
-const (
-	// ModuleNamedIDs module id define, system reserved 1-63
-	ModuleNamedIDs = iota
-	// MIDMain main goruntinue
-	MIDMain
-	// MIDMonitor server monitor module
-	MIDMonitor
-	// MIDLog log module
-	MIDLog
-	// MIDTCP tcp module
-	MIDTCP
-	// MIDKCP kcp module
-	MIDKCP
-	// MIDQUIC quic module
-	MIDQUIC
-	// MIDWSServer ws server
-	MIDWSServer
-	// MIDGRPCServer grpc server
-	MIDGRPCServer
-	// MIDHTTP http module
-	MIDHTTP
-	// MIDLogic logic module
-	MIDLogic
-	// MIDRedis redis module
-	MIDRedis
-	// MIDTCPClient tcp client module
-	MIDTCPClient
-	// MIDKCPClient kcp client module
-	MIDKCPClient
-	// MIDQUICClient quic client module
-	MIDQUICClient
-	// MIDHTTPClient http client module
-	MIDHTTPClient
-	// MIDGRPCClient grpc client module
-	MIDGRPCClient
-	// MIDWSClient ws client
-	MIDWSClient
-	// MIDDB common db module
-	MIDDB
-
-	// MIDUserCustom User custom define named modules from 64-128
-	MIDUserCustom = 64
-	// MIDNamedMax named modules max ID
-	MIDNamedMax = 128
-)
-
-// Module interface define
-type Module interface {
+// IModule interface define
+type IModule interface {
 	//BaseContext start
 	// ID module id
 	ID() int32
@@ -108,7 +64,7 @@ type Module interface {
 	RegisterReflectHandler(id interface{}, f interface{})
 
 	// MakeContext init base module queue and create context
-	MakeContext(p Module, queueSize int32)
+	MakeContext(queueSize int32)
 	// Context get module context
 	Context() context.Context
 	// ChildAdd after child module created and tell parent module, ref count +1
@@ -129,9 +85,9 @@ type Module interface {
 	UserData() int32
 
 	// Setup init custom module and pass config map to module
-	Setup(conf IConfig) (Module, error)
+	Setup(conf config.IConfig) (IModule, error)
 	//Reload reload config
-	Reload(conf IConfig) error
+	Reload(conf config.IConfig) error
 	// OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 	OnRun(dt time.Duration)
 	// Stop goruntine
@@ -160,20 +116,20 @@ type Module interface {
 }
 
 // RunSimpleFrame wrapper simple run function
-func RunSimpleFrame(s Module) {
+func RunSimpleFrame(s IModule) {
 	m, err := s.MQ().Pop()
 	if err != nil {
 		return
 	}
 	obj := m.(*CallObject)
 	if err := s.Processor(obj); err != nil {
-		Error("%s error %s", s.Name(), err.Error())
+		log.Error("%s error %s", s.Name(), err.Error())
 	}
 
 }
 
 // RunAsyncFrame wrapper simple run function
-func RunAsyncFrame(s Module, packageSize int) {
+func RunAsyncFrame(s IModule, packageSize int) {
 	for i := 0; i < packageSize; i++ {
 		m, err := s.MQ().AsyncPop()
 		if err != nil {
@@ -182,18 +138,18 @@ func RunAsyncFrame(s Module, packageSize int) {
 		obj := m.(*CallObject)
 
 		if err := s.Processor(obj); err != nil {
-			Error("%s error %s", s.Name(), err.Error())
+			log.Error("%s error %s", s.Name(), err.Error())
 			break
 		}
 	}
 }
 
 // ModuleRun wrapper module goruntine and in an orderly way to exit
-func ModuleRun(s Module) {
+func ModuleRun(s IModule) {
 	ctxDone := false
 	exitFlag := false
 	start := time.Now()
-	Info("Module [%s] starting", s.Name())
+	log.Info("Module [%s] starting", s.Name())
 	for {
 		s.OnRun(time.Since(start))
 
@@ -213,7 +169,7 @@ func ModuleRun(s Module) {
 }
 
 // ModuleName get the module name
-func ModuleName(s Module) string {
+func ModuleName(s IModule) string {
 	t := reflect.TypeOf(s)
 	path := t.Elem().PkgPath()
 	pos := strings.LastIndex(path, "/")
@@ -229,7 +185,7 @@ func ModuleName(s Module) string {
 type BaseContext struct {
 	ctx        context.Context
 	cancel     context.CancelFunc
-	parent     Module
+	parent     IModule
 	childRef   int32
 	q          queue.Queue
 	name       string
@@ -237,7 +193,7 @@ type BaseContext struct {
 	funcs      map[interface{}]interface{} //handlers
 	rfuncs     map[interface{}]interface{} //reflect handlers
 	processers IWorkerPool
-	idleTimes  uint32
+	// idleTimes  uint32
 }
 
 //Handlers set moudle handlers
@@ -309,17 +265,17 @@ func (s *BaseContext) GetReflectHandler(id interface{}) interface{} {
 // }
 
 // MakeContext init base module queue and create context
-func (s *BaseContext) MakeContext(p Module, queueSize int32) {
-	s.parent = p
+func (s *BaseContext) MakeContext(queueSize int32) {
+	//s.parent = p
 	s.q = queue.NewChanQueue(queueSize)
 	s.funcs = make(map[interface{}]interface{})
 	s.rfuncs = make(map[interface{}]interface{})
-	if p == nil {
-		s.ctx, s.cancel = context.WithCancel(context.Background())
-	} else {
-		s.ctx, s.cancel = context.WithCancel(p.Context())
-		p.ChildAdd()
-	}
+	// if p == nil {
+	// 	s.ctx, s.cancel = context.WithCancel(context.Background())
+	// } else {
+	s.ctx, s.cancel = context.WithCancel(context.Background())
+	// 	p.ChildAdd()
+	// }
 
 }
 
@@ -348,14 +304,14 @@ func (s *BaseContext) Processor(obj *CallObject) error {
 func (s *BaseContext) Call(option int32, obj *CallObject) error {
 	//	s.IdleTimesReset()
 	if err := s.q.AsyncPush(obj); err != nil {
-		Error(err.Error())
+		log.Error(err.Error())
 	}
 
 	return nil
 }
 
 // CreateWorkerPool create processor pool
-func (s *BaseContext) CreateWorkerPool(m Module, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
+func (s *BaseContext) CreateWorkerPool(m IModule, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
 	if s.processers, err = NewFixedWorkerPool(m, cap, expired); err != nil {
 		return err
 	}
@@ -459,12 +415,12 @@ func (s *BaseContext) UserData() int32 {
 // ReadConfig config map
 // m := map[string]interface{}{
 // }
-func (s *BaseContext) ReadConfig(conf IConfig) error {
+func (s *BaseContext) ReadConfig(conf config.IConfig) error {
 	return nil
 }
 
 //Reload reload config
-func (s *BaseContext) Reload(conf IConfig) error {
+func (s *BaseContext) Reload(conf config.IConfig) error {
 	return nil
 }
 
@@ -476,51 +432,7 @@ func (s *BaseContext) Stop() error {
 
 //to override end
 
-// RegisterModule register module name to create function mapping
-func RegisterModule(name string, createFunc func() (Module, error)) error {
-	if IsModuleRegistered(name) {
-		return fmt.Errorf("Already register Module %s", name)
-	}
-	relModules[name] = createFunc
-	return nil
-}
-
-//IsModuleRegistered check module is registered
-func IsModuleRegistered(name string) bool {
-	if _, ok := relModules[name]; ok {
-		return true
-	}
-	return false
-}
-
-// CreateModule create module by name
-func CreateModule(name string) (Module, error) {
-	if f, ok := relModules[name]; ok {
-		return f()
-	}
-	return nil, fmt.Errorf("You need register Module %s first", name)
-}
-
-// GetModuleByID get module instance by id
-func GetModuleByID(MID int32) (Module, error) {
-	se, ok := App.Modules.Load(MID)
-	if ok {
-		return se.(Module), nil
-	}
-	return nil, fmt.Errorf("cant get module ID %d", MID)
-}
-
-// NewNamedModule create named module
-func NewNamedModule(MID int32, name string, createFunc func() (Module, error), parent Module, conf IConfig) (Module, error) {
-	if !IsModuleRegistered(name) {
-		if err := RegisterModule(name, createFunc); err != nil {
-			panic(err)
-		}
-	}
-	return createModuleByID(MID, name, parent, conf)
-}
-
-func cmdRegister(s Module) {
+func cmdRegister(s IModule) {
 	cmds := s.Handlers()
 	if cmds != nil {
 		for k, v := range cmds {
@@ -533,28 +445,4 @@ func cmdRegister(s Module) {
 			s.RegisterReflectHandler(k, v)
 		}
 	}
-}
-func createModuleByID(MID int32, name string, parent Module, conf IConfig) (Module, error) {
-	m, err := CreateModule(name)
-	if err != nil {
-		return nil, err
-	}
-	m.MakeContext(nil, int32(conf.GetQueueSize()))
-	m.SetName(ModuleName(m))
-	cmdRegister(m)
-	m.Setup(conf)
-	m.SetID(MID)
-	App.Modules.Store(MID, m)
-	if MID == MIDLog {
-		GLoggerModule = m
-	}
-	GOWithContext(ModuleRun, m)
-	return m, nil
-}
-
-// NewModule create anonymous module
-func NewModule(name string, parent Module, conf IConfig) (Module, error) {
-	//Inc AnonymousMID count = count +1
-	MID := atomic.AddInt32(&AnonymousMID, 1)
-	return createModuleByID(MID, name, parent, conf)
 }

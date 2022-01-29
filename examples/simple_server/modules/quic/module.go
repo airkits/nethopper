@@ -30,13 +30,14 @@ package quic
 import (
 	"time"
 
+	"github.com/airkits/nethopper/mediator"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/network/quic"
 	"github.com/airkits/nethopper/server"
 )
 
 // ModuleCreate  module create function
-func ModuleCreate() (server.Module, error) {
+func ModuleCreate() (mediator.IModule, error) {
 	return &Module{}, nil
 }
 
@@ -55,7 +56,7 @@ type Module struct {
 //  "socketQueueSize":100,
 //  "maxMessageSize":4096
 // }
-func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (mediator.IModule, error) {
 	s.gs = quic.NewServer(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		return a

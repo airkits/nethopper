@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/airkits/nethopper/mediator"
 	http_server "github.com/airkits/nethopper/network/http"
 	"github.com/airkits/nethopper/server"
 	"github.com/gin-gonic/gin"
@@ -41,7 +42,7 @@ import (
 )
 
 // ModuleCreate  module create function
-func ModuleCreate() (server.Module, error) {
+func ModuleCreate() (mediator.IModule, error) {
 	return &Module{}, nil
 }
 
@@ -82,7 +83,7 @@ type Module struct {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (mediator.IModule, error) {
 	s.Conf = conf.(*http_server.ServerConfig)
 	s.gs = gin.New()
 

@@ -80,7 +80,7 @@ func main() {
 	NewNamedModule(MIDGRPCServer, "grpc", grpc.ModuleCreate, nil, &cfg.GPRC)
 	//NewNamedModule(MIDTCP, "tcp",tcp.ModuleCreate, nil, &cfg.Tcp)
 	//NewNamedModule(MIDKCP, "kcp",kcp.ModuleCreate, nil, &cfg.Kcp)
-	//NewNamedModule(MIDQUIC, "quic", quic_server.ModuleCreate, nil, &cfg.QUIC)
+	//NewNamedModule(MIDQUIC, "quic", quic_mediator.IModuleCreate, nil, &cfg.QUIC)
 	InitSignal()
 	//GracefulExit()
 }

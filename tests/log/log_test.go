@@ -32,33 +32,48 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/log"
-	"github.com/airkits/nethopper/server"
 	"github.com/airkits/nethopper/utils"
 )
 
+func init() {
+	appContext := base.NewAppContext()
+	conf := log.Config{
+		Filename:     "logs/server_log.log",
+		Level:        7,
+		MaxLines:     1000,
+		MaxSize:      50,
+		HourEnabled:  true,
+		DailyEnabled: true,
+		QueueSize:    1000,
+	}
+	log.InitLogger(appContext, &conf)
+
+}
 func TestFormatLog(t *testing.T) {
 	//test msg without params
 	msg := "format log test"
 	format := "%s%s%s\n"
 	var level int32
-	for level = server.FATAL; level < server.DEBUG; level++ {
-		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), server.LogLevelPrefix[level], msg)
-		result := server.FormatLog(level, msg)
+	for level = log.FATAL; level < log.DEBUG; level++ {
+		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], msg)
+		result := log.FormatLog(level, msg)
 		if expect != result {
 			t.Errorf("\nexpect :%s,\nresult :%s", expect, result)
 		}
 	}
 	//test msg with params
 	msg = "format %s log test %d"
-	for level = server.FATAL; level < server.DEBUG; level++ {
-		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), server.LogLevelPrefix[level], fmt.Sprintf(msg, strconv.Itoa(int(level)), level))
-		result := server.FormatLog(level, msg, strconv.Itoa(int(level)), level)
+	for level = log.FATAL; level < log.DEBUG; level++ {
+		expect := fmt.Sprintf(format, utils.TimeYMDHIS(), log.LogLevelPrefix[level], fmt.Sprintf(msg, strconv.Itoa(int(level)), level))
+		result := log.FormatLog(level, msg, strconv.Itoa(int(level)), level)
 		if expect != result {
 			t.Errorf("\nexpect :%s,\nresult :%s", expect, result)
 		}
+		log.Info(result)
 	}
-
+	fmt.Println("result over")
 }
 
 func TestNewFileLogger(t *testing.T) {

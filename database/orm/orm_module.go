@@ -30,16 +30,17 @@ package orm
 import (
 	"time"
 
-	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/mediator"
 )
 
 // OrmModule struct to define module
 type OrmModule struct {
-	server.BaseContext
+	mediator.BaseContext
 }
 
 // OrmModuleCreate  module create function
-func OrmModuleCreate() (server.Module, error) {
+func OrmModuleCreate() (mediator.IModule, error) {
 	return &OrmModule{}, nil
 }
 
@@ -53,12 +54,12 @@ func (s *OrmModule) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *OrmModule) Setup(conf server.IConfig) (server.Module, error) {
+func (s *OrmModule) Setup(conf config.IConfig) (mediator.IModule, error) {
 	return s, nil
 }
 
 //Reload reload config
-func (s *OrmModule) Reload(conf server.IConfig) error {
+func (s *OrmModule) Reload(conf config.IConfig) error {
 	return nil
 }
 
@@ -73,7 +74,7 @@ func (s *OrmModule) Stop() error {
 }
 
 // Call async send message to module
-func (s *OrmModule) Call(option int32, obj *server.CallObject) error {
+func (s *OrmModule) Call(option int32, obj *mediator.CallObject) error {
 	return nil
 }
 

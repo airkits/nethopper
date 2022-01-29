@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/airkits/nethopper/examples/model/common"
+	"github.com/airkits/nethopper/mediator"
 	"github.com/airkits/nethopper/server"
 )
 
@@ -41,7 +42,7 @@ type Module struct {
 }
 
 // ModuleCreate  module create function
-func ModuleCreate() (server.Module, error) {
+func ModuleCreate() (mediator.IModule, error) {
 	return &Module{}, nil
 }
 
@@ -55,7 +56,7 @@ func ModuleCreate() (server.Module, error) {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (mediator.IModule, error) {
 	s.Conf = conf.(*Config)
 	return s, nil
 }

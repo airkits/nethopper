@@ -32,13 +32,14 @@ import (
 
 	"github.com/airkits/nethopper/examples/micro_server/gate/protocol"
 	"github.com/airkits/nethopper/libs/skiplist"
+	"github.com/airkits/nethopper/mediator"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/network/grpc"
 	"github.com/airkits/nethopper/server"
 )
 
 // ModuleCreate  module create function
-func ModuleCreate() (server.Module, error) {
+func ModuleCreate() (mediator.IModule, error) {
 	return &Module{}, nil
 }
 
@@ -72,7 +73,7 @@ func (s *Module) ReflectHandlers() map[string]interface{} {
 //  "queueSize":1000,
 //  "grpcAddress":14000,
 // }
-func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (mediator.IModule, error) {
 	if err := s.ReadConfig(conf); err != nil {
 		panic(err)
 	}

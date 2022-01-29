@@ -30,6 +30,7 @@ package wspb
 import (
 	"time"
 
+	"github.com/airkits/nethopper/mediator"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/network/ws"
 	"github.com/airkits/nethopper/server"
@@ -39,7 +40,7 @@ import (
 const HTTPTimeout = 10
 
 // ModuleCreate  module create function
-func ModuleCreate() (server.Module, error) {
+func ModuleCreate() (mediator.IModule, error) {
 	return &Module{}, nil
 }
 
@@ -67,7 +68,7 @@ type Module struct {
 //  "certFile":"",
 //  "keyFile":"",
 // }
-func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (mediator.IModule, error) {
 
 	s.wsServer = ws.NewServer(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		if len(token) > 0 {

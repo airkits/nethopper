@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-14 14:40:51
 
-package server
+package log
 
 import (
 	"bytes"
@@ -34,28 +34,12 @@ import (
 	"github.com/airkits/nethopper/utils"
 )
 
-// Log Levels Define
-// 0       Fatal: system is unusable
-// 1       Error: error conditions
-// 2       Trace: trace conditions
-// 3       Warning: warning conditions
-// 4       Info: informational messages
-// 5       Debug: debug-level messages
-const (
-	FATAL = iota
-	ERROR
-	TRACE
-	WARNING
-	INFO
-	DEBUG
-)
-
-// Log Interface
-type Log interface {
+// ILog log Interface
+type ILog interface {
 	// ParseConfig read config from conf object
-	ParseConfig(conf IConfig) error
+	ParseConfig(conf *Config) error
 	// InitLogger init logger
-	InitLogger(conf IConfig) error
+	InitLogger(conf *Config) error
 	// SetLevel atomic set level value
 	SetLevel(level int32) error
 	// GetLevel atomic get level value
@@ -100,47 +84,4 @@ func FormatLog(level int32, v ...interface{}) string {
 	}
 	buf.WriteString("\n")
 	return buf.String()
-}
-
-//WriteLog send log to queue
-func WriteLog(level int32, v ...interface{}) error {
-	// UserData return logger level
-	if GLoggerModule == nil || level > GLoggerModule.UserData() {
-		return nil
-	}
-	msg := FormatLog(level, v...)
-	if err := GLoggerModule.PushBytes(level, []byte(msg)); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Fatal system is unusable
-func Fatal(v ...interface{}) error {
-	return WriteLog(FATAL, v...)
-}
-
-// Error error conditions
-func Error(v ...interface{}) error {
-	return WriteLog(ERROR, v...)
-}
-
-// Trace error conditions
-func Trace(v ...interface{}) error {
-	return WriteLog(TRACE, v...)
-}
-
-// Warning warning conditions
-func Warning(v ...interface{}) error {
-	return WriteLog(WARNING, v...)
-}
-
-// Info informational messages
-func Info(v ...interface{}) error {
-	return WriteLog(INFO, v...)
-}
-
-// Debug debug-level messages
-func Debug(v ...interface{}) error {
-	return WriteLog(DEBUG, v...)
 }

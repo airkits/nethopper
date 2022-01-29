@@ -30,7 +30,7 @@ package cache
 import (
 	"context"
 
-	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/config"
 )
 
 // ICache interface
@@ -38,7 +38,7 @@ type ICache interface {
 	// Version cache version
 	Version() string
 	// Setup init cache with config
-	Setup(conf server.IConfig) (ICache, error)
+	Setup(conf config.IConfig) (ICache, error)
 	// Ping to check connection is alive
 	Ping() error
 	// Get command to get value from cache, control with context

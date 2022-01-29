@@ -21,37 +21,68 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-12-11 10:15:30
+// * @Date: 2019-12-11 13:39:15
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-12-11 10:15:30
+// * @Last Modified time: 2019-12-11 13:39:15
 
-package server
+package utils
 
 import (
-	"runtime"
-	"time"
+	"net"
+	"strconv"
 )
 
-// TraceCost calc the api cost time
-// usage: defer TraceCose("func")()
-func TraceCost(msg string) func() {
-	start := time.Now()
-	return func() {
-		Trace("%s [TraceCost] cost (%s)\n", msg, time.Since(start))
+// PowerCalc return size & power
+func PowerCalc(size int32) (int32, uint8) {
+
+	if size <= 0 {
+		return 0, 0
 	}
+	power := uint8(0)
+	value := size
+	for {
+		if value <= 1 {
+			break
+		}
+		value >>= 1
+		power++
+	}
+	if size&(size-1) == 0 { //is power of 2
+		return 1 << power, power
+	}
+	power++
+	return 1 << power, power
 }
 
-//PrintStack print current stack
-func PrintStack(all bool) {
-	buf := make([]byte, 4096)
-	n := runtime.Stack(buf, all)
-
-	Fatal("[FATAL] catch a panic,stack is: %s", string(buf[:n]))
+//Int64ToString convert int64 to string
+func Int64ToString(v int64) string {
+	return strconv.FormatInt(v, 10)
 }
 
-// GetStack get current stack
-func GetStack(all bool) string {
-	buf := make([]byte, 4096)
-	n := runtime.Stack(buf, all)
-	return string(buf[:n])
+//StringToInt64 convert string to int64,if err return 0
+func StringToInt64(s string) int64 {
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return v
+}
+
+// GetLocalIP get local ip
+func GetLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+
+	for _, address := range addrs {
+		// 检查ip地址判断是否回环地址
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+
+		}
+	}
+	return ""
 }

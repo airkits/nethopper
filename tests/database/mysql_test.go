@@ -32,7 +32,7 @@ import (
 
 	"github.com/airkits/nethopper/database"
 	"github.com/airkits/nethopper/database/sqlx"
-	. "github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/log"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -49,7 +49,7 @@ func TestSQLConnection(t *testing.T) {
 	if conn, err := sqlx.NewSQLConnection(conf.Nodes); err == nil {
 		if err := conn.Open(); err != nil {
 			t.Error(err)
-			Error("error")
+			log.Error("error")
 		}
 	} else {
 		t.Error(err)

@@ -32,6 +32,7 @@ import (
 
 	"github.com/airkits/nethopper/cache/redis"
 	"github.com/airkits/nethopper/examples/simple_server/protocol"
+	"github.com/airkits/nethopper/mediator"
 	"github.com/airkits/nethopper/server"
 )
 
@@ -42,7 +43,7 @@ type Module struct {
 }
 
 // ModuleCreate  module create function
-func ModuleCreate() (server.Module, error) {
+func ModuleCreate() (mediator.IModule, error) {
 	return &Module{}, nil
 }
 
@@ -64,7 +65,7 @@ func (s *Module) ReflectHandlers() map[string]interface{} {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *Module) Setup(conf server.IConfig) (server.Module, error) {
+func (s *Module) Setup(conf server.IConfig) (mediator.IModule, error) {
 
 	cache, err := redis.NewRedisCache(conf)
 	if err != nil {

@@ -36,12 +36,11 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/airkits/nethopper/server"
 	"github.com/airkits/nethopper/utils"
 )
 
 // NewFileLogger create FileLog instance
-func NewFileLogger(conf *Config) (server.Log, error) {
+func NewFileLogger(conf *Config) (ILog, error) {
 	logger := &FileLog{}
 	if err := logger.ParseConfig(conf); err != nil {
 		return nil, err
@@ -75,8 +74,8 @@ type FileLog struct {
 }
 
 // InitLogger init logger
-func (l *FileLog) InitLogger(conf server.IConfig) error {
-	l.Conf = conf.(*Config)
+func (l *FileLog) InitLogger(conf *Config) error {
+	l.Conf = conf
 	l.SetLevel(l.Conf.Level)
 	return l.createNewFile()
 }
@@ -108,7 +107,7 @@ func (l *FileLog) CanLog(msgSize int32, count int32) bool {
 
 // SetLevel update log level
 func (l *FileLog) SetLevel(level int32) error {
-	if level < server.FATAL || level > server.DEBUG {
+	if level < FATAL || level > DEBUG {
 		return fmt.Errorf("log level:[%d] invalid", level)
 	}
 	atomic.StoreInt32(&l.Conf.Level, level)
@@ -123,8 +122,8 @@ func (l *FileLog) SetLevel(level int32) error {
 // maxLines default 100000
 // hourEnabled default false
 // dailyEnabled default true
-func (l *FileLog) ParseConfig(conf server.IConfig) error {
-	c := conf.(*Config)
+func (l *FileLog) ParseConfig(conf *Config) error {
+	c := conf
 	c.Filename = utils.GetAbsFilePath(c.Filename)
 	dir := utils.GetAbsDirectory(c.Filename)
 	fmt.Printf("Current Log Dir %s\n", dir)
@@ -255,7 +254,7 @@ func (l *FileLog) PushLog(level int32, v ...interface{}) error {
 	if level > l.Conf.Level {
 		return nil
 	}
-	msg := server.FormatLog(level, v...)
+	msg := FormatLog(level, v...)
 	return l.WriteLog([]byte(msg), 1)
 
 }
@@ -268,25 +267,25 @@ func (l *FileLog) GetLevel() int32 {
 
 // Fatal system is unusable
 func (l *FileLog) Fatal(v ...interface{}) error {
-	return l.PushLog(server.FATAL, v...)
+	return l.PushLog(FATAL, v...)
 }
 
 // Error error conditions
 func (l *FileLog) Error(v ...interface{}) error {
-	return l.PushLog(server.ERROR, v...)
+	return l.PushLog(ERROR, v...)
 }
 
 // Warning warning conditions
 func (l *FileLog) Warning(v ...interface{}) error {
-	return l.PushLog(server.WARNING, v...)
+	return l.PushLog(WARNING, v...)
 }
 
 // Info informational messages
 func (l *FileLog) Info(v ...interface{}) error {
-	return l.PushLog(server.INFO, v...)
+	return l.PushLog(INFO, v...)
 }
 
 // Debug debug-level messages
 func (l *FileLog) Debug(v ...interface{}) error {
-	return l.PushLog(server.DEBUG, v...)
+	return l.PushLog(DEBUG, v...)
 }

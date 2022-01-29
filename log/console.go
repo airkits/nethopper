@@ -32,12 +32,10 @@ import (
 	"io"
 	"os"
 	"sync/atomic"
-
-	"github.com/airkits/nethopper/server"
 )
 
 // NewConsoleLogger create FileLog instance
-func NewConsoleLogger(conf *Config) (server.Log, error) {
+func NewConsoleLogger(conf *Config) (ILog, error) {
 	logger := &ConsoleLog{}
 	if err := logger.ParseConfig(conf); err != nil {
 		return nil, err
@@ -59,21 +57,21 @@ type ConsoleLog struct {
 // ParseConfig read config from map[string]interface{}
 // config key map
 // level default 7
-func (c *ConsoleLog) ParseConfig(conf server.IConfig) error {
+func (c *ConsoleLog) ParseConfig(conf *Config) error {
 
 	return nil
 }
 
 // InitLogger init logger
-func (c *ConsoleLog) InitLogger(conf server.IConfig) error {
-	c.Conf = conf.(*Config)
+func (c *ConsoleLog) InitLogger(conf *Config) error {
+	c.Conf = conf
 	c.writer = os.Stdout
 	return nil
 }
 
 // SetLevel atomic set level
 func (c *ConsoleLog) SetLevel(level int32) error {
-	if level < server.FATAL || level > server.DEBUG {
+	if level < FATAL || level > DEBUG {
 		return fmt.Errorf("log level:[%d] invalid", level)
 	}
 	atomic.StoreInt32(&c.level, level)
@@ -107,32 +105,32 @@ func (c *ConsoleLog) PushLog(level int32, v ...interface{}) error {
 	if level > c.level {
 		return nil
 	}
-	msg := server.FormatLog(level, v...)
+	msg := FormatLog(level, v...)
 	return c.WriteLog([]byte(msg), 1)
 
 }
 
 // Fatal system is unusable
 func (c *ConsoleLog) Fatal(v ...interface{}) error {
-	return c.PushLog(server.FATAL, v...)
+	return c.PushLog(FATAL, v...)
 }
 
 // Error error conditions
 func (c *ConsoleLog) Error(v ...interface{}) error {
-	return c.PushLog(server.ERROR, v...)
+	return c.PushLog(ERROR, v...)
 }
 
 // Warning warning conditions
 func (c *ConsoleLog) Warning(v ...interface{}) error {
-	return c.PushLog(server.WARNING, v...)
+	return c.PushLog(WARNING, v...)
 }
 
 // Info informational messages
 func (c *ConsoleLog) Info(v ...interface{}) error {
-	return c.PushLog(server.INFO, v...)
+	return c.PushLog(INFO, v...)
 }
 
 // Debug debug-level messages
 func (c *ConsoleLog) Debug(v ...interface{}) error {
-	return c.PushLog(server.DEBUG, v...)
+	return c.PushLog(DEBUG, v...)
 }

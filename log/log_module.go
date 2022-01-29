@@ -29,25 +29,25 @@ package log
 
 import (
 	"bytes"
+	"context"
+	"sync/atomic"
 	"time"
 
-	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/base/queue"
 )
 
 // LogModule struct implements the interface Module
 type LogModule struct {
-	server.BaseContext
-	logger  server.Log
-	console server.Log
+	logger  ILog
+	console ILog
 	//for stat
-	buf     bytes.Buffer
-	count   int32
-	msgSize int32
-}
-
-// LogModuleCreate log module create function
-func LogModuleCreate() (server.Module, error) {
-	return &LogModule{}, nil
+	buf       bytes.Buffer
+	count     int32
+	msgSize   int32
+	ctx       context.Context
+	cancel    context.CancelFunc
+	q         queue.Queue
+	idleTimes uint32
 }
 
 // Setup init and setup config
@@ -61,14 +61,18 @@ func LogModuleCreate() (server.Module, error) {
 // 	"dailyEnable": true,
 //  "queueSize":1000,
 // }
-func (s *LogModule) Setup(conf server.IConfig) (server.Module, error) {
+func (s *LogModule) Setup(conf *Config) (*LogModule, error) {
+	c := conf
+	s.q = queue.NewChanQueue(int32(c.GetQueueSize()))
+	s.IdleTimesReset()
+	s.ctx, s.cancel = context.WithCancel(context.Background())
 
-	logger, err := NewFileLogger(conf.(*Config))
+	logger, err := NewFileLogger(conf)
 	if err != nil {
 		return nil, err
 	}
 	s.logger = logger
-	console, err := NewConsoleLogger(conf.(*Config))
+	console, err := NewConsoleLogger(conf)
 	if err != nil {
 		return nil, err
 	}
@@ -77,19 +81,53 @@ func (s *LogModule) Setup(conf server.IConfig) (server.Module, error) {
 }
 
 // Reload reload config from map
-func (s *LogModule) Reload(conf server.IConfig) error {
+func (s *LogModule) Reload(conf *Config) error {
 
-	return s.logger.SetLevel(conf.(*Config).Level)
+	return s.logger.SetLevel(conf.Level)
 
+}
+
+// MQ return module queue
+func (s *LogModule) MQ() queue.Queue {
+	return s.q
+}
+
+// Context get module context
+func (s *LogModule) Context() context.Context {
+	return s.ctx
+}
+
+// Close call context cancel ,self and all child module will receive context.Done()
+func (s *LogModule) Close() {
+	s.cancel()
+}
+
+//IdleTimesReset reset idle times
+func (s *LogModule) IdleTimesReset() {
+	atomic.StoreUint32(&s.idleTimes, 500)
+}
+
+//IdleTimes get idle times
+func (s *LogModule) IdleTimes() uint32 {
+	return atomic.LoadUint32(&s.idleTimes)
+}
+
+// IdleTimesAdd add idle times
+func (s *LogModule) IdleTimesAdd() {
+	t := s.IdleTimes()
+	if t >= 20000000 { //2s
+		return
+	}
+	atomic.AddUint32(&s.idleTimes, 100)
 }
 
 // OnRun goruntine run and call OnRun , always use ModuleRun to call this function
 func (s *LogModule) OnRun(dt time.Duration) {
+
 	s.msgSize = 0
 	s.count = 0
-	for i := 0; i < 128; i++ {
-
-		if v, err := s.MQ().Pop(); err == nil {
+	for i := 0; i < BATCH_LOG_SIZE; i++ {
+		if v, err := s.MQ().AsyncPop(); err == nil {
 			if n, e := s.buf.Write(v.([]byte)); e == nil {
 				s.msgSize += int32(n)
 				s.count++

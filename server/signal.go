@@ -1,3 +1,4 @@
+//go:build linux || darwin
 // +build linux darwin
 
 // MIT License
@@ -33,6 +34,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/airkits/nethopper/log"
 )
 
 // InitSignal register signals handler.
@@ -42,7 +45,7 @@ func InitSignal() {
 	defer close(c)
 	for {
 		s := <-c
-		Info("server get a signal %s", s.String())
+		log.Info("server get a signal %s", s.String())
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGINT:
 			return

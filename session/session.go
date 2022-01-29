@@ -25,15 +25,19 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-12-11 10:13:40
 
-package server
+package session
 
 import (
+	"net"
+	"sync"
+
 	"github.com/airkits/nethopper/base/queue"
 	proto "github.com/golang/protobuf/proto"
 	uuid "github.com/satori/go.uuid"
-	"net"
-	"sync"
 )
+
+// MaxIDSequence max srcid sequence
+const MaxIDSequence = 10
 
 // IDStack store srcIDs,max
 type IDStack struct {
@@ -96,25 +100,6 @@ func (p *SessionPool) Alloc(srcID int32, host string, port string) *Session {
 func (p *SessionPool) Free(sess *Session) {
 	p.Objs.Delete(sess.SessionID)
 	p.Pool.Put(sess)
-}
-
-// CreateSession from session pool
-func CreateSession(srcID int32, host string, port string) *Session {
-	return GSessionPool.Alloc(srcID, host, port)
-}
-
-// GetSession get Session By sessionID
-func GetSession(sessionID string) *Session {
-	if v, ok := GSessionPool.Objs.Load(sessionID); ok {
-		return v.(*Session)
-	}
-	return nil
-
-}
-
-// RemoveSession remove from pool
-func RemoveSession(sess *Session) {
-	GSessionPool.Free(sess)
 }
 
 // Session connection identify

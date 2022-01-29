@@ -25,9 +25,13 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-21 12:05:28
 
-package server
+package mq
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/airkits/nethopper/utils"
+)
 
 const (
 	// MinSizePower min buffer get from pool, means buf size = 1<<7
@@ -74,7 +78,7 @@ func (p *BytesPool) CalcIndex(size int32) int32 {
 	if size <= MinBufferSize {
 		return 0
 	}
-	_, power := PowerCalc(size)
+	_, power := utils.PowerCalc(size)
 	return int32(power) - MinSizePower
 }
 

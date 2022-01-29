@@ -31,7 +31,7 @@ import (
 	"database/sql"
 
 	"github.com/airkits/nethopper/database"
-	"github.com/airkits/nethopper/server"
+	"github.com/airkits/nethopper/log"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -74,7 +74,7 @@ func (s *SQLConnection) Ping() error {
 	for index, db := range s.pools {
 		err := db.Ping()
 		if err != nil {
-			server.Error("couldn't connect to database: %s %s", s.Nodes[index].Driver, s.Nodes[index].DSN)
+			log.Error("couldn't connect to database: %s %s", s.Nodes[index].Driver, s.Nodes[index].DSN)
 			panic(err.Error())
 		}
 		return err
@@ -87,7 +87,7 @@ func (s *SQLConnection) Close() {
 	for index, db := range s.pools {
 		if db != nil {
 			db.Close()
-			server.Info("close db connection: %s %s", s.Nodes[index].Driver, s.Nodes[index].DSN)
+			log.Info("close db connection: %s %s", s.Nodes[index].Driver, s.Nodes[index].DSN)
 		}
 	}
 

@@ -39,7 +39,7 @@ type SERVICEModule struct {
 }
 
 // SERVICEModuleCreate  module create function
-func SERVICEModuleCreate() (server.Module, error) {
+func SERVICEModuleCreate() (module.IModule, error) {
 	return &SERVICEModule{}, nil
 }
 
@@ -53,7 +53,7 @@ func (s *SERVICEModule) UserData() int32 {
 // m := map[string]interface{}{
 //  "queueSize":1000,
 // }
-func (s *SERVICEModule) Setup(m map[string]interface{}) (server.Module, error) {
+func (s *SERVICEModule) Setup(m map[string]interface{}) (module.IModule, error) {
 	return s, nil
 }
 

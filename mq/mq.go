@@ -25,7 +25,7 @@
 // * @Last Modified by:   ankye
 // * @Last Modified time: 2019-06-12 15:53:22
 
-package server
+package mq
 
 import (
 	"sync"

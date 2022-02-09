@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/airkits/nethopper/log"
-	"github.com/airkits/nethopper/utils"
 )
 
 const (
@@ -28,50 +27,22 @@ var (
 	ErrorTodo = errors.New("todo,not implementation")
 )
 
-// NewWorkerPool create Processor pool
-func NewWorkerPool(owner IModule, cap uint32, expired time.Duration) (*WorkerPool, error) {
-	if cap == 0 {
-		return nil, ErrInvalidcapacity
-	}
-
-	// create Processor pool
-	p := &WorkerPool{
-		capacity:        cap,
-		expiredDuration: expired,
-		workers:         make([]*Processor, 0, cap),
-		owner:           owner,
-		name:            owner.Name(),
-	}
-
-	//bind signal and lock
-	p.cond = sync.NewCond(&p.lock)
-	p.cache = sync.Pool{
-		New: func() interface{} {
-			return NewProcessor(p, 128)
-		},
-	}
-	go p.ExpiredCleaning()
-
-	return p, nil
-}
-
 // IWorkerPool process pool interface
 type IWorkerPool interface {
 
-	// Owner get the module who own the processor pool
-	Owner() IModule
+	//Setup
+	Setup(queueSize uint32)
+	// Submit add obj to Processor
+	Submit(obj *CallObject) error
 
-	//WorkerCountInc current goruntine count +1
-	WorkerCountInc()
+	//AddRef current goruntine count +1
+	AddRef()
 
-	//WorkerCountDec current goruntine count -1
-	WorkerCountDec()
+	//DecRef current goruntine count -1
+	DecRef()
 
 	//CachePut put processor return to pool
 	CachePut(w *Processor)
-
-	// Submit add obj to Processor
-	Submit(obj *CallObject) error
 
 	//RecycleProcessor return back Processor to pool
 	RecycleProcessor(w *Processor) bool
@@ -106,17 +77,22 @@ type WorkerPool struct {
 
 	// 确保关闭操作只执行一次
 	once sync.Once
-	name string
+
 	// workers list
 	workers []*Processor
-	owner   IModule
+
 	// fixed pool flag
 	fixed bool
 }
 
-// Name get the processor pool name
-func (p *WorkerPool) Name() string {
-	return p.name
+func (p *WorkerPool) Setup(queueSize uint32) {
+	//bind signal and lock
+	p.cond = sync.NewCond(&p.lock)
+	p.cache = sync.Pool{
+		New: func() interface{} {
+			return NewProcessor(p, queueSize)
+		},
+	}
 }
 
 // RecycleProcessor return back Processor to pool
@@ -137,19 +113,14 @@ func (p *WorkerPool) Count() uint32 {
 	return atomic.LoadUint32(&p.workerCount)
 }
 
-//WorkerCountInc current goruntine count +1
-func (p *WorkerPool) WorkerCountInc() {
+//AddRef current goruntine count +1
+func (p *WorkerPool) AddRef() {
 	atomic.AddUint32(&p.workerCount, 1)
 }
 
-//WorkerCountDec current goruntine count -1
-func (p *WorkerPool) WorkerCountDec() {
+//DecRef current goruntine count -1
+func (p *WorkerPool) DecRef() {
 	atomic.AddUint32(&p.workerCount, ^uint32(-(-1)-1))
-}
-
-// Owner get processor pool owner
-func (p *WorkerPool) Owner() IModule {
-	return p.owner
 }
 
 // CachePut return processor back to cache
@@ -222,8 +193,10 @@ func (p *WorkerPool) ExpiredCleaning() {
 
 // getProcessor get one Processor from pool
 func (p *WorkerPool) getProcessor() *Processor {
-	var w *Processor
+
 	p.lock.Lock()
+	defer p.lock.Unlock()
+	var w *Processor
 	// 首先看running是否到达容量限制和是否存在空闲Processor
 	idles := p.workers
 	if p.workerCount < p.capacity && len(idles) == 0 {
@@ -242,7 +215,7 @@ func (p *WorkerPool) getProcessor() *Processor {
 		p.workers = idles[1:]
 
 	}
-	p.lock.Unlock()
+
 	return w
 }
 
@@ -262,34 +235,6 @@ func (p *WorkerPool) Submit(obj *CallObject) error {
 }
 
 ///////////////////
-
-// NewFixedWorkerPool create fixed Processor pool
-func NewFixedWorkerPool(owner IModule, cap uint32, expired time.Duration) (IWorkerPool, error) {
-	if cap == 0 {
-		return nil, ErrInvalidcapacity
-	}
-	capacity, power := utils.PowerCalc(int32(cap))
-	// create FixedProcessor pool
-	p := &FixedWorkerPool{
-		capacity:        uint32(capacity),
-		expiredDuration: expired,
-		workers:         make([]*Processor, capacity, capacity),
-		owner:           owner,
-		power:           power,
-		name:            owner.Name(),
-	}
-
-	//bind signal and lock
-	p.cond = sync.NewCond(&p.lock)
-	p.cache = sync.Pool{
-		New: func() interface{} {
-			return NewProcessor(p, 128)
-		},
-	}
-	go p.ExpiredCleaning()
-
-	return p, nil
-}
 
 // FixedWorkerPool fixed hash processor pool
 type FixedWorkerPool struct {
@@ -317,17 +262,20 @@ type FixedWorkerPool struct {
 
 	// 确保关闭操作只执行一次
 	once sync.Once
-	name string
 	// workers list
 	workers []*Processor
-	owner   IModule
 	// fixed pool flag
 	fixed bool
 }
 
-// Name get the processor pool name
-func (p *FixedWorkerPool) Name() string {
-	return p.name
+func (p *FixedWorkerPool) Setup(queueSize uint32) {
+	//bind signal and lock
+	p.cond = sync.NewCond(&p.lock)
+	p.cache = sync.Pool{
+		New: func() interface{} {
+			return NewProcessor(p, queueSize)
+		},
+	}
 }
 
 // RecycleProcessor return back Processor to pool
@@ -344,19 +292,14 @@ func (p *FixedWorkerPool) Count() uint32 {
 	return atomic.LoadUint32(&p.workerCount)
 }
 
-//WorkerCountInc current goruntine count +1
-func (p *FixedWorkerPool) WorkerCountInc() {
+//AddRef current goruntine count +1
+func (p *FixedWorkerPool) AddRef() {
 	atomic.AddUint32(&p.workerCount, 1)
 }
 
-//WorkerCountDec current goruntine count -1
-func (p *FixedWorkerPool) WorkerCountDec() {
+//DecRef current goruntine count -1
+func (p *FixedWorkerPool) DecRef() {
 	atomic.AddUint32(&p.workerCount, ^uint32(-(-1)-1))
-}
-
-// Owner get processor pool owner
-func (p *FixedWorkerPool) Owner() IModule {
-	return p.owner
 }
 
 // CachePut return processor back to cache
@@ -434,6 +377,7 @@ func (p *FixedWorkerPool) ExpiredCleaning() {
 func (p *FixedWorkerPool) getProcessor(opt uint32) *Processor {
 	var w *Processor
 	p.lock.Lock()
+	defer p.lock.Unlock()
 	// 首先看running是否到达容量限制和是否存在空闲Processor
 	workers := p.workers
 
@@ -441,6 +385,7 @@ func (p *FixedWorkerPool) getProcessor(opt uint32) *Processor {
 	if hash >= p.capacity {
 		panic("hash function calc error")
 	}
+
 	w = workers[hash]
 
 	if w == nil {
@@ -451,7 +396,6 @@ func (p *FixedWorkerPool) getProcessor(opt uint32) *Processor {
 		}
 	}
 
-	p.lock.Unlock()
 	return w
 }
 

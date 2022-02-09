@@ -32,7 +32,6 @@ import (
 	"testing"
 
 	"github.com/airkits/nethopper/log"
-	"github.com/airkits/nethopper/server"
 )
 
 const Step = 1000000
@@ -42,7 +41,7 @@ func BenchmarkFormatLog(t *testing.B) {
 
 	msg := "format log test"
 	for i := 0; i < Step; i++ {
-		_ = server.FormatLog(server.INFO, msg)
+		_ = log.FormatLog(log.INFO, msg)
 	}
 
 }
@@ -51,7 +50,7 @@ func BenchmarkFormatLogWithParams(t *testing.B) {
 
 	msg := "format %d log test"
 	for i := 0; i < Step; i++ {
-		_ = server.FormatLog(server.INFO, msg, i)
+		_ = log.FormatLog(log.INFO, msg, i)
 	}
 }
 

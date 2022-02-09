@@ -21,36 +21,38 @@
 // SOFTWARE.
 
 // * @Author: ankye
-// * @Date: 2019-06-12 15:53:22
+// * @Date: 2019-06-21 13:42:42
 // * @Last Modified by:   ankye
-// * @Last Modified time: 2019-06-12 15:53:22
+// * @Last Modified time: 2019-06-21 13:42:42
 
-package server
+package utils_test
 
 import (
-	"fmt"
+	"testing"
 
-	"github.com/airkits/nethopper/base"
-	"github.com/airkits/nethopper/log"
+	"github.com/airkits/nethopper/mq"
 )
 
-// global app context
-var AppCtx *base.AppContext
+func TestCalcPower(t *testing.T) {
+	pw := mq.NewBytesPool()
+	if pw.CalcIndex(1) != 0 || pw.CalcIndex(0) != 0 || pw.CalcIndex(32) != 0 || pw.CalcIndex(1<<mq.MinSizePower) != 0 {
+		t.Error("calc Index 0 failed")
+	}
+	var power uint8 = 10
+	var value int32 = 1 << power
+	var value2 int32 = 1 << (power + 1)
+	if pw.CalcIndex(value+1) != int32(power-mq.MinSizePower+1) || pw.CalcIndex(value2-1) != int32(power-mq.MinSizePower+1) {
+		t.Errorf("calc Index %d failed", power-mq.MinSizePower+1)
+	}
+	if pw.CalcIndex(mq.MaxBufferSize) != mq.MaxSizePower-mq.MinSizePower {
+		t.Error("calc Index MaxSizePower failed")
+	}
+	if pw.CalcIndex(mq.MaxBufferSize-1) != mq.MaxSizePower-mq.MinSizePower {
+		t.Error("calc Index MaxSizePower failed")
+	}
+	if pw.CalcIndex(mq.MaxBufferSize*2) != mq.OutMaxBufferPower {
+		t.Error("calc Index OutMaxBufferPower failed")
+	}
 
-func init() {
-	AppCtx = base.NewAppContext()
-	fmt.Println("Nethopper Framework init")
 }
 
-// GracefulExit server exit by call root context close
-func GracefulExit() {
-	AppCtx.WG.Wait()
-	log.GLoggerModule.Close()
-	// wait root context done
-	// for {
-	// 	if _, exitFlag := log.GLoggerModule.CanExit(true); exitFlag {
-	// 		return
-	// 	}
-	// 	time.Sleep(1 * time.Second)
-	// }
-}

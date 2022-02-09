@@ -11,13 +11,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 	quic "github.com/lucas-clemente/quic-go"
 )
 
 //NewServer create quic server
-func NewServer(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
@@ -70,13 +71,13 @@ func (s *Server) ListenAndServe() {
 	}
 	s.listener = listener
 
-	server.Info("listening on: %s %s", s.Conf.Network, listener.Addr())
+	log.Info("listening on: %s %s", s.Conf.Network, listener.Addr())
 
 	// loop accepting
 	for {
 		sess, err := listener.Accept(context.Background())
 		if err != nil {
-			server.Warning("accept failed: %s", err.Error())
+			log.Warning("accept failed: %s", err.Error())
 			continue
 		}
 		stream, err := sess.AcceptStream(context.Background())
@@ -84,7 +85,7 @@ func (s *Server) ListenAndServe() {
 			panic(err)
 
 		}
-		server.Info("receive one client peer %s", sess.RemoteAddr().String())
+		log.Info("receive one client peer %s", sess.RemoteAddr().String())
 		//go conn
 		go s.Transport(sess, stream)
 	}

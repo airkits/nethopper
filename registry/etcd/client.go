@@ -15,7 +15,7 @@
 // )
 
 // //NewEtcdClient 生成etcd client 实例，在一个实例服务器中，有且只有一个etcd client实例
-// func NewEtcdClient(conf server.IConfig) (*Client, error) {
+// func NewEtcdClient(conf config.IConfig) (*Client, error) {
 // 	c := &Client{}
 // 	return c.Setup(conf)
 
@@ -30,7 +30,7 @@
 // }
 
 // //Setup init
-// func (c *Client) Setup(conf server.IConfig) (*Client, error) {
+// func (c *Client) Setup(conf config.IConfig) (*Client, error) {
 // 	c.Conf = conf.(*Config)
 // 	options := clientv3.Config{}
 // 	options.Endpoints = c.Conf.Endpoints
@@ -41,7 +41,7 @@
 
 // 	client, err := clientv3.New(options)
 // 	if err != nil {
-// 		server.Error("ETCD:create etcd client failed,error(%v)", err)
+// 		log.Error("ETCD:create etcd client failed,error(%v)", err)
 // 		return nil, err
 // 	}
 
@@ -72,29 +72,29 @@
 // 			//申请租约
 // 			resp, err := c.etcdClient.Grant(context.Background(), int64(ttl/time.Second))
 // 			if err != nil {
-// 				server.Error("etcd:grant failed[%v],key[%s],resp[%q]", err, serviceKey, resp)
+// 				log.Error("etcd:grant failed[%v],key[%s],resp[%q]", err, serviceKey, resp)
 // 			}
 // 			//创建key-value 进去
 // 			putResp, err := c.etcdClient.Put(context.Background(), serviceKey, val, clientv3.WithLease(resp.ID))
 // 			if err != nil {
-// 				server.Error("etcd:put failed[%v],key[%s],resp[%q]", err, serviceKey, putResp)
+// 				log.Error("etcd:put failed[%v],key[%s],resp[%q]", err, serviceKey, putResp)
 // 			}
 // 		} else {
 // 			if len(vals) == 0 {
 // 				//申请租约
 // 				resp, err := c.etcdClient.Grant(context.Background(), int64(ttl/time.Second))
 // 				if err != nil {
-// 					server.Error("etcd:grant failed[%v],key[%s],resp[%q]", err, serviceKey, resp)
+// 					log.Error("etcd:grant failed[%v],key[%s],resp[%q]", err, serviceKey, resp)
 // 				}
 // 				//创建key-value 进去
 // 				putResp, err := c.etcdClient.Put(context.Background(), serviceKey, val, clientv3.WithLease(resp.ID))
 // 				if err != nil {
 // 					fmt.Println("get error")
-// 					server.Error("etcd:put failed[%v],key[%s],resp[%q]", err, serviceKey, putResp)
+// 					log.Error("etcd:put failed[%v],key[%s],resp[%q]", err, serviceKey, putResp)
 
 // 				}
 // 			} else {
-// 				server.Debug("etcd:registed key[%s] val[%v]", serviceKey, vals)
+// 				log.Debug("etcd:registed key[%s] val[%v]", serviceKey, vals)
 // 			}
 // 		}
 // 		//这里
@@ -116,17 +116,17 @@
 // 	c.stopSignal = make(chan bool, 1)
 // 	resp, err := c.etcdClient.Delete(context.Background(), serviceKey)
 // 	if err != nil {
-// 		server.Error("etcd:delete failed [%v],key[%s] resp[%q]", err, serviceKey, resp)
+// 		log.Error("etcd:delete failed [%v],key[%s] resp[%q]", err, serviceKey, resp)
 // 	}
 // }
 
 // //Watcher callback的处理必须是非阻塞的
 // func (c *Client) Watcher(serviceKey string, callback WatchCallback) {
 // 	watchChan := c.etcdClient.Watch(context.Background(), serviceKey, clientv3.WithPrefix())
-// 	server.Debug("start watch: %s\n", serviceKey)
+// 	log.Debug("start watch: %s\n", serviceKey)
 // 	for wresp := range watchChan {
 // 		for _, ev := range wresp.Events {
-// 			server.Debug("etcd: watch[%s],ev[%q]", serviceKey, ev)
+// 			log.Debug("etcd: watch[%s],ev[%q]", serviceKey, ev)
 // 			if ev.Type.String() == ActionPut {
 // 				callback(ActionPut, ev.Kv.Key, ev.Kv.Value)
 // 			} else if ev.Type.String() == ActionDel {
@@ -164,7 +164,7 @@
 // 	putResp, err := c.etcdClient.Put(context.Background(), key, val)
 // 	if err != nil {
 
-// 		server.Error("etcd:KV put failed[%v],key[%s],resp[%q]", err, key, putResp)
+// 		log.Error("etcd:KV put failed[%v],key[%s],resp[%q]", err, key, putResp)
 // 		return err
 // 	}
 // 	return nil

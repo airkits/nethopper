@@ -7,38 +7,6 @@ import (
 	"github.com/airkits/nethopper/base"
 )
 
-// CallObject call struct
-type CallObject struct {
-	Cmd     string
-	Option  int32
-	Args    []interface{}
-	ChanRet chan RetObject
-}
-
-type Callback func(interface{}, Ret)
-
-//Ret define code and error
-type Ret struct {
-	Code int32
-	Err  error
-}
-
-// RetObject call return object
-type RetObject struct {
-	Data interface{}
-	Ret  Ret
-}
-
-// NewCallObject create call object
-func NewCallObject(cmd string, opt int32, args ...interface{}) *CallObject {
-	return &CallObject{
-		Cmd:     cmd,
-		Option:  opt,
-		Args:    args,
-		ChanRet: make(chan RetObject, 1),
-	}
-}
-
 func NewMediator() *Mediator {
 	m := new(Mediator)
 	m.modules = [ModuleMax]IModule{}
@@ -84,11 +52,15 @@ func (m *Mediator) CreateModule(data *MData) (IModule, error) {
 	if err != nil {
 		return nil, err
 	}
-	mediator.MakeContext(int32(data.Conf.GetQueueSize()))
-	mediator.Setup(data.Conf)
-	mediator.SetID(int32(data.ID))
+	module.MakeContext(int32(data.Conf.GetQueueSize()))
+	module.Setup(data.Conf)
+	module.SetID(int32(data.ID))
+	module.SetName(ModuleName(module))
+	cmdRegister(module)
+	data.Module = module
 	m.modules[data.ID] = module
 	m.datas = append(m.datas, data)
+
 	sort.Sort(m.datas)
 	base.GOFunctionWithWG(m.wg, m.ref, ModuleRun, module)
 	return module, nil

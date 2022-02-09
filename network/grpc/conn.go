@@ -5,8 +5,8 @@ import (
 	"net"
 	"sync"
 
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 	"github.com/airkits/proto/ss"
 	"google.golang.org/grpc/peer"
 )
@@ -41,7 +41,7 @@ func NewConn(stream IRPCStream, rwQueueSize int, maxMessageSize uint32) network.
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				server.PrintStack(false)
+				log.PrintStack(false)
 			}
 		}()
 		for b := range grpcConn.writeChan {
@@ -96,7 +96,7 @@ func (c *Conn) Close() {
 
 func (c *Conn) doWrite(b *ss.Message) {
 	if len(c.writeChan) == cap(c.writeChan) {
-		server.Debug("close conn: channel full")
+		log.Debug("close conn: channel full")
 		c.doDestroy()
 		return
 	}
@@ -106,7 +106,7 @@ func (c *Conn) doWrite(b *ss.Message) {
 
 //LocalAddr get local addr
 func (c *Conn) LocalAddr() net.Addr {
-	server.Error("[LocalAddr] invoke LocalAddr() unsupport")
+	log.Error("[LocalAddr] invoke LocalAddr() unsupport")
 	return nil
 }
 
@@ -114,11 +114,11 @@ func (c *Conn) LocalAddr() net.Addr {
 func (c *Conn) RemoteAddr() net.Addr {
 	pr, ok := peer.FromContext(c.stream.Context())
 	if !ok {
-		server.Error("[RemoteAddr] invoke FromContext() failed")
+		log.Error("[RemoteAddr] invoke FromContext() failed")
 		return nil
 	}
 	if pr.Addr == net.Addr(nil) {
-		server.Error("[RemoteAddr] peer.Addr is nil")
+		log.Error("[RemoteAddr] peer.Addr is nil")
 		return nil
 	}
 

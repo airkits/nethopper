@@ -1,7 +1,0 @@
-POST http://127.0.0.1:11080/v1/genuids HTTP/1.1
-Content-Type: application/json
-
-{
-    "channel":1,
-    "num":1000
-}

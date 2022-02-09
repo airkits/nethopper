@@ -1,17 +1,17 @@
 package kcp
 
 import (
-	"log"
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 	"github.com/xtaci/kcp-go"
 )
 
 // NewClient create kcp client
-func NewClient(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
+func NewClient(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
 	c.Conf = conf.(*ClientConfig)
 	c.NewAgent = agentFunc
@@ -46,10 +46,10 @@ func (c *Client) init() {
 	defer c.Unlock()
 
 	if c.NewAgent == nil {
-		log.Fatal("NewAgent must not be nil")
+		log.Error("NewAgent must not be nil")
 	}
 	if c.conns != nil {
-		log.Fatal("client is running")
+		log.Error("client is running")
 	}
 
 	c.conns = make(ConnSet)
@@ -70,10 +70,10 @@ func (c *Client) connect(serverID int, name string, address string) {
 reconnect:
 	conn, err := c.dial(serverID, address)
 	if err != nil {
-		server.Fatal("kcp client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		log.Fatal("kcp client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.Conf.AutoReconnect {
 			time.Sleep(c.Conf.ConnectInterval * time.Second)
-			server.Warning("kcp client try reconnect to id:[%d] %s %s", serverID, name, address)
+			log.Warning("kcp client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
@@ -100,7 +100,7 @@ reconnect:
 
 	if c.Conf.AutoReconnect {
 		time.Sleep(c.Conf.ConnectInterval * time.Second)
-		server.Warning("kcp client try reconnect to id:[%d] %s %s", serverID, name, address)
+		log.Warning("kcp client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

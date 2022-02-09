@@ -151,7 +151,7 @@ func Future(f func() (interface{}, error)) func() (interface{}, error) {
 }
 
 // GetMethodName 获取正在运行的函数名
-func GetMethodName() string {
+func GetFunctionName() string {
 	pc := make([]uintptr, 1)
 	runtime.Callers(2, pc)
 	f := runtime.FuncForPC(pc[0])

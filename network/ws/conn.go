@@ -5,8 +5,8 @@ import (
 	"net"
 	"sync"
 
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 	"github.com/gorilla/websocket"
 )
 
@@ -43,7 +43,7 @@ func NewConn(conn *websocket.Conn, rwQueueSize int, maxMessageSize uint32) netwo
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				server.PrintStack(false)
+				log.PrintStack(false)
 			}
 		}()
 		for b := range wsConn.writeChan {
@@ -98,7 +98,7 @@ func (c *Conn) Close() {
 
 func (c *Conn) doWrite(b []byte) {
 	if len(c.writeChan) == cap(c.writeChan) {
-		server.Debug("close conn: channel full")
+		log.Debug("close conn: channel full")
 		c.doDestroy()
 		return
 	}

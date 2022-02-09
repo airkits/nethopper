@@ -29,11 +29,8 @@ package mediator
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
-	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/airkits/nethopper/base/queue"
@@ -54,36 +51,34 @@ type IModule interface {
 	SetName(v string)
 
 	//Handlers set moudle handlers
-	Handlers() map[string]interface{}
+	Handlers() map[int32]interface{}
 	//ReflectHandlers set moudle reflect handlers
-	ReflectHandlers() map[string]interface{}
+	ReflectHandlers() map[int32]interface{}
 
 	// RegisterHandler register function before run
-	RegisterHandler(id interface{}, f interface{})
+	RegisterHandler(id int32, f interface{})
 	// RegisterReflectHandler register reflect function before run
-	RegisterReflectHandler(id interface{}, f interface{})
+	RegisterReflectHandler(id int32, f interface{})
 
 	// MakeContext init base module queue and create context
 	MakeContext(queueSize int32)
 	// Context get module context
 	Context() context.Context
-	// ChildAdd after child module created and tell parent module, ref count +1
-	ChildAdd()
-	// ChildDone child module exit and tell parent module, ref count -1
-	ChildDone()
 	// Close call context cancel ,self and all child module will receive context.Done()
 	Close()
 	// Queue return module queue
 	MQ() queue.Queue
 	// CanExit if receive ctx.Done() and child ref = 0 and queue is empty ,then return true
 	CanExit(doneflag bool) (bool, bool)
-	// TryExit check child ref count , if ref count == 0 then return true, if parent not nil, fire parent.ChildDone()
-	TryExit() bool
+
 	//BaseContext end
 
 	// UserData module custom option, can you store you data and you must keep goruntine safe
 	UserData() int32
 
+	HasWorkerPool() bool
+
+	WorkerPoolSubmit(obj *CallObject) error
 	// Setup init custom module and pass config map to module
 	Setup(conf config.IConfig) (IModule, error)
 	//Reload reload config
@@ -94,16 +89,19 @@ type IModule interface {
 	Stop() error
 	// Call async send callobject to module
 	Call(option int32, obj *CallObject) error
+	// Execute callobject
+	Execute(obj *CallObject) *RetObject
+
 	// PushBytes async send string or bytes to queue
 	PushBytes(option int32, buf []byte) error
 	//GetHandler get call handler
-	GetHandler(id interface{}) interface{}
+	GetHandler(id int32) interface{}
 
 	//GetReflectHandler get reflect handler
-	GetReflectHandler(id interface{}) interface{}
+	GetReflectHandler(id int32) interface{}
 
-	// Processor process callobject
-	Processor(obj *CallObject) error
+	// DoWorker dispatch callobject to worker processor
+	DoWorker(obj *CallObject) error
 
 	//IdleTimesReset reset idle times
 	// IdleTimesReset()
@@ -115,72 +113,6 @@ type IModule interface {
 	// IdleTimesAdd()
 }
 
-// RunSimpleFrame wrapper simple run function
-func RunSimpleFrame(s IModule) {
-	m, err := s.MQ().Pop()
-	if err != nil {
-		return
-	}
-	obj := m.(*CallObject)
-	if err := s.Processor(obj); err != nil {
-		log.Error("%s error %s", s.Name(), err.Error())
-	}
-
-}
-
-// RunAsyncFrame wrapper simple run function
-func RunAsyncFrame(s IModule, packageSize int) {
-	for i := 0; i < packageSize; i++ {
-		m, err := s.MQ().AsyncPop()
-		if err != nil {
-			break
-		}
-		obj := m.(*CallObject)
-
-		if err := s.Processor(obj); err != nil {
-			log.Error("%s error %s", s.Name(), err.Error())
-			break
-		}
-	}
-}
-
-// ModuleRun wrapper module goruntine and in an orderly way to exit
-func ModuleRun(s IModule) {
-	ctxDone := false
-	exitFlag := false
-	start := time.Now()
-	log.Info("Module [%s] starting", s.Name())
-	for {
-		s.OnRun(time.Since(start))
-
-		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
-			return
-		}
-
-		//start = time.Now()
-		//if s.MQ().Length() == 0 {
-		// t := time.Duration(s.IdleTimes()) * time.Nanosecond
-		// time.Sleep(t)
-		// s.IdleTimesAdd()
-
-		//}
-		//runtime.Gosched()
-	}
-}
-
-// ModuleName get the module name
-func ModuleName(s IModule) string {
-	t := reflect.TypeOf(s)
-	path := t.Elem().PkgPath()
-	pos := strings.LastIndex(path, "/")
-	if pos >= 0 {
-		prefix := []byte(path)[pos+1 : len(path)]
-		rs := string(prefix)
-		return rs
-	}
-	return "unknown module"
-}
-
 //BaseContext use context to close all module and using the bubbling method to exit
 type BaseContext struct {
 	ctx        context.Context
@@ -190,30 +122,30 @@ type BaseContext struct {
 	q          queue.Queue
 	name       string
 	id         int32
-	funcs      map[interface{}]interface{} //handlers
-	rfuncs     map[interface{}]interface{} //reflect handlers
-	processers IWorkerPool
+	funcs      map[int32]interface{} //handlers
+	rfuncs     map[int32]interface{} //reflect handlers
+	workerPool IWorkerPool
 	// idleTimes  uint32
 }
 
 //Handlers set moudle handlers
-func (s *BaseContext) Handlers() map[string]interface{} {
+func (s *BaseContext) Handlers() map[int32]interface{} {
 	return nil
 }
 
 //ReflectHandlers set moudle reflect handlers
-func (s *BaseContext) ReflectHandlers() map[string]interface{} {
+func (s *BaseContext) ReflectHandlers() map[int32]interface{} {
 	return nil
 }
 
 // RegisterHandler register function before run
-func (s *BaseContext) RegisterHandler(id interface{}, f interface{}) {
+func (s *BaseContext) RegisterHandler(id int32, f interface{}) {
 
 	switch f.(type) {
-	case func(interface{}) (interface{}, Ret):
-	case func(interface{}, interface{}) (interface{}, Ret):
-	case func(interface{}, interface{}, interface{}) (interface{}, Ret):
-	case func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret):
+	case func(interface{}) *RetObject:
+	case func(interface{}, interface{}) *RetObject:
+	case func(interface{}, interface{}, interface{}) *RetObject:
+	case func(interface{}, interface{}, interface{}, interface{}) *RetObject:
 	default:
 		panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
 	}
@@ -226,7 +158,7 @@ func (s *BaseContext) RegisterHandler(id interface{}, f interface{}) {
 }
 
 // RegisterReflectHandler register reflect function before run
-func (s *BaseContext) RegisterReflectHandler(id interface{}, f interface{}) {
+func (s *BaseContext) RegisterReflectHandler(id int32, f interface{}) {
 
 	if _, ok := s.rfuncs[id]; ok {
 		panic(fmt.Sprintf("function id %v: already registered", id))
@@ -236,13 +168,18 @@ func (s *BaseContext) RegisterReflectHandler(id interface{}, f interface{}) {
 }
 
 // GetHandler get call handler
-func (s *BaseContext) GetHandler(id interface{}) interface{} {
+func (s *BaseContext) GetHandler(id int32) interface{} {
 	return s.funcs[id]
 }
 
 // GetReflectHandler get call reflect handler
-func (s *BaseContext) GetReflectHandler(id interface{}) interface{} {
+func (s *BaseContext) GetReflectHandler(id int32) interface{} {
 	return s.rfuncs[id]
+}
+
+// Execute callobject
+func (s *BaseContext) Execute(obj *CallObject) *RetObject {
+	return NewRetObject(-1, fmt.Errorf("must override execute"), nil)
 }
 
 // IdleTimesReset reset idle times
@@ -268,8 +205,8 @@ func (s *BaseContext) GetReflectHandler(id interface{}) interface{} {
 func (s *BaseContext) MakeContext(queueSize int32) {
 	//s.parent = p
 	s.q = queue.NewChanQueue(queueSize)
-	s.funcs = make(map[interface{}]interface{})
-	s.rfuncs = make(map[interface{}]interface{})
+	s.funcs = make(map[int32]interface{})
+	s.rfuncs = make(map[int32]interface{})
 	// if p == nil {
 	// 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	// } else {
@@ -279,23 +216,27 @@ func (s *BaseContext) MakeContext(queueSize int32) {
 
 }
 
-// Processor process callobject
-func (s *BaseContext) Processor(obj *CallObject) error {
+func (s *BaseContext) HasWorkerPool() bool {
+	return s.workerPool != nil
+}
+func (s *BaseContext) WorkerPoolSubmit(obj *CallObject) error {
+	return s.workerPool.Submit(obj)
+}
+
+// DoWorker process callobject
+func (s *BaseContext) DoWorker(obj *CallObject) error {
 	//Debug("[%s] cmd [%s] process", s.Name(), obj.Cmd)
 	var err error
-	if s.processers == nil {
-		err = errors.New("no processor pool")
+	if s.workerPool == nil {
+		//err = errors.New("no processor pool")
+		result := s.Execute(obj)
+		obj.ChanRet <- result
+		return nil
 	} else {
-		err = s.processers.Submit(obj)
+		err = s.workerPool.Submit(obj)
 	}
 	if err != nil {
-		obj.ChanRet <- RetObject{
-			Data: nil,
-			Ret: Ret{
-				Code: -1,
-				Err:  err,
-			},
-		}
+		obj.ChanRet <- NewRetObject(-1, err, nil)
 	}
 	return err
 }
@@ -311,8 +252,8 @@ func (s *BaseContext) Call(option int32, obj *CallObject) error {
 }
 
 // CreateWorkerPool create processor pool
-func (s *BaseContext) CreateWorkerPool(m IModule, cap uint32, expired time.Duration, isNonBlocking bool) (err error) {
-	if s.processers, err = NewFixedWorkerPool(m, cap, expired); err != nil {
+func (s *BaseContext) CreateWorkerPool(cap uint32, queueSize uint32, expired time.Duration, isNonBlocking bool) (err error) {
+	if s.workerPool, err = NewFixedWorkerPool(cap, queueSize, expired); err != nil {
 		return err
 	}
 	return nil
@@ -326,16 +267,6 @@ func (s *BaseContext) MQ() queue.Queue {
 // Context get module context
 func (s *BaseContext) Context() context.Context {
 	return s.ctx
-}
-
-// ChildAdd child module created and tell parent module, ref count +1
-func (s *BaseContext) ChildAdd() {
-	atomic.AddInt32(&s.childRef, 1)
-}
-
-// ChildDone child module exit and tell parent module, ref count -1
-func (s *BaseContext) ChildDone() {
-	atomic.AddInt32(&s.childRef, -1)
 }
 
 // Close call context cancel ,self and all child module will receive context.Done()
@@ -363,30 +294,17 @@ func (s *BaseContext) SetName(v string) {
 	s.name = v
 }
 
-// TryExit check child ref count , if ref count == 0 then return true, if parent not nil, and will fire parent.ChildDone()
-func (s *BaseContext) TryExit() bool {
-
-	count := atomic.LoadInt32(&s.childRef)
-	if count > 0 {
-		return false
-	}
-	if s.parent != nil {
-		s.parent.ChildDone()
-	}
-	return true
-}
-
 // CanExit if receive ctx.Done() and all child exit and queue is empty ,then return true
 func (s *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 	if doneFlag {
-		if s.q.Length() == 0 && s.TryExit() {
+		if s.q.Length() == 0 {
 			return doneFlag, true
 		}
 	}
 	select {
 	case <-s.ctx.Done():
 		doneFlag = true
-		if s.q.Length() == 0 && s.TryExit() {
+		if s.q.Length() == 0 {
 			return doneFlag, true
 		}
 	default:

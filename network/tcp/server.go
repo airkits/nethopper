@@ -5,12 +5,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 )
 
 //NewServer create tcp server
-func NewServer(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
@@ -44,15 +45,15 @@ func (s *Server) ListenAndServe() {
 		panic(err)
 	}
 	s.tcpListener = listener
-	server.Info("listening on: %s %s", s.Conf.Network, listener.Addr())
+	log.Info("listening on: %s %s", s.Conf.Network, listener.Addr())
 	// loop accepting
 	for {
 		conn, err := listener.AcceptTCP()
 		if err != nil {
-			server.Warning("accept failed: %s", err.Error())
+			log.Warning("accept failed: %s", err.Error())
 			continue
 		}
-		server.Info("receive one client peer %s", conn.RemoteAddr().String())
+		log.Info("receive one client peer %s", conn.RemoteAddr().String())
 		// set socket read buffer
 		conn.SetReadBuffer(s.Conf.ReadBufferSize)
 		// set socket write buffer

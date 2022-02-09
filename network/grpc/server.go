@@ -6,16 +6,17 @@ import (
 	"sync"
 
 	"github.com/airkits/nethopper/base/queue"
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
-	"github.com/airkits/nethopper/utils/conv"
+	"github.com/airkits/nethopper/utils"
 	"github.com/airkits/proto/ss"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 //NewServer create grpc server
-func NewServer(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
@@ -41,7 +42,7 @@ type Server struct {
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
 	if s.NewAgent == nil {
-		server.Fatal("NewAgent must not be nil")
+		log.Fatal("NewAgent must not be nil")
 	}
 	s.conns = make(ConnSet)
 
@@ -51,10 +52,10 @@ func (s *Server) ListenAndServe() {
 	lis, err := net.Listen("tcp", s.Conf.Address)
 
 	if err != nil {
-		server.Error("failed to listen: %v", err)
+		log.Error("failed to listen: %v", err)
 		return
 	}
-	server.Info("grpc start listen:%s", s.Conf.Address)
+	log.Info("grpc start listen:%s", s.Conf.Address)
 	s.listener = lis
 	s.gs.Serve(lis)
 }
@@ -84,16 +85,16 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 	if md, ok := metadata.FromIncomingContext(stream.Context()); ok {
 		if md.Get("token") != nil {
 			token = md.Get("token")[0]
-			server.Info("token from header: %s", token)
+			log.Info("token from header: %s", token)
 		}
 		if md.Get("UID") != nil {
 			uidStr := md.Get("UID")[0]
-			uid = conv.Str2Uint64(uidStr)
-			server.Info("UID from header: %d", uid)
+			uid = utils.Str2Uint64(uidStr)
+			log.Info("UID from header: %d", uid)
 		}
 	}
 
-	server.Info("one client connection opened.")
+	log.Info("one client connection opened.")
 	s.mutexConns.Lock()
 	s.conns[stream] = struct{}{}
 	s.mutexConns.Unlock()

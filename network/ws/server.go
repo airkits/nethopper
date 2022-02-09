@@ -7,15 +7,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/network/common"
-	"github.com/airkits/nethopper/server"
-	"github.com/airkits/nethopper/utils/conv"
+	"github.com/airkits/nethopper/utils"
 	"github.com/gorilla/websocket"
 )
 
 //NewServer create ws server
-func NewServer(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
@@ -44,7 +45,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		server.Debug("upgrade error: %v", err)
+		log.Debug("upgrade error: %v", err)
 		return
 	}
 	conn.SetReadLimit(int64(s.Conf.MaxMessageSize))
@@ -61,7 +62,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(s.conns) >= s.Conf.MaxConnNum {
 		s.mutexConns.Unlock()
 		conn.Close()
-		server.Debug("too many connections")
+		log.Debug("too many connections")
 		return
 	}
 	s.conns[conn] = struct{}{}
@@ -73,7 +74,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		token = r.Header.Get(common.HeaderToken)
 		uid = r.Header.Get(common.HeaderUID)
 	}
-	userID := conv.Str2Uint64(uid)
+	userID := utils.Str2Uint64(uid)
 	if len(token) > 0 && userID > 0 {
 
 		var agent network.IAgent
@@ -102,14 +103,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
 	if s.NewAgent == nil {
-		server.Fatal("NewAgent must not be nil")
+		log.Fatal("NewAgent must not be nil")
 	}
 	s.conns = make(ConnSet)
 	ln, err := net.Listen("tcp", s.Conf.Address)
 	if err != nil {
-		server.Fatal("%v", err)
+		log.Fatal("%v", err)
 	}
-	server.Info("websocket start listen:%s", s.Conf.Address)
+	log.Info("websocket start listen:%s", s.Conf.Address)
 	if s.Conf.CertFile != "" || s.Conf.KeyFile != "" {
 		config := &tls.Config{}
 		config.NextProtos = []string{"http/1.1"}
@@ -118,7 +119,7 @@ func (s *Server) ListenAndServe() {
 		config.Certificates = make([]tls.Certificate, 1)
 		config.Certificates[0], err = tls.LoadX509KeyPair(s.Conf.CertFile, s.Conf.KeyFile)
 		if err != nil {
-			server.Fatal("%v", err)
+			log.Fatal("%v", err)
 		}
 
 		ln = tls.NewListener(ln, config)
@@ -129,7 +130,7 @@ func (s *Server) ListenAndServe() {
 	s.upgrader = websocket.Upgrader{
 		HandshakeTimeout: time.Duration(s.Conf.HTTPTimeout) * time.Second,
 		CheckOrigin: func(r *http.Request) bool {
-			server.Info("connection header:%v", r.Header)
+			log.Info("connection header:%v", r.Header)
 			return true
 		}}
 

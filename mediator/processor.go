@@ -28,19 +28,15 @@
 package mediator
 
 import (
-	"errors"
-	"fmt"
-	"reflect"
 	"time"
 
-	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/base/queue"
 )
 
 // NewProcessor create new processor
-func NewProcessor(owner IWorkerPool, queueSize uint32) *Processor {
+func NewProcessor(wp IWorkerPool, queueSize uint32) *Processor {
 	return &Processor{
-		owner:   owner,
+		wp:      wp,
 		q:       queue.NewChanQueue(int32(queueSize)),
 		timeout: time.Now(),
 	}
@@ -48,7 +44,7 @@ func NewProcessor(owner IWorkerPool, queueSize uint32) *Processor {
 
 // Processor process job
 type Processor struct {
-	owner IWorkerPool
+	wp IWorkerPool
 	//CallObject chan
 	q queue.Queue
 	//timeout set to tigger timeout event
@@ -56,91 +52,81 @@ type Processor struct {
 }
 
 // Process goruntine process pre call
-func Process(s IModule, obj *CallObject) (result Ret) {
+func Process(obj *CallObject) *RetObject {
 	//defer TraceCost(s.Name() + ":" + obj.Cmd)()
-	var ret = RetObject{
-		Data: nil,
-		Ret:  Ret{Err: nil, Code: 0},
-	}
+	var result *RetObject
 
 	defer func() {
 		if r := recover(); r != nil {
-			result.Err = r.(error)
-			result.Code = -1
+			result = NewRetObject(-1, r.(error), nil)
+			obj.ChanRet <- result
 		}
 	}()
 
-	f := s.(IModule).GetHandler(obj.Cmd)
-	if f != nil {
-		var data interface{}
-		var result Ret
-		switch f.(type) {
-		case func(interface{}) (interface{}, Ret):
-			data, result = f.(func(interface{}) (interface{}, Ret))(s)
-		case func(interface{}, interface{}) (interface{}, Ret):
-			data, result = f.(func(interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0])
-		case func(interface{}, interface{}, interface{}) (interface{}, Ret):
-			data, result = f.(func(interface{}, interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0], obj.Args[1])
-		case func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret):
-			data, result = f.(func(interface{}, interface{}, interface{}, interface{}) (interface{}, Ret))(s, obj.Args[0], obj.Args[1], obj.Args[2])
-		default:
-			panic(fmt.Sprintf("function cmd %v: definition of function is invalid,%v", obj.Cmd, reflect.TypeOf(f)))
-		}
-		ret.Data = data
-		ret.Ret = result
-	} else {
-		f = s.(IModule).GetReflectHandler(obj.Cmd)
-		if f == nil {
-			err := fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.Cmd)
-			panic(err)
-		} else {
-			args := []interface{}{s}
-			args = append(args, obj.Args...)
-			values := base.CallFunction(f, args...)
-			if values == nil {
-				err := errors.New("unsupport handler,need return (interface{},Result) or ([]interface{},Result)")
-				panic(err)
-			} else {
-				l := len(values)
-				if l == 2 {
-					ret.Data = values[0].Interface()
-					if values[1].Interface() != nil {
-						result = values[1].Interface().(Ret)
-						ret.Ret.Code = result.Code
-						ret.Ret.Err = result.Err
-					}
-				} else {
-					err := errors.New("unsupport params length")
-					panic(err)
-				}
-			}
-		}
-	}
-
-	obj.ChanRet <- ret
+	result = obj.Caller.Execute(obj)
+	obj.ChanRet <- result
 	return result
 }
+
+// f := s.(IModule).GetHandler(obj.CmdID)
+// if f != nil {
+
+// 	switch f.(type) {
+// 	case func(interface{}) *RetObject:
+// 		result = f.(func(interface{}) *RetObject)(s)
+// 	case func(interface{}, interface{}) *RetObject:
+// 		result = f.(func(interface{}, interface{}) *RetObject)(s, obj.Args[0])
+// 	case func(interface{}, interface{}, interface{}) *RetObject:
+// 		result = f.(func(interface{}, interface{}, interface{}) *RetObject)(s, obj.Args[0], obj.Args[1])
+// 	case func(interface{}, interface{}, interface{}, interface{}) *RetObject:
+// 		result = f.(func(interface{}, interface{}, interface{}, interface{}) *RetObject)(s, obj.Args[0], obj.Args[1], obj.Args[2])
+// 	default:
+// 		panic(fmt.Sprintf("function cmd %v: definition of function is invalid,%v", obj.CmdID, reflect.TypeOf(f)))
+// 	}
+
+// } else {
+// 	f = s.(IModule).GetReflectHandler(obj.CmdID)
+// 	if f == nil {
+// 		err := fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.CmdID)
+// 		panic(err)
+// 	} else {
+// 		args := []interface{}{s}
+// 		args = append(args, obj.Args...)
+// 		values := base.CallFunction(f, args...)
+// 		if values == nil {
+// 			err := errors.New("unsupport handler,need return (interface{},Result) or ([]interface{},Result)")
+// 			panic(err)
+// 		} else {
+// 			l := len(values)
+// 			if l == 1 {
+// 				result = values[0].Interface().(*RetObject)
+// 			} else {
+// 				err := errors.New("unsupport params length")
+// 				result = NewRetObject(-1, err, nil)
+// 				panic(err)
+// 			}
+// 		}
+// 	}
+// }
 
 // Run Processor goruntine
 func (w *Processor) Run() {
 	//	atomic.AddUint32(&w.owner.WorkerCount, 1)
-	w.owner.WorkerCountInc()
+	w.wp.AddRef()
 	go func() {
 		for {
 			obj, err := w.q.Pop()
 			if err == nil && obj == nil {
 				//atomic.AddUint32(&w.owner.WorkerCount, ^uint32(-(-1)-1))
-				w.owner.WorkerCountDec()
-				w.owner.CachePut(w)
+				w.wp.DecRef()
+				w.wp.CachePut(w)
 				break
 			}
 			if err == nil {
-				if result := Process(w.owner.Owner(), obj.(*CallObject)); result.Err != nil {
-					obj.(*CallObject).ChanRet <- RetObject{Data: nil, Ret: result}
-				}
+				Process(obj.(*CallObject))
 			}
 			if w.q.Length() == 0 {
-				if ok := w.owner.RecycleProcessor(w); !ok {
+				if ok := w.wp.RecycleProcessor(w); !ok {
 					break
 				}
 			}
@@ -153,5 +139,6 @@ func (w *Processor) Submit(obj *CallObject) error {
 	if err := w.q.AsyncPush(obj); err != nil {
 		return err
 	}
+
 	return nil
 }

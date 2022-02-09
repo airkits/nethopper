@@ -1,17 +1,17 @@
 package tcp
 
 import (
-	"log"
 	"net"
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 )
 
 // NewClient create tcp client
-func NewClient(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
+func NewClient(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
 	c.Conf = conf.(*ClientConfig)
 	c.NewAgent = agentFunc
@@ -63,10 +63,10 @@ reconnect:
 	//conn, err := net.DialTimeout(c.Network, c.Address, time.Second*30)
 	conn, err := net.Dial(c.Conf.Network, address)
 	if err != nil {
-		server.Fatal("tcp client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		log.Fatal("tcp client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.Conf.AutoReconnect {
 			time.Sleep(c.Conf.ConnectInterval * time.Second)
-			server.Warning("tcp client try reconnect to id:[%d] %s %s", serverID, name, address)
+			log.Warning("tcp client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
@@ -88,7 +88,7 @@ reconnect:
 
 	if c.Conf.AutoReconnect {
 		time.Sleep(c.Conf.ConnectInterval * time.Second)
-		server.Warning("tcp client try reconnect to id:[%d] %s %s", serverID, name, address)
+		log.Warning("tcp client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

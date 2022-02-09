@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/network/common"
-	"github.com/airkits/nethopper/server"
 	quic "github.com/lucas-clemente/quic-go"
 )
 
@@ -63,7 +63,7 @@ func NewConn(conn quic.Session, stream quic.Stream, rwQueueSize int, maxMessageS
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				server.PrintStack(false)
+				log.PrintStack(false)
 			}
 		}()
 		for b := range quicConn.writeChan {
@@ -73,7 +73,7 @@ func NewConn(conn quic.Session, stream quic.Stream, rwQueueSize int, maxMessageS
 			// write data
 			n, err := stream.Write(b)
 			if err != nil {
-				server.Warning("Error send reply data, bytes: %v reason: %v", n, err)
+				log.Warning("Error send reply data, bytes: %v reason: %v", n, err)
 				break
 			}
 
@@ -118,7 +118,7 @@ func (c *Conn) Close() {
 
 func (c *Conn) doWrite(b []byte) {
 	if len(c.writeChan) == cap(c.writeChan) {
-		server.Debug("close conn: channel full")
+		log.Debug("close conn: channel full")
 		c.doDestroy()
 		return
 	}
@@ -151,7 +151,7 @@ func (c *Conn) ReadMessage() (interface{}, error) {
 		// read 2B Package Length
 		n, err := io.ReadFull(c.stream, pkgLen)
 		if err != nil {
-			server.Warning("read package length failed, ip:%v reason:%v size:%v", c.RemoteAddr().String(), err, n)
+			log.Warning("read package length failed, ip:%v reason:%v size:%v", c.RemoteAddr().String(), err, n)
 			return nil, ErrReadPackageLength
 		}
 		size := binary.BigEndian.Uint16(pkgLen)
@@ -160,7 +160,7 @@ func (c *Conn) ReadMessage() (interface{}, error) {
 		payload := make([]byte, size-2)
 		n, err = io.ReadFull(c.stream, payload)
 		if err != nil {
-			server.Warning("read payload failed, ip:%v reason:%v size:%v", c.RemoteAddr().String(), err, n)
+			log.Warning("read payload failed, ip:%v reason:%v size:%v", c.RemoteAddr().String(), err, n)
 			return nil, ErrReadMessage
 		}
 

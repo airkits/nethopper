@@ -3,13 +3,15 @@ package http
 import (
 	"sync"
 
+	"github.com/airkits/nethopper/base"
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 	"github.com/gin-gonic/gin"
 )
 
 //NewServer create http server
-func NewServer(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
@@ -37,10 +39,10 @@ func (s *Server) web() {
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
 	if s.NewAgent == nil {
-		server.Fatal("NewAgent must not be nil")
+		log.Error("NewAgent must not be nil")
 	}
 	s.gs = gin.New()
-	server.GO(s.web)
+	base.GO(s.web)
 }
 
 //Close websocket server

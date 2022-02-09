@@ -98,7 +98,7 @@ func InitViper(app string, path string, env string, config interface{}, pack boo
 
 	viper.WatchConfig() // Watch for changes to the configuration file and recompile
 	// viper.OnConfigChange(func(e fsnotify.Event) {
-	// 	server.Info("Config file changed:", e.Name)
+	// 	log.Info("Config file changed:", e.Name)
 	// })
 	if err := viper.Unmarshal(&config); err != nil {
 		log.Error(err)

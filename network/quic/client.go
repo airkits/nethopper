@@ -3,22 +3,21 @@ package quic
 import (
 	"context"
 	"crypto/tls"
-	"log"
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 	quic "github.com/lucas-clemente/quic-go"
 )
 
 // NewClient create quic client
-func NewClient(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
+func NewClient(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
 	c := new(Client)
 	c.Conf = conf.(*ClientConfig)
 	c.NewAgent = agentFunc
 	c.CloseAgent = agentCloseFunc
-
 	return c
 }
 
@@ -76,24 +75,24 @@ func (c *Client) connect(serverID int, name string, address string) {
 reconnect:
 	sess, err := c.dial(serverID, address)
 	if err != nil {
-		server.Fatal("quic client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		log.Fatal("quic client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.Conf.AutoReconnect {
 			time.Sleep(c.Conf.ConnectInterval * time.Second)
-			server.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
+			log.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
 
 	stream, err := sess.OpenStreamSync(context.Background())
 	if err != nil {
-		server.Info("quic client connect to id:[%d] %s %s transport failed, reason %v", serverID, name, address, err.Error())
+		log.Info("quic client connect to id:[%d] %s %s transport failed, reason %v", serverID, name, address, err.Error())
 		if c.Conf.AutoReconnect {
 			time.Sleep(c.Conf.ConnectInterval * time.Second)
-			server.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
+			log.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
-	server.Info("quic client create new connection to id:[%d] %s %s.", serverID, name, address)
+	log.Info("quic client create new connection to id:[%d] %s %s.", serverID, name, address)
 	c.Lock()
 	c.conns[sess] = struct{}{}
 	c.Unlock()
@@ -112,7 +111,7 @@ reconnect:
 
 	if c.Conf.AutoReconnect {
 		time.Sleep(c.Conf.ConnectInterval * time.Second)
-		server.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
+		log.Warning("quic client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

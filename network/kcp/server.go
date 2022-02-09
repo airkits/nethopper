@@ -5,13 +5,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/config"
+	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/server"
 	"github.com/xtaci/kcp-go"
 )
 
 //NewServer create kcp server
-func NewServer(conf server.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
+func NewServer(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) network.IServer {
 	s := new(Server)
 	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
@@ -38,23 +39,23 @@ func (s *Server) ListenAndServe() {
 	if err != nil {
 		panic(err)
 	}
-	server.Info("KCP listening on: %s", listener.Addr())
+	log.Info("KCP listening on: %s", listener.Addr())
 	s.kcpListener = listener.(*kcp.Listener)
 
 	if err := s.kcpListener.SetReadBuffer(s.Conf.UDPSocketBufferSize); err != nil {
-		server.Error("SetReadBuffer", err)
+		log.Error("SetReadBuffer", err)
 	}
 	if err := s.kcpListener.SetWriteBuffer(s.Conf.UDPSocketBufferSize); err != nil {
-		server.Error("SetWriteBuffer", err)
+		log.Error("SetWriteBuffer", err)
 	}
 	if err := s.kcpListener.SetDSCP(s.Conf.Dscp); err != nil {
-		server.Error("SetDSCP", err)
+		log.Error("SetDSCP", err)
 	}
 	// loop accepting
 	for {
 		conn, err := s.kcpListener.AcceptKCP()
 		if err != nil {
-			server.Warning("accept failed: %s", err.Error())
+			log.Warning("accept failed: %s", err.Error())
 			continue
 		}
 		// set kcp parameters

@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 // MIT License
@@ -32,6 +33,8 @@ package server
 import (
 	"os"
 	"os/signal"
+
+	"github.com/airkits/nethopper/log"
 )
 
 // InitSignal register signals handler.
@@ -40,5 +43,5 @@ func InitSignal() {
 	defer close(chanSig)
 	signal.Notify(chanSig, os.Interrupt, os.Kill)
 	sig := <-chanSig
-	Info("recv kill %s", sig.String())
+	log.Info("recv kill %s", sig.String())
 }

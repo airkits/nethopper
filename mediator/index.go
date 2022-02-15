@@ -43,7 +43,7 @@ func GetModuleByID(mid uint8) IModule {
 func AsyncCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*CallObject, error) {
 	m := M().GetModuleByID(destMID)
 	if m == nil {
-		return nil, fmt.Errorf("get module failed")
+		return nil, fmt.Errorf("get module failed module [%d] cmd[%d]", destMID, cmdID)
 	}
 	obj := NewCallObject(m, cmdID, option, args...)
 	if err := m.Call(option, obj); err != nil {

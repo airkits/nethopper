@@ -37,9 +37,10 @@ type Callback func(ret *RetObject)
 
 // RetObject call return object
 type RetObject struct {
-	Data interface{}
-	Code int32
-	Err  error
+	Data  interface{}
+	Code  int32
+	Err   error
+	Trace []uint8
 }
 
 // NewCallObject create call object
@@ -58,7 +59,11 @@ func (c *RetObject) Init(code int32, err error, data interface{}) *RetObject {
 	c.Code = code
 	c.Data = data
 	c.Err = err
+	c.Trace = make([]uint8, 0, 3)
 	return c
+}
+func (c *RetObject) SetTrace(mid uint8) {
+	c.Trace = append(c.Trace, mid)
 }
 func (c *RetObject) Reset() *RetObject {
 	c.Code = 0

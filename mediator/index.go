@@ -58,9 +58,12 @@ func AsyncCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*
 func Call(destMID uint8, cmdID int32, option int32, args ...interface{}) *RetObject {
 	obj, err := AsyncCall(destMID, cmdID, option, args...)
 	if err != nil {
-		return NewRetObject(-1, err, nil)
+		result := NewRetObject(-1, err, nil)
+		result.SetTrace(destMID)
+		return result
 	}
 	result := <-obj.ChanRet
+	result.SetTrace(destMID)
 	return result
 }
 

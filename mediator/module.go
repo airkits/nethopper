@@ -230,13 +230,16 @@ func (s *BaseContext) DoWorker(obj *CallObject) error {
 	if s.workerPool == nil {
 		//err = errors.New("no processor pool")
 		result := s.Execute(obj)
+		result.SetTrace(uint8(s.ID()))
 		obj.ChanRet <- result
 		return nil
 	} else {
 		err = s.workerPool.Submit(obj)
 	}
 	if err != nil {
-		obj.ChanRet <- NewRetObject(-1, err, nil)
+		result := NewRetObject(-1, err, nil)
+		result.SetTrace(uint8(s.ID()))
+		obj.ChanRet <- result
 	}
 	return err
 }

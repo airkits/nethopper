@@ -10,6 +10,7 @@ type CallObject struct {
 	CmdID   int32
 	Option  int32
 	Args    []interface{}
+	Trace   []uint8
 	ChanRet chan *RetObject
 }
 
@@ -19,13 +20,21 @@ func (c *CallObject) Init(caller ICaller, cmdID int32, opt int32, args ...interf
 	c.Option = opt
 	c.Args = args
 	c.ChanRet = make(chan *RetObject, 1)
+	c.Trace = make([]uint8, 0, 3)
 	return c
+}
+func (c *CallObject) SetTrace(mid uint8) {
+	c.Trace = append(c.Trace, mid)
+}
+func (c *CallObject) SetTraces(arr []uint8) {
+	c.Trace = append(c.Trace, arr...)
 }
 func (c *CallObject) Reset() *CallObject {
 	c.Args = nil
 	c.Caller = nil
 	c.CmdID = 0
 	c.Option = 0
+	c.Trace = nil
 	if c.ChanRet != nil {
 		close(c.ChanRet)
 		c.ChanRet = nil
@@ -69,5 +78,6 @@ func (c *RetObject) Reset() *RetObject {
 	c.Code = 0
 	c.Data = nil
 	c.Err = nil
+	c.Trace = nil
 	return c
 }

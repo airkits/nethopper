@@ -93,14 +93,20 @@ func (c *RedisCache) HMGetObj(ctx context.Context, obj interface{}, key string, 
 }
 
 //HMSetObj 批量添加字段
-func (c *RedisCache) HMSetObj(ctx context.Context, key interface{}, obj interface{}) error {
+func (c *RedisCache) HMSetObj(ctx context.Context, key string, obj interface{}, expire int64) error {
 	_, err := c.Do(ctx, "HMSET", redis.Args{}.Add(key).AddFlat(obj).AddFlat(map[string]interface{}{redisMustExistField: redisMustExistValue})...)
+	if err == nil && expire > 0 {
+		err = c.SetExpire(ctx, key, expire)
+	}
 	return err
 }
 
 //HMSet 批量添加字段
-func (c *RedisCache) HMSet(ctx context.Context, key interface{}, fields map[string]interface{}) error {
+func (c *RedisCache) HMSet(ctx context.Context, key string, fields map[string]interface{}, expire int64) error {
 	_, err := c.Do(ctx, "HMSET", redis.Args{}.Add(key).AddFlat(fields).AddFlat(map[string]interface{}{redisMustExistField: redisMustExistValue})...)
+	if err == nil && expire > 0 {
+		err = c.SetExpire(ctx, key, expire)
+	}
 	return err
 }
 

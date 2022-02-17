@@ -75,10 +75,10 @@ func TestRedis(t *testing.T) {
 	if err := redisCache.Set(ctx, key, valInt, expr); err != nil {
 		t.Error(err)
 	}
-	if ret, err := redisCache.Incr(ctx, key); err != nil || ret != valInt+1 {
+	if ret, err := redisCache.Incr(ctx, key, 86400); err != nil || ret != valInt+1 {
 		t.Error(err)
 	}
-	if ret, err := redisCache.Decr(ctx, key); err != nil || ret != valInt {
+	if ret, err := redisCache.Decr(ctx, key, 86400); err != nil || ret != valInt {
 		t.Error(err)
 	}
 

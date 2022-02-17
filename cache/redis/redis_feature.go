@@ -109,13 +109,30 @@ func (c *RedisCache) HMSet(ctx context.Context, key string, fields map[string]in
 	}
 	return err
 }
-
-//HSetEmptyValue 设置空值，防止缓存击穿
-func (c *RedisCache) HSetEmptyValue(ctx context.Context, key interface{}, expire int64) error {
-	if _, err := c.Do(ctx, "HSET", key, redisEmptyField, redisEmptyValue); err != nil {
+func (c *RedisCache) HSet(ctx context.Context, key string, field string, value interface{}, expire int64) error {
+	if _, err := c.Do(ctx, "HSET", key, field, value); err != nil {
 		return err
 	}
-	return c.SetExpire(ctx, key.(string), expire)
+	return c.SetExpire(ctx, key, expire)
+}
+
+//HSetEmptyValue 设置空值，防止缓存击穿
+func (c *RedisCache) HSetEmptyValue(ctx context.Context, key string, expire int64) error {
+	return c.HSet(ctx, key, redisEmptyField, redisEmptyValue, expire)
+}
+func (c *RedisCache) HIncrBy(ctx context.Context, key string, field string, value int64, expire int64) (int64, error) {
+	result, err := c.Do(ctx, "HINCRBY", key, field, value)
+	if err == nil && expire > 0 {
+		c.SetExpire(ctx, key, expire)
+	}
+	return result.(int64), err
+}
+func (c *RedisCache) HDecrBy(ctx context.Context, key string, field string, value int64, expire int64) (int64, error) {
+	result, err := c.Do(ctx, "HDECRBY", key, field, value)
+	if err == nil && expire > 0 {
+		c.SetExpire(ctx, key, expire)
+	}
+	return result.(int64), err
 }
 
 /**

@@ -54,7 +54,7 @@ func (m *Mediator) CreateModule(data *MData) (IModule, error) {
 	}
 	module.MakeContext(int32(data.Conf.GetQueueSize()))
 	module.Setup(data.Conf)
-	module.SetID(int32(data.ID))
+	module.SetID(data.ID)
 	module.SetName(ModuleName(module))
 	cmdRegister(module)
 	data.Module = module

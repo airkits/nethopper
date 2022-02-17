@@ -221,20 +221,50 @@ func (c *RedisCache) SetExpire(ctx context.Context, key string, expire int64) er
 	return nil
 }
 
+// IncrBy auto-Increment get key and set v++
+func (c *RedisCache) IncrBy(ctx context.Context, key string, value int64, expire int64) (int64, error) {
+	ret, err := c.Do(ctx, "INCRBY", key, value)
+	if err != nil {
+		return -1, err
+	}
+	if expire > 0 {
+		c.SetExpire(ctx, key, expire)
+	}
+	return redis.Int64(ret, err)
+}
+
+// DecrBy auto-Decrement get key and set v--
+func (c *RedisCache) DecrBy(ctx context.Context, key string, value int64, expire int64) (int64, error) {
+	ret, err := c.Do(ctx, "DECRBY", key)
+	if err != nil {
+		return -1, err
+	}
+	if expire > 0 {
+		c.SetExpire(ctx, key, expire)
+	}
+	return redis.Int64(ret, err)
+}
+
 // Incr auto-Increment get key and set v++
-func (c *RedisCache) Incr(ctx context.Context, key string) (int64, error) {
+func (c *RedisCache) Incr(ctx context.Context, key string, expire int64) (int64, error) {
 	ret, err := c.Do(ctx, "INCR", key)
 	if err != nil {
 		return -1, err
+	}
+	if expire > 0 {
+		c.SetExpire(ctx, key, expire)
 	}
 	return redis.Int64(ret, err)
 }
 
 // Decr auto-Decrement get key and set v--
-func (c *RedisCache) Decr(ctx context.Context, key string) (int64, error) {
+func (c *RedisCache) Decr(ctx context.Context, key string, expire int64) (int64, error) {
 	ret, err := c.Do(ctx, "DECR", key)
 	if err != nil {
 		return -1, err
+	}
+	if expire > 0 {
+		c.SetExpire(ctx, key, expire)
 	}
 	return redis.Int64(ret, err)
 }

@@ -23,12 +23,10 @@ func (c *CallObject) Init(caller ICaller, cmdID int32, opt int32, args ...interf
 	c.Trace = make([]uint8, 0, 3)
 	return c
 }
-func (c *CallObject) SetTrace(mid uint8) {
-	c.Trace = append(c.Trace, mid)
+func (c *CallObject) SetTrace(mid ...uint8) {
+	c.Trace = append(c.Trace, mid...)
 }
-func (c *CallObject) SetTraces(arr []uint8) {
-	c.Trace = append(c.Trace, arr...)
-}
+
 func (c *CallObject) Reset() *CallObject {
 	c.Args = nil
 	c.Caller = nil
@@ -71,9 +69,10 @@ func (c *RetObject) Init(code int32, err error, data interface{}) *RetObject {
 	c.Trace = make([]uint8, 0, 3)
 	return c
 }
-func (c *RetObject) SetTrace(mid uint8) {
-	c.Trace = append(c.Trace, mid)
+func (c *RetObject) SetTrace(mid ...uint8) {
+	c.Trace = append(c.Trace, mid...)
 }
+
 func (c *RetObject) Reset() *RetObject {
 	c.Code = 0
 	c.Data = nil

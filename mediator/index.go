@@ -46,6 +46,7 @@ func AsyncCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*
 		return nil, fmt.Errorf("get module failed module [%d] cmd[%d]", destMID, cmdID)
 	}
 	obj := NewCallObject(m, cmdID, option, args...)
+	obj.SetTrace(destMID)
 	if err := m.Call(option, obj); err != nil {
 		return nil, err
 	}

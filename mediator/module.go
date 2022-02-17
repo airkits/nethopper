@@ -42,9 +42,9 @@ import (
 type IModule interface {
 	//BaseContext start
 	// ID module id
-	ID() int32
+	ID() uint8
 	//SetID set module ID
-	SetID(v int32)
+	SetID(v uint8)
 	// Name module name
 	Name() string
 	//SetName set module name
@@ -121,7 +121,7 @@ type BaseContext struct {
 	childRef   int32
 	q          queue.Queue
 	name       string
-	id         int32
+	id         uint8
 	funcs      map[int32]interface{} //handlers
 	rfuncs     map[int32]interface{} //reflect handlers
 	workerPool IWorkerPool
@@ -230,7 +230,8 @@ func (s *BaseContext) DoWorker(obj *CallObject) error {
 	if s.workerPool == nil {
 		//err = errors.New("no processor pool")
 		result := s.Execute(obj)
-		result.SetTrace(uint8(s.ID()))
+		result.SetTrace(obj.Trace...)
+		result.SetTrace(s.ID())
 		obj.ChanRet <- result
 		return nil
 	} else {
@@ -238,7 +239,8 @@ func (s *BaseContext) DoWorker(obj *CallObject) error {
 	}
 	if err != nil {
 		result := NewRetObject(-1, err, nil)
-		result.SetTrace(uint8(s.ID()))
+		result.SetTrace(obj.Trace...)
+		result.SetTrace(s.ID())
 		obj.ChanRet <- result
 	}
 	return err
@@ -278,12 +280,12 @@ func (s *BaseContext) Close() {
 }
 
 //ID module ID
-func (s *BaseContext) ID() int32 {
+func (s *BaseContext) ID() uint8 {
 	return s.id
 }
 
 //SetID set module id
-func (s *BaseContext) SetID(v int32) {
+func (s *BaseContext) SetID(v uint8) {
 	s.id = v
 }
 

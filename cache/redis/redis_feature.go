@@ -35,7 +35,7 @@ func (c *RedisCache) ScanStruct(src []interface{}, dest interface{}, fields []st
 		return errors.New("src is nil")
 	}
 	src = src[2:] //移除以一个must key
-	if fields != nil && len(fields) > 0 {
+	if len(fields) > 0 {
 		vs := make([]interface{}, 0, len(src)*2)
 		for i := 0; i < len(fields); i++ {
 			if src[i] != nil {
@@ -54,34 +54,35 @@ func (c *RedisCache) HMGet(ctx context.Context, key interface{}, fieldNames ...i
 	if err != nil {
 		return nil, err
 	}
+	if s, e := redis.String(values[1], nil); e == nil && s == redisMustExistValue {
+		results := make(map[string]interface{})
+		for index, value := range values {
+			results[fieldNames[index].(string)] = value
+		}
+		return results, nil
+	}
 	if s, e := redis.String(values[0], nil); e == redis.ErrNil || s != redisEmptyValue {
 		return nil, ErrEmptyCached
 	}
 
-	if s, e := redis.String(values[1], nil); e == redis.ErrNil || s != redisMustExistValue {
-		return nil, nil
-	}
-	results := make(map[string]interface{})
-	for index, value := range values {
-		results[fieldNames[index].(string)] = value
-	}
-	return results, nil
+	return nil, redis.ErrNil
+
 }
 
 //HMGetObj 获取结构体
 func (c *RedisCache) HMGetObj(ctx context.Context, obj interface{}, key string, fieldNames ...string) (notFound bool, err error) {
-	if fieldNames != nil && len(fieldNames) > 0 {
+	if len(fieldNames) > 0 {
 		values, err := redis.Values(c.Do(ctx, "HMGET", redis.Args{}.Add(key).Add(redisEmptyField).Add(redisMustExistField).AddFlat(fieldNames)...))
 		if err != nil {
 			return false, err
 		}
+		if s, e := redis.String(values[1], nil); e == nil && s == redisMustExistValue {
+			return false, c.ScanStruct(values, obj, fieldNames)
+		}
 		if s, e := redis.String(values[0], nil); e == redis.ErrNil || s != redisEmptyValue {
 			return true, ErrEmptyCached
 		}
-		if s, e := redis.String(values[1], nil); e == redis.ErrNil || s != redisMustExistValue {
-			return true, nil
-		}
-		return false, c.ScanStruct(values, obj, fieldNames)
+		return false, redis.ErrNil
 	}
 
 	values, err := redis.Values(c.Do(ctx, "HGETALL", key))
@@ -115,6 +116,10 @@ func (c *RedisCache) HSet(ctx context.Context, key string, field string, value i
 	}
 	return c.SetExpire(ctx, key, expire)
 }
+func (c *RedisCache) HGet(ctx context.Context, key string, field string) (interface{}, error) {
+	result, err := c.Do(ctx, "HGET", key, field)
+	return result, err
+}
 
 //HSetEmptyValue 设置空值，防止缓存击穿
 func (c *RedisCache) HSetEmptyValue(ctx context.Context, key string, expire int64) error {
@@ -128,11 +133,7 @@ func (c *RedisCache) HIncrBy(ctx context.Context, key string, field string, valu
 	return result.(int64), err
 }
 func (c *RedisCache) HDecrBy(ctx context.Context, key string, field string, value int64, expire int64) (int64, error) {
-	result, err := c.Do(ctx, "HDECRBY", key, field, value)
-	if err == nil && expire > 0 {
-		c.SetExpire(ctx, key, expire)
-	}
-	return result.(int64), err
+	return c.HIncrBy(ctx, key, field, -value, expire)
 }
 
 /**

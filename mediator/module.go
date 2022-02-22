@@ -68,7 +68,7 @@ type IModule interface {
 	Close()
 	// Queue return module queue
 	MQ() queue.Queue
-	// CanExit if receive ctx.Done() and child ref = 0 and queue is empty ,then return true
+	// CanExit if receive ctx.Done() and queue is empty ,then return true
 	CanExit(doneflag bool) (bool, bool)
 
 	//BaseContext end
@@ -93,7 +93,7 @@ type IModule interface {
 	Execute(obj *CallObject) *RetObject
 
 	// PushBytes async send string or bytes to queue
-	PushBytes(option int32, buf []byte) error
+	//PushBytes(option int32, buf []byte) error
 	//GetHandler get call handler
 	GetHandler(id int32) interface{}
 
@@ -117,8 +117,6 @@ type IModule interface {
 type BaseContext struct {
 	ctx        context.Context
 	cancel     context.CancelFunc
-	parent     IModule
-	childRef   int32
 	q          queue.Queue
 	name       string
 	id         uint8
@@ -299,7 +297,7 @@ func (s *BaseContext) SetName(v string) {
 	s.name = v
 }
 
-// CanExit if receive ctx.Done() and all child exit and queue is empty ,then return true
+// CanExit if receive ctx.Done() and queue is empty ,then return true
 func (s *BaseContext) CanExit(doneFlag bool) (bool, bool) {
 	if doneFlag {
 		if s.q.Length() == 0 {
@@ -326,9 +324,9 @@ func (s *BaseContext) OnRun(dt time.Duration) {
 // to override start
 
 //PushBytes push buffer
-func (s *BaseContext) PushBytes(option int32, buf []byte) error {
-	return nil
-}
+// func (s *BaseContext) PushBytes(option int32, buf []byte) error {
+// 	return nil
+// }
 
 // UserData module custom option, can you store you data and you must keep goruntine safe
 func (s *BaseContext) UserData() int32 {

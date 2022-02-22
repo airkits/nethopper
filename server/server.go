@@ -32,6 +32,7 @@ import (
 
 	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/log"
+	"github.com/airkits/nethopper/mediator"
 )
 
 // global app context
@@ -45,6 +46,7 @@ func init() {
 // GracefulExit server exit by call root context close
 func GracefulExit() {
 	AppCtx.WG.Wait()
+	mediator.Wait()
 	log.GLoggerModule.Close()
 	// wait root context done
 	// for {

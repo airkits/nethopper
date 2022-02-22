@@ -65,6 +65,9 @@ func (m *Mediator) CreateModule(data *MData) (IModule, error) {
 	base.GOFunctionWithWG(m.wg, m.ref, ModuleRun, module)
 	return module, nil
 }
+func (m *Mediator) Wait() {
+	m.wg.Wait()
+}
 
 func (m *Mediator) GetModuleByID(mid uint8) IModule {
 	return m.modules[mid]

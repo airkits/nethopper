@@ -25,6 +25,10 @@ func M() *Mediator {
 	return instance
 }
 
+func Wait() {
+	M().Wait()
+}
+
 // NewModule create module
 func NewModule(mid uint8, createFunc func() (IModule, error), conf config.IConfig, dep []uint8) (IModule, error) {
 	if M().HasModule(mid) {
@@ -199,6 +203,7 @@ func ModuleRun(s IModule) {
 		s.OnRun(time.Since(start))
 
 		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
+			fmt.Printf("module exit %s", s.Name())
 			return
 		}
 

@@ -274,6 +274,9 @@ func (s *BaseContext) Context() context.Context {
 
 // Close call context cancel ,self and all child module will receive context.Done()
 func (s *BaseContext) Close() {
+	if s.q.Length() == 0 && !s.q.IsClosed() {
+		s.q.ForceClose()
+	}
 	s.cancel()
 }
 

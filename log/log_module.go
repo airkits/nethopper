@@ -66,7 +66,6 @@ func (s *LogModule) Setup(conf *Config) (*LogModule, error) {
 	s.q = queue.NewChanQueue(int32(c.GetQueueSize()))
 	s.IdleTimesReset()
 	s.ctx, s.cancel = context.WithCancel(context.Background())
-
 	logger, err := NewFileLogger(conf)
 	if err != nil {
 		return nil, err
@@ -149,6 +148,24 @@ func (s *LogModule) OnRun(dt time.Duration) {
 		}
 	}
 
+}
+
+// CanExit if receive ctx.Done() and queue is empty ,then return true
+func (s *LogModule) CanExit(doneFlag bool) (bool, bool) {
+	if doneFlag {
+		if s.q.Length() == 0 {
+			return doneFlag, true
+		}
+	}
+	select {
+	case <-s.ctx.Done():
+		doneFlag = true
+		if s.q.Length() == 0 {
+			return doneFlag, true
+		}
+	default:
+	}
+	return doneFlag, false
 }
 
 // Stop goruntine

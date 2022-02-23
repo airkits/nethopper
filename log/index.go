@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"runtime"
 	"time"
 
@@ -10,6 +11,8 @@ import (
 const BATCH_LOG_SIZE = 1
 
 func Run(s *LogModule) {
+	ctxDone := false
+	exitFlag := false
 	start := time.Now()
 	Info("Module [Logger] starting")
 	for {
@@ -21,6 +24,10 @@ func Run(s *LogModule) {
 			s.IdleTimesAdd()
 
 		}
+		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
+			fmt.Printf("module log exit")
+			return
+		}
 		runtime.Gosched()
 	}
 }
@@ -29,10 +36,10 @@ func Run(s *LogModule) {
 var GLoggerModule *LogModule
 
 // SetGLogger set logger module instance
-func InitLogger(appCtx *base.AppContext, conf *Config) {
+func InitLogger(conf *Config) {
 	GLoggerModule = &LogModule{}
 	GLoggerModule.Setup(conf)
-	base.GOFunctionWithWG(appCtx.WG, appCtx.Ref, Run, GLoggerModule)
+	base.GO(Run, GLoggerModule)
 }
 
 //WriteLog send log to queue

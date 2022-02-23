@@ -130,6 +130,11 @@ func (q *ChanQueue) Close() error {
 
 	return nil
 }
+func (q *ChanQueue) ForceClose() error {
+
+	close(q.innerChan)
+	return nil
+}
 
 // IsClosed if chan is close,return true
 func (q *ChanQueue) IsClosed() bool {

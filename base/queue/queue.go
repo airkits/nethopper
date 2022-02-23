@@ -43,6 +43,8 @@ type Queue interface {
 	Length() int32
 	// Close 关闭队列
 	Close() error
+	// 强制关闭
+	ForceClose() error
 	// IsClosed 队列是否已经关闭 关闭返回true,否则返回false
 	IsClosed() bool
 }

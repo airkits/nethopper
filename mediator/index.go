@@ -25,8 +25,12 @@ func M() *Mediator {
 	return instance
 }
 
-func Wait() {
+func GracefulExit() {
+	M().Exit()
 	M().Wait()
+}
+func GetAppCtx() *base.AppContext {
+	return M().AppCtx
 }
 
 // NewModule create module
@@ -203,7 +207,7 @@ func ModuleRun(s IModule) {
 		s.OnRun(time.Since(start))
 
 		if ctxDone, exitFlag = s.CanExit(ctxDone); exitFlag {
-			fmt.Printf("module exit %s", s.Name())
+			fmt.Printf("module exit %s\n", s.Name())
 			return
 		}
 

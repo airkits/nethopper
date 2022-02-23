@@ -30,24 +30,20 @@ package server
 import (
 	"fmt"
 
-	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/mediator"
 )
 
 // global app context
-var AppCtx *base.AppContext
-
 func init() {
-	AppCtx = base.NewAppContext()
 	fmt.Println("Nethopper Framework init")
 }
 
 // GracefulExit server exit by call root context close
 func GracefulExit() {
-	AppCtx.WG.Wait()
-	mediator.Wait()
+	mediator.GracefulExit()
 	log.GLoggerModule.Close()
+
 	// wait root context done
 	// for {
 	// 	if _, exitFlag := log.GLoggerModule.CanExit(true); exitFlag {

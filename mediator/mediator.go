@@ -12,13 +12,14 @@ func NewMediator() *Mediator {
 	m.modules = [ModuleMax]IModule{}
 	m.datas = make(MDataSlice, 0)
 	m.ref = base.NewRef()
+	m.wg = &sync.WaitGroup{}
 	return m
 }
 
 type Mediator struct {
 	modules [ModuleMax]IModule //module id => MData
 	datas   MDataSlice         // array mdata cache
-	wg      sync.WaitGroup
+	wg      *sync.WaitGroup
 	ref     base.IRef
 	sync.Mutex
 }
@@ -62,6 +63,7 @@ func (m *Mediator) CreateModule(data *MData) (IModule, error) {
 	m.datas = append(m.datas, data)
 
 	sort.Sort(m.datas)
+
 	base.GOFunctionWithWG(m.wg, m.ref, ModuleRun, module)
 	return module, nil
 }

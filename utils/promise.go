@@ -31,7 +31,7 @@ type Promise struct {
 	// Mutex protects against data race conditions.
 	mutex sync.Mutex
 	// WaitGroup allows to block until all callbacks are executed.
-	wg sync.WaitGroup
+	wg *sync.WaitGroup
 }
 
 // New instantiates and returns a pointer to a new Promise.
@@ -42,7 +42,7 @@ func New(executor func(resolve func(Any), reject func(error))) *Promise {
 		result:   nil,
 		err:      nil,
 		mutex:    sync.Mutex{},
-		wg:       sync.WaitGroup{},
+		wg:       &sync.WaitGroup{},
 	}
 
 	promise.wg.Add(1)

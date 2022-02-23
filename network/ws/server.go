@@ -21,7 +21,7 @@ func NewServer(conf config.IConfig, agentFunc network.AgentCreateFunc, agentClos
 	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
 	s.CloseAgent = agentCloseFunc
-
+	s.wg = &sync.WaitGroup{}
 	return s
 }
 
@@ -34,7 +34,7 @@ type Server struct {
 	conns      ConnSet
 	CloseAgent network.AgentCloseFunc
 	mutexConns sync.Mutex
-	wg         sync.WaitGroup
+	wg         *sync.WaitGroup
 	httpServer *http.Server
 }
 

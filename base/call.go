@@ -68,18 +68,19 @@ func CallMethod(instance interface{}, method string, v ...interface{}) []reflect
 }
 
 // GOFunctionWithWG wapper exec goruntine,waitgroup and ref count
-func GOFunctionWithWG(wg sync.WaitGroup, ref IRef, v ...interface{}) {
+func GOFunctionWithWG(wg *sync.WaitGroup, ref IRef, v ...interface{}) {
 	f := v[0]
 	wg.Add(1)
 	if ref != nil {
 		ref.AddRef()
 	}
-	go func(wg sync.WaitGroup, ref IRef, v ...interface{}) {
+	go func(wg *sync.WaitGroup, ref IRef, v ...interface{}) {
 		defer wg.Done()
 		if ref != nil {
 			defer ref.DecRef()
 		}
 		CallFunction(f, v[1:]...)
+
 	}(wg, ref, v...)
 }
 
@@ -98,12 +99,12 @@ func GOFunction(ref IRef, v ...interface{}) {
 }
 
 // GOMethodWithWG wapper exec goruntine,waitgroup and ref count
-func GOMethodWithWG(wg sync.WaitGroup, ref IRef, instance interface{}, method string, v ...interface{}) {
+func GOMethodWithWG(wg *sync.WaitGroup, ref IRef, instance interface{}, method string, v ...interface{}) {
 	wg.Add(1)
 	if ref != nil {
 		ref.AddRef()
 	}
-	go func(wg sync.WaitGroup, ref IRef, instance interface{}, method string, v ...interface{}) {
+	go func(wg *sync.WaitGroup, ref IRef, instance interface{}, method string, v ...interface{}) {
 		defer wg.Done()
 		if ref != nil {
 			defer ref.DecRef()

@@ -19,7 +19,7 @@ func NewClient(conf config.IConfig, agentFunc network.AgentCreateFunc, agentClos
 	c.Conf = conf.(*ClientConfig)
 	c.NewAgent = agentFunc
 	c.CloseAgent = agentCloseFunc
-
+	c.wg = &sync.WaitGroup{}
 	return c
 }
 
@@ -31,7 +31,7 @@ type Client struct {
 	CloseAgent network.AgentCloseFunc
 	dialer     websocket.Dialer
 	conns      ConnSet
-	wg         sync.WaitGroup
+	wg         *sync.WaitGroup
 	closeFlag  bool
 }
 

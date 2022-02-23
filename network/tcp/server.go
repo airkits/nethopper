@@ -16,7 +16,7 @@ func NewServer(conf config.IConfig, agentFunc network.AgentCreateFunc, agentClos
 	s.Conf = conf.(*ServerConfig)
 	s.NewAgent = agentFunc
 	s.CloseAgent = agentCloseFunc
-
+	s.wg = &sync.WaitGroup{}
 	return s
 }
 
@@ -28,7 +28,7 @@ type Server struct {
 	CloseAgent  network.AgentCloseFunc
 	conns       ConnSet
 	mutexConns  sync.Mutex
-	wg          sync.WaitGroup
+	wg          *sync.WaitGroup
 }
 
 //ListenAndServe start serve

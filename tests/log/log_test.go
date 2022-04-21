@@ -32,13 +32,11 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/utils"
 )
 
 func init() {
-	appContext := base.NewAppContext()
 	conf := log.Config{
 		Filename:     "logs/server_log.log",
 		Level:        7,
@@ -48,7 +46,7 @@ func init() {
 		DailyEnabled: true,
 		QueueSize:    1000,
 	}
-	log.InitLogger(appContext, &conf)
+	log.InitLogger(&conf)
 
 }
 func TestFormatLog(t *testing.T) {

@@ -92,7 +92,7 @@ func (s *Server) ListenAndServe() {
 }
 
 //Transport quic connection
-func (s *Server) Transport(sess quic.Session, stream quic.Stream) error {
+func (s *Server) Transport(sess quic.Connection, stream quic.Stream) error {
 
 	s.wg.Add(1)
 	defer s.wg.Done()

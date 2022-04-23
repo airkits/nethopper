@@ -38,12 +38,12 @@ type Config struct {
 }
 
 //ConnSet quic conn set
-type ConnSet map[quic.Session]struct{}
+type ConnSet map[quic.Connection]struct{}
 
 //Conn quic conn define
 type Conn struct {
 	sync.Mutex
-	conn           quic.Session
+	conn           quic.Connection
 	stream         quic.Stream
 	writeChan      chan []byte
 	maxMessageSize uint32
@@ -52,7 +52,7 @@ type Conn struct {
 }
 
 //NewConn create quic conn
-func NewConn(conn quic.Session, stream quic.Stream, rwQueueSize int, maxMessageSize uint32, readDeadline time.Duration) network.IConn {
+func NewConn(conn quic.Connection, stream quic.Stream, rwQueueSize int, maxMessageSize uint32, readDeadline time.Duration) network.IConn {
 	quicConn := new(Conn)
 	quicConn.conn = conn
 	quicConn.writeChan = make(chan []byte, rwQueueSize)

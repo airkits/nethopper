@@ -30,7 +30,7 @@ package mq
 import (
 	"sync"
 
-	proto "github.com/golang/protobuf/proto"
+	proto "google.golang.org/protobuf/proto"
 )
 
 const (

@@ -32,8 +32,8 @@ import (
 	"sync"
 
 	"github.com/airkits/nethopper/base/queue"
-	proto "github.com/golang/protobuf/proto"
 	uuid "github.com/satori/go.uuid"
+	proto "google.golang.org/protobuf/proto"
 )
 
 // MaxIDSequence max srcid sequence

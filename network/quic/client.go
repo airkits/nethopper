@@ -57,7 +57,7 @@ func (c *Client) init() {
 	c.conns = make(ConnSet)
 }
 
-func (c *Client) dial(serverID int, address string) (quic.Session, error) {
+func (c *Client) dial(serverID int, address string) (quic.Connection, error) {
 	tlsConf := &tls.Config{
 		InsecureSkipVerify: true,
 		NextProtos:         []string{"quic-echo-example"},

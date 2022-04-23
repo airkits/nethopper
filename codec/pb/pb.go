@@ -29,7 +29,7 @@ package pb
 
 import (
 	"github.com/airkits/nethopper/codec/common"
-	proto "github.com/golang/protobuf/proto"
+	proto "google.golang.org/protobuf/proto"
 )
 
 // PBCodec use protobuf encode/decode

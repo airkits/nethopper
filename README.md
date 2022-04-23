@@ -6,8 +6,8 @@ micro-module framework
 ```
 brew install protobuf
 
-go get -u -v github.com/golang/protobuf/proto
-go get -u -v github.com/golang/protobuf/protoc-gen-go
+go get -u -v google.golang.org/protobuf/proto
+go get -u -v google.golang.org/protobuf/protoc-gen-go
 ```
 
 
@@ -19,6 +19,6 @@ go.mod设置grpc版本
 replace google.golang.org/grpc => google.golang.org/grpc v1.26.0 
 
 指定protoc版本
- go get github.com/golang/protobuf/protoc-gen-go@v1.3.2 
+ go get google.golang.org/protobuf/protoc-gen-go@v1.3.2 
 
 ```

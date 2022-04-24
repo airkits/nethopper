@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/log"
 )
 
@@ -33,7 +34,7 @@ type IWorkerPool interface {
 	//Setup
 	Setup(queueSize uint32)
 	// Submit add obj to Processor
-	Submit(obj *CallObject) error
+	Submit(obj *base.CallObject) error
 
 	//AddRef current goruntine count +1
 	AddRef()
@@ -220,7 +221,7 @@ func (p *WorkerPool) getProcessor() *Processor {
 }
 
 // Submit add obj to Processor
-func (p *WorkerPool) Submit(obj *CallObject) error {
+func (p *WorkerPool) Submit(obj *base.CallObject) error {
 	if atomic.LoadUint32(&p.isClosed) == CLOSED {
 		return ErrWorkerPoolClosed
 	}
@@ -400,7 +401,7 @@ func (p *FixedWorkerPool) getProcessor(opt uint32) *Processor {
 }
 
 // Submit add obj to Processor
-func (p *FixedWorkerPool) Submit(obj *CallObject) error {
+func (p *FixedWorkerPool) Submit(obj *base.CallObject) error {
 	if atomic.LoadUint32(&p.isClosed) == CLOSED {
 		return ErrWorkerPoolClosed
 	}

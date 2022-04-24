@@ -1,4 +1,4 @@
-package base
+package timer
 
 import (
 	"errors"

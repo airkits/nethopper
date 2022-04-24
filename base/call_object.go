@@ -1,7 +1,7 @@
-package mediator
+package base
 
 type ICaller interface {
-	Execute(obj *CallObject) *RetObject
+	Execute(obj *CallObject) *Ret
 }
 
 // CallObject call struct
@@ -11,7 +11,7 @@ type CallObject struct {
 	Option  int32
 	Args    []interface{}
 	Trace   []uint8
-	ChanRet chan *RetObject
+	ChanRet chan *Ret
 }
 
 func (c *CallObject) Init(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
@@ -19,7 +19,7 @@ func (c *CallObject) Init(caller ICaller, cmdID int32, opt int32, args ...interf
 	c.CmdID = cmdID
 	c.Option = opt
 	c.Args = args
-	c.ChanRet = make(chan *RetObject, 1)
+	c.ChanRet = make(chan *Ret, 1)
 	c.Trace = make([]uint8, 0, 3)
 	return c
 }
@@ -40,10 +40,10 @@ func (c *CallObject) Reset() *CallObject {
 	return c
 }
 
-type Callback func(ret *RetObject)
+type Callback func(ret *Ret)
 
-// RetObject call return object
-type RetObject struct {
+// Ret call return object
+type Ret struct {
 	Data  interface{}
 	Code  int32
 	Err   error
@@ -56,24 +56,24 @@ func NewCallObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) 
 	return obj.Init(caller, cmdID, opt, args...)
 }
 
-// NewRetObject create ret object
-func NewRetObject(code int32, err error, data interface{}) *RetObject {
-	obj := &RetObject{}
+// NewRet create ret object
+func NewRet(code int32, err error, data interface{}) *Ret {
+	obj := &Ret{}
 	return obj.Init(code, err, data)
 }
 
-func (c *RetObject) Init(code int32, err error, data interface{}) *RetObject {
+func (c *Ret) Init(code int32, err error, data interface{}) *Ret {
 	c.Code = code
 	c.Data = data
 	c.Err = err
 	c.Trace = make([]uint8, 0, 3)
 	return c
 }
-func (c *RetObject) SetTrace(mid ...uint8) {
+func (c *Ret) SetTrace(mid ...uint8) {
 	c.Trace = append(c.Trace, mid...)
 }
 
-func (c *RetObject) Reset() *RetObject {
+func (c *Ret) Reset() *Ret {
 	c.Code = 0
 	c.Data = nil
 	c.Err = nil

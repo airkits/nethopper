@@ -175,7 +175,7 @@ func (s *LogModule) Stop() error {
 }
 
 // Call async push message to queue
-// func (s *LogModule) Call(option int32, obj *mediator.CallObject) error {
+// func (s *LogModule) Call(option int32, obj *base.CallObject) error {
 // 	return fmt.Errorf("TODO LogModule Call")
 // }
 

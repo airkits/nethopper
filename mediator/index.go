@@ -48,12 +48,12 @@ func GetModuleByID(mid uint8) IModule {
 
 // AsyncCall async get data from modules,return call object
 // same option value will run in same processor
-func AsyncCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*CallObject, error) {
+func AsyncCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*base.CallObject, error) {
 	m := M().GetModuleByID(destMID)
 	if m == nil {
 		return nil, fmt.Errorf("get module failed module [%d] cmd[%d]", destMID, cmdID)
 	}
-	obj := NewCallObject(m, cmdID, option, args...)
+	obj := base.NewCallObject(m, cmdID, option, args...)
 	obj.SetTrace(destMID)
 	if err := m.Call(option, obj); err != nil {
 		return nil, err
@@ -64,10 +64,10 @@ func AsyncCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*
 
 // Call sync get data from modules
 // same option value will run in same processor
-func Call(destMID uint8, cmdID int32, option int32, args ...interface{}) *RetObject {
+func Call(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.Ret {
 	obj, err := AsyncCall(destMID, cmdID, option, args...)
 	if err != nil {
-		result := NewRetObject(-1, err, nil)
+		result := base.NewRet(-1, err, nil)
 		result.SetTrace(destMID)
 		return result
 	}
@@ -129,19 +129,19 @@ func ModuleName(s IModule) string {
 	return "unknown module"
 }
 
-func ExecuteHandler(s IModule, obj *CallObject) *RetObject {
-	var result *RetObject
+func ExecuteHandler(s IModule, obj *base.CallObject) *base.Ret {
+	var result *base.Ret
 	f := s.GetHandler(obj.CmdID)
 	if f != nil {
 		switch f.(type) {
-		case func(interface{}) *RetObject:
-			result = f.(func(interface{}) *RetObject)(s)
-		case func(interface{}, interface{}) *RetObject:
-			result = f.(func(interface{}, interface{}) *RetObject)(s, obj.Args[0])
-		case func(interface{}, interface{}, interface{}) *RetObject:
-			result = f.(func(interface{}, interface{}, interface{}) *RetObject)(s, obj.Args[0], obj.Args[1])
-		case func(interface{}, interface{}, interface{}, interface{}) *RetObject:
-			result = f.(func(interface{}, interface{}, interface{}, interface{}) *RetObject)(s, obj.Args[0], obj.Args[1], obj.Args[2])
+		case func(interface{}) *base.Ret:
+			result = f.(func(interface{}) *base.Ret)(s)
+		case func(interface{}, interface{}) *base.Ret:
+			result = f.(func(interface{}, interface{}) *base.Ret)(s, obj.Args[0])
+		case func(interface{}, interface{}, interface{}) *base.Ret:
+			result = f.(func(interface{}, interface{}, interface{}) *base.Ret)(s, obj.Args[0], obj.Args[1])
+		case func(interface{}, interface{}, interface{}, interface{}) *base.Ret:
+			result = f.(func(interface{}, interface{}, interface{}, interface{}) *base.Ret)(s, obj.Args[0], obj.Args[1], obj.Args[2])
 		default:
 			panic(fmt.Sprintf("function cmd %v: definition of function is invalid,%v", obj.CmdID, reflect.TypeOf(f)))
 		}
@@ -161,10 +161,10 @@ func ExecuteHandler(s IModule, obj *CallObject) *RetObject {
 			} else {
 				l := len(values)
 				if l == 1 {
-					result = values[0].Interface().(*RetObject)
+					result = values[0].Interface().(*base.Ret)
 				} else {
 					err := errors.New("unsupport params length")
-					result = NewRetObject(-1, err, nil)
+					result = base.NewRet(-1, err, nil)
 					panic(err)
 				}
 			}
@@ -179,7 +179,7 @@ func RunSimpleFrame(s IModule) {
 	if err != nil {
 		return
 	}
-	obj := m.(*CallObject)
+	obj := m.(*base.CallObject)
 	// if err := s.DoWorker(obj); err != nil {
 	// 	log.Error("%s error %s", s.Name(), err.Error())
 	// }
@@ -193,7 +193,7 @@ func RunSimpleFrame(s IModule) {
 	err = s.WorkerPoolSubmit(obj)
 
 	if err != nil {
-		obj.ChanRet <- NewRetObject(-1, err, nil)
+		obj.ChanRet <- base.NewRet(-1, err, nil)
 	}
 }
 

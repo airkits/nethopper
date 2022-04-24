@@ -33,6 +33,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/base/queue"
 	"github.com/airkits/nethopper/config"
 	"github.com/airkits/nethopper/log"
@@ -78,7 +79,7 @@ type IModule interface {
 
 	HasWorkerPool() bool
 
-	WorkerPoolSubmit(obj *CallObject) error
+	WorkerPoolSubmit(obj *base.CallObject) error
 	// Setup init custom module and pass config map to module
 	Setup(conf config.IConfig) (IModule, error)
 	//Reload reload config
@@ -88,9 +89,9 @@ type IModule interface {
 	// Stop goruntine
 	Stop() error
 	// Call async send callobject to module
-	Call(option int32, obj *CallObject) error
+	Call(option int32, obj *base.CallObject) error
 	// Execute callobject
-	Execute(obj *CallObject) *RetObject
+	Execute(obj *base.CallObject) *base.Ret
 
 	// PushBytes async send string or bytes to queue
 	//PushBytes(option int32, buf []byte) error
@@ -101,7 +102,7 @@ type IModule interface {
 	GetReflectHandler(id int32) interface{}
 
 	// DoWorker dispatch callobject to worker processor
-	DoWorker(obj *CallObject) error
+	DoWorker(obj *base.CallObject) error
 
 	//IdleTimesReset reset idle times
 	// IdleTimesReset()
@@ -140,10 +141,10 @@ func (s *BaseContext) ReflectHandlers() map[int32]interface{} {
 func (s *BaseContext) RegisterHandler(id int32, f interface{}) {
 
 	switch f.(type) {
-	case func(interface{}) *RetObject:
-	case func(interface{}, interface{}) *RetObject:
-	case func(interface{}, interface{}, interface{}) *RetObject:
-	case func(interface{}, interface{}, interface{}, interface{}) *RetObject:
+	case func(interface{}) *base.Ret:
+	case func(interface{}, interface{}) *base.Ret:
+	case func(interface{}, interface{}, interface{}) *base.Ret:
+	case func(interface{}, interface{}, interface{}, interface{}) *base.Ret:
 	default:
 		panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
 	}
@@ -176,8 +177,8 @@ func (s *BaseContext) GetReflectHandler(id int32) interface{} {
 }
 
 // Execute callobject
-func (s *BaseContext) Execute(obj *CallObject) *RetObject {
-	return NewRetObject(-1, fmt.Errorf("must override execute"), nil)
+func (s *BaseContext) Execute(obj *base.CallObject) *base.Ret {
+	return base.NewRet(-1, fmt.Errorf("must override execute"), nil)
 }
 
 // IdleTimesReset reset idle times
@@ -217,12 +218,12 @@ func (s *BaseContext) MakeContext(queueSize int32) {
 func (s *BaseContext) HasWorkerPool() bool {
 	return s.workerPool != nil
 }
-func (s *BaseContext) WorkerPoolSubmit(obj *CallObject) error {
+func (s *BaseContext) WorkerPoolSubmit(obj *base.CallObject) error {
 	return s.workerPool.Submit(obj)
 }
 
 // DoWorker process callobject
-func (s *BaseContext) DoWorker(obj *CallObject) error {
+func (s *BaseContext) DoWorker(obj *base.CallObject) error {
 	//Debug("[%s] cmd [%s] process", s.Name(), obj.Cmd)
 	var err error
 	if s.workerPool == nil {
@@ -236,7 +237,7 @@ func (s *BaseContext) DoWorker(obj *CallObject) error {
 		err = s.workerPool.Submit(obj)
 	}
 	if err != nil {
-		result := NewRetObject(-1, err, nil)
+		result := base.NewRet(-1, err, nil)
 		result.SetTrace(obj.Trace...)
 		result.SetTrace(s.ID())
 		obj.ChanRet <- result
@@ -245,7 +246,7 @@ func (s *BaseContext) DoWorker(obj *CallObject) error {
 }
 
 // Call async send message to module
-func (s *BaseContext) Call(option int32, obj *CallObject) error {
+func (s *BaseContext) Call(option int32, obj *base.CallObject) error {
 	//	s.IdleTimesReset()
 	if err := s.q.AsyncPush(obj); err != nil {
 		log.Error(err.Error())

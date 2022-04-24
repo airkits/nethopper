@@ -30,6 +30,7 @@ package mediator
 import (
 	"time"
 
+	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/base/queue"
 )
 
@@ -52,13 +53,13 @@ type Processor struct {
 }
 
 // Process goruntine process pre call
-func Process(obj *CallObject) *RetObject {
+func Process(obj *base.CallObject) *base.Ret {
 	//defer TraceCost(s.Name() + ":" + obj.Cmd)()
-	var result *RetObject
+	var result *base.Ret
 
 	defer func() {
 		if r := recover(); r != nil {
-			result = NewRetObject(-1, r.(error), nil)
+			result = base.NewRet(-1, r.(error), nil)
 			obj.ChanRet <- result
 		}
 	}()
@@ -72,14 +73,14 @@ func Process(obj *CallObject) *RetObject {
 // if f != nil {
 
 // 	switch f.(type) {
-// 	case func(interface{}) *RetObject:
-// 		result = f.(func(interface{}) *RetObject)(s)
-// 	case func(interface{}, interface{}) *RetObject:
-// 		result = f.(func(interface{}, interface{}) *RetObject)(s, obj.Args[0])
-// 	case func(interface{}, interface{}, interface{}) *RetObject:
-// 		result = f.(func(interface{}, interface{}, interface{}) *RetObject)(s, obj.Args[0], obj.Args[1])
-// 	case func(interface{}, interface{}, interface{}, interface{}) *RetObject:
-// 		result = f.(func(interface{}, interface{}, interface{}, interface{}) *RetObject)(s, obj.Args[0], obj.Args[1], obj.Args[2])
+// 	case func(interface{}) *Ret:
+// 		result = f.(func(interface{}) *Ret)(s)
+// 	case func(interface{}, interface{}) *Ret:
+// 		result = f.(func(interface{}, interface{}) *Ret)(s, obj.Args[0])
+// 	case func(interface{}, interface{}, interface{}) *Ret:
+// 		result = f.(func(interface{}, interface{}, interface{}) *Ret)(s, obj.Args[0], obj.Args[1])
+// 	case func(interface{}, interface{}, interface{}, interface{}) *Ret:
+// 		result = f.(func(interface{}, interface{}, interface{}, interface{}) *Ret)(s, obj.Args[0], obj.Args[1], obj.Args[2])
 // 	default:
 // 		panic(fmt.Sprintf("function cmd %v: definition of function is invalid,%v", obj.CmdID, reflect.TypeOf(f)))
 // 	}
@@ -99,10 +100,10 @@ func Process(obj *CallObject) *RetObject {
 // 		} else {
 // 			l := len(values)
 // 			if l == 1 {
-// 				result = values[0].Interface().(*RetObject)
+// 				result = values[0].Interface().(*Ret)
 // 			} else {
 // 				err := errors.New("unsupport params length")
-// 				result = NewRetObject(-1, err, nil)
+// 				result = NewRet(-1, err, nil)
 // 				panic(err)
 // 			}
 // 		}
@@ -123,7 +124,7 @@ func (w *Processor) Run() {
 				break
 			}
 			if err == nil {
-				Process(obj.(*CallObject))
+				Process(obj.(*base.CallObject))
 			}
 			if w.q.Length() == 0 {
 				if ok := w.wp.RecycleProcessor(w); !ok {
@@ -135,7 +136,7 @@ func (w *Processor) Run() {
 }
 
 //Submit task to processor
-func (w *Processor) Submit(obj *CallObject) error {
+func (w *Processor) Submit(obj *base.CallObject) error {
 	if err := w.q.AsyncPush(obj); err != nil {
 		return err
 	}

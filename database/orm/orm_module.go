@@ -30,6 +30,7 @@ package orm
 import (
 	"time"
 
+	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/config"
 	"github.com/airkits/nethopper/mediator"
 )
@@ -74,7 +75,7 @@ func (s *OrmModule) Stop() error {
 }
 
 // Call async send message to module
-func (s *OrmModule) Call(option int32, obj *mediator.CallObject) error {
+func (s *OrmModule) Call(option int32, obj *base.CallObject) error {
 	return nil
 }
 

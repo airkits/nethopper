@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/base/queue"
 	"github.com/airkits/nethopper/mediator"
 	"github.com/airkits/nethopper/utils"
@@ -28,9 +29,9 @@ func init() {
 type MCall struct {
 }
 
-func (m *MCall) Execute(obj *mediator.CallObject) *mediator.RetObject {
+func (m *MCall) Execute(obj *base.CallObject) *base.Ret {
 	utils.GenUID()
-	return mediator.NewRetObject(1, nil, obj.Args[0])
+	return base.NewRet(1, nil, obj.Args[0])
 
 }
 func BenchmarkWorkerPool(b *testing.B) {
@@ -40,12 +41,12 @@ func BenchmarkWorkerPool(b *testing.B) {
 	if err != nil {
 		b.Error(err)
 	}
-	obj := mediator.NewCallObject(m, 1, int32(1), 1)
+	obj := base.NewCallObject(m, 1, int32(1), 1)
 	wp.Submit(obj)
 
 	for j := 0; j < b.N; j++ {
 
-		obj := mediator.NewCallObject(m, 1, int32(j), j)
+		obj := base.NewCallObject(m, 1, int32(j), j)
 		wp.Submit(obj)
 
 		result := <-obj.ChanRet
@@ -74,7 +75,7 @@ func BenchmarkWorkerSend(b *testing.B) {
 	f := func() {
 		for j := 0; j < b.N; j++ {
 			v, _ := q.Pop()
-			obj := mediator.NewCallObject(m, 1, utils.RandomInt32(0, 1000), v)
+			obj := base.NewCallObject(m, 1, utils.RandomInt32(0, 1000), v)
 			wp.Submit(obj)
 			result := <-obj.ChanRet
 			if result.Data != v {
@@ -111,7 +112,7 @@ func BenchmarkWorker(b *testing.B) {
 			if v.(int) != j {
 				b.Error("push error %ld", j)
 			}
-			obj := mediator.NewCallObject(m, 1, utils.RandomInt32(0, 1000), j)
+			obj := base.NewCallObject(m, 1, utils.RandomInt32(0, 1000), j)
 			wp.Submit(obj)
 			result := <-obj.ChanRet
 			p.Push(result.Data)

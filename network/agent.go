@@ -101,6 +101,7 @@ func (a *Agent) Run() {
 			log.Debug("read message: %v", err)
 			break
 		}
+		log.Debug("[WS] receive one message")
 		a.adapter.ProcessMessage(data)
 
 	}
@@ -113,7 +114,12 @@ func (a *Agent) OnClose() {
 
 // SendMessage send message to conn
 func (a *Agent) SendMessage(payload []byte) error {
-	return a.GetAdapter().WriteMessage(payload)
+	if err := a.GetAdapter().WriteMessage(payload); err != nil {
+		log.Warning("[Network] send message failed %s", err.Error())
+		return err
+	}
+	log.Info("[Network] send one message success.")
+	return nil
 }
 
 //LocalAddr get local addr

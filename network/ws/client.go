@@ -51,10 +51,10 @@ func (c *Client) init() {
 	defer c.Unlock()
 
 	if c.NewAgent == nil {
-		log.Fatal("NewAgent must not be nil")
+		log.Fatal("[WSClient] NewAgent must not be nil")
 	}
 	if c.conns != nil {
-		log.Fatal("client is running")
+		log.Fatal("[WSClient] client is running")
 	}
 
 	c.conns = make(ConnSet)
@@ -65,11 +65,11 @@ func (c *Client) init() {
 
 }
 
-func (c *Client) dial(uid uint32, address string) (*websocket.Conn, error) {
+func (c *Client) dial(uid uint64, address string) (*websocket.Conn, error) {
 	headers := make(http.Header)
 	headers.Set(common.HeaderToken, c.Conf.Token)
 	headers.Set(common.HeaderUID, fmt.Sprintf("%d", uid))
-
+	log.Trace("[WSClient] websocket client start to connecting uid:[%d] address:[%s]", uid, address)
 	conn, _, err := c.dialer.Dial(address, headers)
 	if err == nil || c.closeFlag {
 		return conn, nil
@@ -83,13 +83,14 @@ func (c *Client) connect(serverID int, name string, address string) {
 reconnect:
 	conn, err := c.dial(c.Conf.UID, address)
 	if err != nil {
-		log.Fatal("websocket client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		log.Fatal("[WSClient] websocket client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.Conf.AutoReconnect {
 			time.Sleep(c.Conf.ConnectInterval * time.Second)
-			log.Warning("websocket client try reconnect to id:[%d] %s %s", serverID, name, address)
+			log.Warning("[WSClient] websocket client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
+
 	conn.SetReadLimit(int64(c.Conf.MaxMessageSize))
 
 	c.Lock()
@@ -100,9 +101,11 @@ reconnect:
 	}
 	c.conns[conn] = struct{}{}
 	c.Unlock()
+	log.Trace("[WSClient] websocket client connect to server success id:[%d] %s [%s]", serverID, name, address)
 
 	wsConn := NewConn(conn, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
 	agent := c.NewAgent(wsConn, uint64(c.Conf.UID), c.Conf.Token)
+
 	agent.Run()
 
 	// cleanup
@@ -115,7 +118,7 @@ reconnect:
 
 	if c.Conf.AutoReconnect {
 		time.Sleep(c.Conf.ConnectInterval * time.Second)
-		log.Warning("websocket client try reconnect to id:[%d] %s %s", serverID, name, address)
+		log.Warning("[WSClient] websocket client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }

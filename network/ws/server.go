@@ -81,6 +81,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		wsConn := NewConn(conn, s.Conf.SocketQueueSize, s.Conf.MaxMessageSize)
 		agent = s.NewAgent(wsConn, userID, token)
+		log.Trace("[WS] one client connection opened, uid:[%d] token: %s success", userID, token)
 
 		agent.Run()
 
@@ -103,14 +104,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
 	if s.NewAgent == nil {
-		log.Fatal("NewAgent must not be nil")
+		log.Fatal("[WS] NewAgent must not be nil")
 	}
 	s.conns = make(ConnSet)
 	ln, err := net.Listen("tcp", s.Conf.Address)
 	if err != nil {
 		log.Fatal("%v", err)
 	}
-	log.Info("websocket start listen:%s", s.Conf.Address)
+	log.Trace("[WS] websocket start listen %s", s.Conf.Address)
 	if s.Conf.CertFile != "" || s.Conf.KeyFile != "" {
 		config := &tls.Config{}
 		config.NextProtos = []string{"http/1.1"}
@@ -130,7 +131,7 @@ func (s *Server) ListenAndServe() {
 	s.upgrader = websocket.Upgrader{
 		HandshakeTimeout: time.Duration(s.Conf.HTTPTimeout) * time.Second,
 		CheckOrigin: func(r *http.Request) bool {
-			log.Info("connection header:%v", r.Header)
+			log.Info("[WS] connection header:%v", r.Header)
 			return true
 		}}
 

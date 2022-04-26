@@ -42,7 +42,7 @@ type Server struct {
 //ListenAndServe start serve
 func (s *Server) ListenAndServe() {
 	if s.NewAgent == nil {
-		log.Fatal("NewAgent must not be nil")
+		log.Fatal("[GRPC] NewAgent must not be nil")
 	}
 	s.conns = make(ConnSet)
 
@@ -52,10 +52,10 @@ func (s *Server) ListenAndServe() {
 	lis, err := net.Listen("tcp", s.Conf.Address)
 
 	if err != nil {
-		log.Error("failed to listen: %v", err)
+		log.Error("[GRPC] failed to listen: %v", err)
 		return
 	}
-	log.Info("grpc start listen:%s", s.Conf.Address)
+	log.Info("[GRPC] grpc start listen:%s", s.Conf.Address)
 	s.listener = lis
 	s.gs.Serve(lis)
 }
@@ -85,16 +85,16 @@ func (s *Server) Transport(stream ss.RPC_TransportServer) error {
 	if md, ok := metadata.FromIncomingContext(stream.Context()); ok {
 		if md.Get("token") != nil {
 			token = md.Get("token")[0]
-			log.Info("token from header: %s", token)
+			log.Info("[GRPC] token from header: %s", token)
 		}
 		if md.Get("UID") != nil {
 			uidStr := md.Get("UID")[0]
 			uid = utils.Str2Uint64(uidStr)
-			log.Info("UID from header: %d", uid)
+			log.Info("[GRPC] UID from header: %d", uid)
 		}
 	}
 
-	log.Info("one client connection opened.")
+	log.Info("[GRPC] one client connection opened.")
 	s.mutexConns.Lock()
 	s.conns[stream] = struct{}{}
 	s.mutexConns.Unlock()

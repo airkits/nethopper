@@ -50,10 +50,10 @@ func (c *Client) init() {
 	defer c.Unlock()
 
 	if c.NewAgent == nil {
-		log.Fatal("NewAgent must not be nil")
+		log.Fatal("[GRPCClient] NewAgent must not be nil")
 	}
 	if c.conns != nil {
-		log.Fatal("client is running")
+		log.Fatal("[GRPCClient] client is running")
 	}
 
 	c.conns = make(ConnSet)
@@ -65,10 +65,10 @@ func (c *Client) connect(serverID int, name string, address string) {
 reconnect:
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
-		log.Fatal("grpc client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		log.Fatal("[GRPCClient] grpc client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.Conf.AutoReconnect {
 			time.Sleep(c.Conf.ConnectInterval * time.Second)
-			log.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
+			log.Warning("[GRPCClient] grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
@@ -79,14 +79,14 @@ reconnect:
 	ctx, cancel := context.WithCancel(ctx) // context.WithTimeout(context.Background(), 10*time.Second)
 	stream, err := client.Transport(ctx)
 	if err != nil {
-		log.Info("grpc client connect to id:[%d] %s %s transport failed, reason %v", serverID, name, address, err.Error())
+		log.Info("[GRPCClient] grpc client connect to id:[%d] %s %s transport failed, reason %v", serverID, name, address, err.Error())
 		if c.Conf.AutoReconnect {
 			time.Sleep(c.Conf.ConnectInterval * time.Second)
-			log.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
+			log.Warning("[GRPCClient] grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 			goto reconnect
 		}
 	}
-	log.Info("grpc client create new connection to id:[%d] %s %s.", serverID, name, address)
+	log.Info("[GRPCClient] grpc client create new connection to id:[%d] %s %s.", serverID, name, address)
 	c.Lock()
 	c.conns[stream] = struct{}{}
 	c.Unlock()
@@ -107,7 +107,7 @@ reconnect:
 
 	if c.Conf.AutoReconnect {
 		time.Sleep(c.Conf.ConnectInterval * time.Second)
-		log.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
+		log.Warning("[GRPCClient] grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 		goto reconnect
 	}
 }
@@ -127,10 +127,10 @@ func (c *Client) Close() {
 func (c *Client) Call(serverID int, name string, address string) *ss.Message {
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(5*time.Second))
 	if err != nil {
-		log.Fatal("grpc client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
+		log.Fatal("[GRPCClient] grpc client connect to id:[%d] %s %s failed, reason: %v", serverID, name, address, err)
 		if c.Conf.AutoReconnect {
 			time.Sleep(c.Conf.ConnectInterval * time.Second)
-			log.Warning("grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
+			log.Warning("[GRPCClient] grpc client try reconnect to id:[%d] %s %s", serverID, name, address)
 			return nil
 		}
 	}
@@ -142,7 +142,7 @@ func (c *Client) Call(serverID int, name string, address string) *ss.Message {
 
 	r, err := client.Call(ctx, &ss.Message{})
 	if err != nil {
-		log.Fatal("could not greet: %v", err)
+		log.Fatal("[GRPCClient] could not greet: %v", err)
 	}
 	return r
 }

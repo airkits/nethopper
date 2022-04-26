@@ -85,8 +85,8 @@ type IAgent interface {
 type IAgentAdapter interface {
 	//Setup AgentAdapter
 	Setup(conn IConn, codec codec.Codec)
-	//ProcessMessage process request and notify message
-	ProcessMessage(payload interface{}) error
+	//DecodeMessage process request and notify message
+	DecodeMessage(payload interface{}) error
 
 	//WriteMessage to connection
 	WriteMessage(payload interface{}) error
@@ -101,9 +101,11 @@ type IAgentAdapter interface {
 	// SetConn set conn
 	SetConn(conn IConn)
 	//GetSequence get inc id
-	GetSequence() uint32
+	GetSequenceID() uint32
 	//OnClose agent close and clear
 	OnClose()
+	//GenID gen inc id
+	GenID() uint32
 }
 
 //AgentCreateFunc create agent func

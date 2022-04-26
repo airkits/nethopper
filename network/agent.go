@@ -102,7 +102,7 @@ func (a *Agent) Run() {
 			break
 		}
 		log.Debug("[WS] receive one message")
-		a.adapter.ProcessMessage(data)
+		a.adapter.DecodeMessage(data)
 
 	}
 }

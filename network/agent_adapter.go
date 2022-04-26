@@ -38,14 +38,16 @@ import (
 type AgentAdapter struct {
 	codec codec.Codec
 	conn  IConn
-	seq   uint32
+	seqID uint32
+	genID uint32
 }
 
 //Setup AgentAdapter
 func (a *AgentAdapter) Setup(conn IConn, codec codec.Codec) {
 	a.conn = conn
 	a.codec = codec
-	a.seq = 0
+	a.seqID = 0
+	a.genID = 0
 }
 
 //WriteMessage to connection
@@ -68,6 +70,11 @@ func (a *AgentAdapter) Codec() codec.Codec {
 	return a.codec
 }
 
+// ReqID get message gen id
+func (a *AgentAdapter) GenID() uint32 {
+	return atomic.AddUint32(&a.genID, 1)
+}
+
 //SetCodec set codec
 func (a *AgentAdapter) SetCodec(c codec.Codec) {
 	a.codec = c
@@ -83,7 +90,7 @@ func (a *AgentAdapter) SetConn(conn IConn) {
 	a.conn = conn
 }
 
-//GetSequence get inc id
-func (a *AgentAdapter) GetSequence() uint32 {
-	return atomic.AddUint32(&a.seq, 1)
+//GetSequenceID get inc id
+func (a *AgentAdapter) GetSequenceID() uint32 {
+	return atomic.AddUint32(&a.seqID, 1)
 }

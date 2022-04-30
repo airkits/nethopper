@@ -344,3 +344,24 @@ func RandomWeight(weightMapping map[int32]int32) int32 {
 	}
 	return 0
 }
+
+//BitFlag bit 位操作类
+type BitFlag struct {
+	src uint64
+}
+
+func (b *BitFlag) Set(pos uint8) uint64 {
+	b.src = b.src | (uint64(1) << uint64(pos))
+	return b.src
+}
+
+func (b *BitFlag) UnSet(pos uint8) uint64 {
+	b.src = b.src &^ (uint64(1) << uint64(pos))
+	return b.src
+}
+func (b *BitFlag) Reset() {
+	b.src = 0
+}
+func (b *BitFlag) Has(pos uint8) bool {
+	return b.src&(uint64(1)<<uint64(pos)) > 0
+}

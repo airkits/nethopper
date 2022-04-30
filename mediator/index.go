@@ -62,6 +62,22 @@ func AsyncCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*
 
 }
 
+// AsyncNotify async send data from modules,return call object
+// same option value will run in same processor
+func AsyncNotify(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.CallObject {
+	m := M().GetModuleByID(destMID)
+	if m == nil {
+		return nil
+	}
+	obj := base.NewNotifyObject(m, cmdID, option, args...)
+	obj.SetTrace(destMID)
+	if err := m.Call(option, obj); err != nil {
+		return nil
+	}
+	return obj
+
+}
+
 // Call sync get data from modules
 // same option value will run in same processor
 func Call(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.Ret {
@@ -187,12 +203,15 @@ func RunSimpleFrame(s IModule) {
 	if !s.HasWorkerPool() {
 		//err = errors.New("no processor pool")
 		result := s.Execute(obj)
-		obj.ChanRet <- result
+		if !obj.Notify {
+			obj.ChanRet <- result
+		}
 		return
 	}
 	err = s.WorkerPoolSubmit(obj)
 
-	if err != nil {
+	if err != nil && !obj.Notify {
+
 		obj.ChanRet <- base.NewRet(-1, err, nil)
 	}
 }

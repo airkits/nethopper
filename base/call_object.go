@@ -9,6 +9,7 @@ type CallObject struct {
 	Caller  ICaller
 	CmdID   int32
 	Option  int32
+	Notify  bool
 	Args    []interface{}
 	Trace   []uint8
 	ChanRet chan *Ret
@@ -19,7 +20,9 @@ func (c *CallObject) Init(caller ICaller, cmdID int32, opt int32, args ...interf
 	c.CmdID = cmdID
 	c.Option = opt
 	c.Args = args
-	c.ChanRet = make(chan *Ret, 1)
+	if !c.Notify {
+		c.ChanRet = make(chan *Ret, 1)
+	}
 	c.Trace = make([]uint8, 0, 3)
 	return c
 }
@@ -52,7 +55,17 @@ type Ret struct {
 
 // NewCallObject create call object
 func NewCallObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
-	obj := &CallObject{}
+	obj := &CallObject{
+		Notify: false,
+	}
+	return obj.Init(caller, cmdID, opt, args...)
+}
+
+// NewNotifyObject create notify object
+func NewNotifyObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
+	obj := &CallObject{
+		Notify: true,
+	}
 	return obj.Init(caller, cmdID, opt, args...)
 }
 

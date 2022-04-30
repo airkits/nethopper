@@ -90,6 +90,7 @@ type IModule interface {
 	Stop() error
 	// Call async send callobject to module
 	Call(option int32, obj *base.CallObject) error
+
 	// Execute callobject
 	Execute(obj *base.CallObject) *base.Ret
 
@@ -231,7 +232,10 @@ func (s *BaseContext) DoWorker(obj *base.CallObject) error {
 		result := s.Execute(obj)
 		result.SetTrace(obj.Trace...)
 		result.SetTrace(s.ID())
-		obj.ChanRet <- result
+		if !obj.Notify {
+			obj.ChanRet <- result
+		}
+
 		return nil
 	} else {
 		err = s.workerPool.Submit(obj)
@@ -240,7 +244,9 @@ func (s *BaseContext) DoWorker(obj *base.CallObject) error {
 		result := base.NewRet(-1, err, nil)
 		result.SetTrace(obj.Trace...)
 		result.SetTrace(s.ID())
-		obj.ChanRet <- result
+		if !obj.Notify {
+			obj.ChanRet <- result
+		}
 	}
 	return err
 }

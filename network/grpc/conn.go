@@ -96,7 +96,7 @@ func (c *Conn) Close() {
 
 func (c *Conn) doWrite(b *ss.Message) {
 	if len(c.writeChan) == cap(c.writeChan) {
-		log.Debug("close conn: channel full")
+		log.Error("close conn: channel full")
 		c.doDestroy()
 		return
 	}

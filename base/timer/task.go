@@ -10,12 +10,13 @@ import (
 type TaskManager struct {
 	tm *TimerManager
 	// Mapping between task id and timerID, keep id globally unique
-	taskTimerID map[uint64]TimerID
+	//taskTimerID map[uint64]TimerID
+	tick time.Duration
 }
 
 // NewTaskManager create task manager
-func NewTaskManager() *TaskManager {
-	schedule := &TaskManager{tm: NewTimerManager(time.Second)}
+func NewTaskManager(tick time.Duration) *TaskManager {
+	schedule := &TaskManager{tm: NewTimerManager(tick), tick: tick}
 	return schedule
 }
 
@@ -24,7 +25,7 @@ func (t *TaskManager) Serve() {
 	go func() {
 		for {
 			t.tm.DetectTimerInLock()
-			time.Sleep(20 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 	}()
 }
@@ -49,7 +50,7 @@ func (t *TaskManager) RunAt(unix int64, f func(interface{})) (TimerID, error) {
 
 //RunAfter add timer run once,callback function should keep goruntine safe
 func (t *TaskManager) RunAfter(d time.Duration, f func(interface{})) (TimerID, error) {
-	interval := d / time.Second
+	interval := d / t.tick
 	if interval <= 0 {
 		err := fmt.Errorf("invalid interval time! %d", interval)
 		return 0, err
@@ -61,7 +62,7 @@ func (t *TaskManager) RunAfter(d time.Duration, f func(interface{})) (TimerID, e
 
 //RunLoop run loop timer,callback function should keep goruntine safe
 func (t *TaskManager) RunLoop(d time.Duration, f func(interface{})) (TimerID, error) {
-	interval := d / time.Second
+	interval := d / t.tick
 	if interval <= 0 {
 		err := fmt.Errorf("invalid interval time! %d", interval)
 		return 0, err
@@ -73,7 +74,7 @@ func (t *TaskManager) RunLoop(d time.Duration, f func(interface{})) (TimerID, er
 
 //Update update timer duration,callback function should keep goruntine safe
 func (t *TaskManager) Update(ID TimerID, d time.Duration, f func(interface{})) error {
-	interval := d / time.Second
+	interval := d / t.tick
 	if interval <= 0 {
 		err := fmt.Errorf("invalid interval time! %d", interval)
 		return err

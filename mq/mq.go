@@ -37,13 +37,13 @@ const (
 	// MessageType message type enum
 	MessageType = iota
 	// MTRequest request =1
-	MTRequest
+	MTRequest = 1
 	// MTResponse response = 2
-	MTResponse
+	MTResponse = 2
 	// MTNotify notify = 3
-	MTNotify
+	MTNotify = 3
 	// MTBroadcast broadcast = 4
-	MTBroadcast
+	MTBroadcast = 4
 )
 const (
 	// InvalidInt32 Invalid values set to -1

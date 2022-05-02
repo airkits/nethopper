@@ -15,6 +15,7 @@ type TaskManager struct {
 }
 
 // NewTaskManager create task manager
+// @param tick 需要输入的循环精度秒或者毫秒
 func NewTaskManager(tick time.Duration) *TaskManager {
 	schedule := &TaskManager{tm: NewTimerManager(tick), tick: tick}
 	return schedule

@@ -20,7 +20,7 @@ type NatsStream struct {
 	conn *nats.Conn
 }
 
-func (s *NatsStream) Send(*ss.Message) error {
+func (s *NatsStream) Send(msg *ss.Message) error {
 
 	return nil
 }

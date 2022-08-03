@@ -31,6 +31,10 @@ type Client struct {
 	wg         *sync.WaitGroup
 }
 
+func (c *Client) Wait() {
+	c.wg.Wait()
+}
+
 // Run client start run
 func (c *Client) Run() {
 	c.init()
@@ -75,17 +79,17 @@ func (c *Client) connect(serverID int, name string, address string) error {
 		return err
 	}
 	stream := NewStream(nc)
-	log.Info("[GRPCClient] grpc client create new connection to id:[%d] %s %s.", serverID, name, address)
+	log.Info("[Client] client create new connection to id:[%d] %s %s.", serverID, name, address)
 	c.Lock()
 	c.conns[stream] = struct{}{}
 	c.Unlock()
 
-	grpcConn := NewConn(stream, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
-	agent := c.NewAgent(grpcConn, uint64(serverID), name)
+	conn := NewConn(stream, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
+	agent := c.NewAgent(conn, uint64(serverID), name)
 
 	agent.Run()
 
-	grpcConn.Close()
+	conn.Close()
 	c.Lock()
 	delete(c.conns, stream)
 	c.Unlock()

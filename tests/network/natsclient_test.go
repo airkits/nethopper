@@ -56,6 +56,7 @@ func TestNatsClientRequest(t *testing.T) {
 	}
 	client := natsrpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
+
 		any, _ := anypb.New(nil)
 		msg := &ss.Message{
 			ID:      1,

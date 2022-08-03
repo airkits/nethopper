@@ -2,9 +2,9 @@ package natsrpc
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/airkits/proto/ss"
+	"github.com/golang/protobuf/proto"
 	"github.com/nats-io/nats.go"
 )
 
@@ -15,7 +15,9 @@ func NewStream(conn *nats.Conn) INatsStream {
 	js, _ := conn.JetStream(nats.PublishAsyncMaxPending(256))
 	s.js = js
 	s.createStream()
-
+	go s.SubscribeToStream(func(data []byte) []byte {
+		return data
+	})
 	return s
 }
 
@@ -42,7 +44,7 @@ func (s *NatsStream) createStream() error {
 
 func (s *NatsStream) SubscribeToStream(f func([]byte) []byte) {
 	fmt.Printf("Subscribing to query.unserialized")
-	s.js.Subscribe("query.unserialized", func(msg *nats.Msg) {
+	s.js.Subscribe("query.serialized", func(msg *nats.Msg) {
 		fmt.Printf("Msg recieved")
 		msg.Ack()
 		fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
@@ -50,10 +52,11 @@ func (s *NatsStream) SubscribeToStream(f func([]byte) []byte) {
 		fmt.Printf("Data recieved: ")
 		s.PublishToStream(res)
 	}, nats.Durable("monitor"), nats.ManualAck())
-	runtime.Goexit()
+
 }
 
 func (s *NatsStream) PublishToStream(data []byte) {
+
 	_, err := s.js.Publish("query.serialized", data)
 
 	if err != nil {
@@ -64,7 +67,8 @@ func (s *NatsStream) PublishToStream(data []byte) {
 }
 
 func (s *NatsStream) Send(msg *ss.Message) error {
-
+	data, _ := proto.Marshal(msg)
+	s.PublishToStream(data)
 	return nil
 }
 func (s *NatsStream) Recv() (*ss.Message, error) {

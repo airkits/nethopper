@@ -84,12 +84,12 @@ func (c *Client) connect(serverID int, name string, address string) error {
 	c.conns[stream] = struct{}{}
 	c.Unlock()
 
-	conn := NewConn(stream, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
-	agent := c.NewAgent(conn, uint64(serverID), name)
+	natsConn := NewConn(stream, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
+	agent := c.NewAgent(natsConn, uint64(serverID), name)
 
 	agent.Run()
 
-	conn.Close()
+	natsConn.Close()
 	c.Lock()
 	delete(c.conns, stream)
 	c.Unlock()

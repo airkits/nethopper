@@ -12,10 +12,13 @@ import (
 func NewStream(conn *nats.Conn) INatsStream {
 	s := new(NatsStream)
 	s.conn = conn
-	js, _ := conn.JetStream(nats.PublishAsyncMaxPending(256))
+	js, err := conn.JetStream(nats.PublishAsyncMaxPending(256))
 	s.js = js
+	if err != nil {
+		fmt.Println(err)
+	}
 	s.createStream()
-	go s.SubscribeToStream(func(data []byte) []byte {
+	s.SubscribeToStream(func(data []byte) []byte {
 		return data
 	})
 	return s
@@ -23,28 +26,34 @@ func NewStream(conn *nats.Conn) INatsStream {
 
 //NatsStream define nat stream interface
 type NatsStream struct {
-	js   nats.JetStreamContext
-	conn *nats.Conn
+	js         nats.JetStreamContext
+	conn       *nats.Conn
+	streamInfo *nats.StreamInfo
 }
 
 func (s *NatsStream) createStream() error {
-	err := s.js.DeleteStream("query.*")
-	if err != nil {
-		return err
+	name := "query"
+	if s.streamInfo != nil {
+		err := s.js.DeleteStream(name)
+		if err != nil {
+			return err
+		}
 	}
-	_, err = s.js.AddStream(&nats.StreamConfig{
-		Name:     "query.*",
+
+	info, err := s.js.AddStream(&nats.StreamConfig{
+		Name:     name,
 		Subjects: []string{"query.*"},
 	})
 	if err != nil {
 		return err
 	}
+	s.streamInfo = info
 	return nil
 }
 
 func (s *NatsStream) SubscribeToStream(f func([]byte) []byte) {
-	fmt.Printf("Subscribing to query.unserialized")
-	s.js.Subscribe("query.serialized", func(msg *nats.Msg) {
+	fmt.Printf("Subscribing to query.serialized")
+	result, err := s.js.Subscribe("query.test", func(msg *nats.Msg) {
 		fmt.Printf("Msg recieved")
 		msg.Ack()
 		fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
@@ -52,12 +61,15 @@ func (s *NatsStream) SubscribeToStream(f func([]byte) []byte) {
 		fmt.Printf("Data recieved: ")
 		s.PublishToStream(res)
 	}, nats.Durable("monitor"), nats.ManualAck())
-
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(result)
 }
 
 func (s *NatsStream) PublishToStream(data []byte) {
 
-	_, err := s.js.Publish("query.serialized", data)
+	_, err := s.js.Publish("query.test", data)
 
 	if err != nil {
 		fmt.Println(err.Error())

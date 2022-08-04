@@ -45,7 +45,7 @@ func TestNatsClientRequest(t *testing.T) {
 		Nodes: []common.NodeInfo{{
 			ID:      0,
 			Name:    "NAME",
-			Address: "nats://127.0.0.1:4222",
+			Address: "nats://192.168.1.178:4222",
 		}},
 		PingInterval:        30 * time.Second,
 		MaxPingsOutstanding: 10,

@@ -1,9 +1,11 @@
 package natsrpc
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
@@ -11,6 +13,11 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/nats-io/nats.go"
 )
+
+//ErrQueueIsClosed queue is closed
+var ErrQueueIsClosed = errors.New("Queue is Closed")
+
+var ErrQueueEmpty = errors.New("Queue is empty")
 
 //ConnSet grpc conn set
 type ConnSet map[*nats.Conn]struct{}
@@ -40,11 +47,17 @@ type Conn struct {
 func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IConn {
 	natsConn := new(Conn)
 	natsConn.nc = conn
-
+	js, err := conn.JetStream(nats.PublishAsyncMaxPending(1024))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	natsConn.stream = js
 	natsConn.writeChan = make(chan *ss.Message, rwQueueSize)
 	natsConn.readChan = make(chan *ss.Message, rwQueueSize)
 	natsConn.maxMessageSize = maxMessageSize
 	natsConn.CreateStream("query", []string{"query.*"})
+	natsConn.SubscribeToStream("query.test")
+
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
@@ -55,11 +68,10 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 			if b == nil {
 				break
 			}
-
-			//err := stream.Send(b)
-			// if err != nil {
-			// 	break
-			// }
+			err := natsConn.PublishToStream("query.test", b)
+			if err != nil {
+				break
+			}
 		}
 
 		//	conn.Close()
@@ -90,7 +102,37 @@ func (s *Conn) CreateStream(name string, subjects []string) error {
 	s.streamInfo = info
 	return nil
 }
+func (c *Conn) Request(subject string, msg *ss.Message) (*ss.Message, error) {
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+	result, err := c.nc.Request(subject, data, time.Second*30)
+	if err != nil {
+		return nil, err
+	}
+	outMsg := &ss.Message{}
+	err = proto.Unmarshal(result.Data, outMsg)
+	if err != nil {
+		return nil, err
+	}
+	return outMsg, nil
+}
+func (c *Conn) Reply(subject string, f func(*ss.Message) *ss.Message) (*nats.Subscription, error) {
+	return c.nc.Subscribe(subject, func(msg *nats.Msg) {
+		fmt.Printf("Msg recieved")
+		msg.Ack()
+		fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
+		ss := &ss.Message{}
+		proto.Unmarshal(msg.Data, ss)
+		result := f(ss)
+		data, err := proto.Marshal(result)
+		if err != nil {
 
+		}
+		c.nc.PublishRequest(msg.Subject, msg.Reply, data)
+	})
+}
 func (c *Conn) SubscribeToStream(subject string) {
 	fmt.Printf("Subscribing to query.serialized")
 	result, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
@@ -118,8 +160,6 @@ func (c *Conn) PublishToStream(subject string, msg *ss.Message) error {
 	return nil
 }
 func (c *Conn) doDestroy() {
-	// c.conn.UnderlyingConn().(*net.TCPConn).SetLinger(0)
-	// c.conn.Close()
 
 	if !c.closeFlag {
 		close(c.writeChan)
@@ -165,23 +205,28 @@ func (c *Conn) LocalAddr() net.Addr {
 
 //RemoteAddr get remote addr
 func (c *Conn) RemoteAddr() net.Addr {
-	// pr, ok := peer.FromContext(c.stream.Context())
-	// if !ok {
-	// 	log.Error("[RemoteAddr] invoke FromContext() failed")
-	// 	return nil
-	// }
-	// if pr.Addr == net.Addr(nil) {
-	// 	log.Error("[RemoteAddr] peer.Addr is nil")
-	// 	return nil
-	// }
 
-	//return pr.Addr
-	return nil
+	return c.nc.Opts.Dialer.LocalAddr
+
 }
 
 //ReadMessage goroutine not safe
 func (c *Conn) ReadMessage() (interface{}, error) {
-	return c.stream.Recv()
+
+	v, ok := <-c.readChan
+	if ok {
+		return v, nil
+	}
+	return nil, ErrQueueIsClosed
+	// select {
+	// case v, ok := <-c.readChan:
+	// 	if ok {
+	// 		return v, nil
+	// 	}
+	// 	return nil, ErrQueueIsClosed
+	// default:
+	// 	return nil, ErrQueueEmpty
+	// }
 }
 
 //WriteMessage args must not be modified by the others goroutines

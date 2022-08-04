@@ -91,7 +91,7 @@ func (c *Client) connect(serverID int, name string, address string) error {
 
 	natsConn.Close()
 	c.Lock()
-	delete(c.conns, stream)
+	delete(c.conns, nc)
 	c.Unlock()
 	c.CloseAgent(agent)
 	agent.OnClose()

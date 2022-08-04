@@ -78,13 +78,13 @@ func (c *Client) connect(serverID int, name string, address string) error {
 	if err != nil {
 		return err
 	}
-	stream := NewStream(nc)
+
 	log.Info("[Client] client create new connection to id:[%d] %s %s.", serverID, name, address)
 	c.Lock()
-	c.conns[stream] = struct{}{}
+	c.conns[nc] = struct{}{}
 	c.Unlock()
 
-	natsConn := NewConn(stream, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
+	natsConn := NewConn(nc, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
 	agent := c.NewAgent(natsConn, uint64(serverID), name)
 
 	agent.Run()

@@ -3,6 +3,7 @@ package natsrpc
 import (
 	"fmt"
 
+	"github.com/airkits/nethopper/base/queue"
 	"github.com/airkits/proto/ss"
 	"github.com/golang/protobuf/proto"
 	"github.com/nats-io/nats.go"
@@ -14,10 +15,11 @@ func NewStream(conn *nats.Conn) INatsStream {
 	s.conn = conn
 	js, err := conn.JetStream(nats.PublishAsyncMaxPending(256))
 	s.js = js
+	s.queue = queue.NewChanQueue(int32(1024))
 	if err != nil {
 		fmt.Println(err)
 	}
-	s.createStream()
+	s.CreateStream("query", []string{"query.*"})
 	s.SubscribeToStream(func(data []byte) []byte {
 		return data
 	})
@@ -29,10 +31,11 @@ type NatsStream struct {
 	js         nats.JetStreamContext
 	conn       *nats.Conn
 	streamInfo *nats.StreamInfo
+	queue      queue.Queue
 }
 
-func (s *NatsStream) createStream() error {
-	name := "query"
+func (s *NatsStream) CreateStream(name string, subjects []string) error {
+
 	if s.streamInfo != nil {
 		err := s.js.DeleteStream(name)
 		if err != nil {
@@ -42,7 +45,7 @@ func (s *NatsStream) createStream() error {
 
 	info, err := s.js.AddStream(&nats.StreamConfig{
 		Name:     name,
-		Subjects: []string{"query.*"},
+		Subjects: subjects,
 	})
 	if err != nil {
 		return err

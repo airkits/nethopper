@@ -45,7 +45,7 @@ type Conn struct {
 
 //NewConn create websocket conn
 func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IConn {
-	natsConn := new(Conn)
+	natsConn := &Conn{}
 	natsConn.nc = conn
 	js, err := conn.JetStream(nats.PublishAsyncMaxPending(1024))
 	if err != nil {

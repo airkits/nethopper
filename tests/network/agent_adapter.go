@@ -28,7 +28,7 @@
 package rpc_test
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/airkits/nethopper/codec"
 	"github.com/airkits/nethopper/log"
@@ -49,7 +49,8 @@ type AgentAdapter struct {
 
 //DecodeMessage process request and notify message
 func (a *AgentAdapter) DecodeMessage(payload interface{}) error {
-	return errors.New("unknown message")
+	fmt.Println(payload)
+	return nil
 }
 
 //WriteMessage to connection

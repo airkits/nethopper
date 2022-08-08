@@ -41,12 +41,18 @@ type Conn struct {
 	maxMessageSize uint32
 	closeFlag      bool
 	streamInfo     *nats.StreamInfo
+	subjects       map[int32]string
+	requests       map[int32]string
+	funcs          map[string](func(*ss.Message) *ss.Message) //handlers
 }
 
 //NewConn create websocket conn
 func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IConn {
 	natsConn := &Conn{}
 	natsConn.nc = conn
+	natsConn.subjects = make(map[int32]string)
+	natsConn.requests = make(map[int32]string)
+	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
 	js, err := conn.JetStream(nats.PublishAsyncMaxPending(1024))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -55,8 +61,8 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 	natsConn.writeChan = make(chan *ss.Message, rwQueueSize)
 	natsConn.readChan = make(chan *ss.Message, rwQueueSize)
 	natsConn.maxMessageSize = maxMessageSize
-	natsConn.CreateStream("query", []string{"query.*"})
-	natsConn.SubscribeToStream("query.test")
+	//natsConn.CreateStream("query", []string{"query.*"})
+	//natsConn.SubscribeToStream("query.test")
 
 	go func() {
 		defer func() {
@@ -68,10 +74,23 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 			if b == nil {
 				break
 			}
-			err := natsConn.PublishToStream("query.test", b)
-			if err != nil {
-				break
+			subject, ok := natsConn.requests[int32(b.MsgID)]
+			if ok {
+				msg, err := natsConn.Request(subject, b)
+				if err != nil {
+					break
+				}
+				natsConn.readChan <- msg
+			} else {
+				subject, ok = natsConn.subjects[int32(b.MsgID)]
+				if ok {
+					err = natsConn.publishToStream(subject, b)
+					if err != nil {
+						break
+					}
+				}
 			}
+
 		}
 
 		//	conn.Close()
@@ -102,7 +121,35 @@ func (s *Conn) CreateStream(name string, subjects []string) error {
 	s.streamInfo = info
 	return nil
 }
+
+func (c *Conn) RegisterSubject(msgID int32, subject string) {
+
+	if _, ok := c.subjects[msgID]; ok {
+		fmt.Printf("subject id %v: already registered", msgID)
+	}
+	c.SubscribeToStream(subject)
+	c.subjects[msgID] = subject
+}
+func (c *Conn) RegisterRequest(msgID int32, subject string) {
+
+	if _, ok := c.requests[msgID]; ok {
+		fmt.Printf("request message id %v: already registered", msgID)
+	}
+	c.requests[msgID] = subject
+}
+
+// RegisterReply register function before run
+func (c *Conn) RegisterReply(subject string, f func(*ss.Message) *ss.Message) {
+
+	if _, ok := c.funcs[subject]; ok {
+		panic(fmt.Sprintf("function id %v: already registered", subject))
+	}
+	c.funcs[subject] = f
+	c.reply(subject, f)
+}
+
 func (c *Conn) Request(subject string, msg *ss.Message) (*ss.Message, error) {
+
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -118,7 +165,7 @@ func (c *Conn) Request(subject string, msg *ss.Message) (*ss.Message, error) {
 	}
 	return outMsg, nil
 }
-func (c *Conn) Reply(subject string, f func(*ss.Message) *ss.Message) (*nats.Subscription, error) {
+func (c *Conn) reply(subject string, f func(*ss.Message) *ss.Message) (*nats.Subscription, error) {
 	return c.nc.Subscribe(subject, func(msg *nats.Msg) {
 		fmt.Printf("Msg recieved")
 		msg.Ack()
@@ -148,7 +195,7 @@ func (c *Conn) SubscribeToStream(subject string) {
 	}
 	fmt.Println(result)
 }
-func (c *Conn) PublishToStream(subject string, msg *ss.Message) error {
+func (c *Conn) publishToStream(subject string, msg *ss.Message) error {
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return err

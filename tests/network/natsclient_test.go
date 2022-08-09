@@ -47,21 +47,21 @@ func TestNatsClientRequest(t *testing.T) {
 		Nodes: []common.NodeInfo{{
 			ID:      0,
 			Name:    "NAME",
-			Address: "nats://127.0.0.1:4222",
+			Address: "nats://192.168.1.178:4222",
 		}},
 		PingInterval:        30 * time.Second,
 		MaxPingsOutstanding: 10,
 		MaxReconnects:       10,
-		QueueSize:           1000,
-		SocketQueueSize:     1000,
-		MaxMessageSize:      100,
+		QueueSize:           100000,
+		SocketQueueSize:     100000,
+		MaxMessageSize:      100000,
 	}
 	client := natsrpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		nc := conn.(*natsrpc.Conn)
 		nc.CreateStream("query", []string{"query.*"})
 		nc.RegisterSubject(int32(s2s.MessageCmd_HEARTBEAT), "query.test")
-		for i := 0; i < 2; i++ {
+		for i := 0; i < 1000; i++ {
 			any, _ := anypb.New(&s2s.HeartBeatReq{Time: utils.LocalMilliscond()})
 			msg := &ss.Message{
 				ID:      uint32(i),

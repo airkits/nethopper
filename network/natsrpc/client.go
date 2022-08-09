@@ -1,6 +1,7 @@
 package natsrpc
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -76,6 +77,7 @@ func (c *Client) connect(serverID int, name string, address string) error {
 		nats.DisconnectHandler(c.Disconnect),
 	)
 	if err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
 

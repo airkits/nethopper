@@ -41,19 +41,19 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-//NewAgentAdapter create agent adapter
+// NewAgentAdapter create agent adapter
 func NewAgentAdapter(conn network.IConn) network.IAgentAdapter {
 	a := new(AgentAdapter)
 	a.Setup(conn, codec.PBCodec)
 	return a
 }
 
-//AgentAdapter do agent hander
+// AgentAdapter do agent hander
 type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-//DecodeMessage process request and notify message
+// DecodeMessage process request and notify message
 func (a *AgentAdapter) DecodeMessage(payload interface{}) error {
 	msg := (payload).(*ss.Message)
 	var err error
@@ -64,7 +64,7 @@ func (a *AgentAdapter) DecodeMessage(payload interface{}) error {
 			resp := &s2s.HeartBeatResp{}
 			err := anypb.UnmarshalTo(msg.Body, resp, proto.UnmarshalOptions{})
 			if err == nil {
-				fmt.Printf("get msg cost %d ms", utils.LocalMilliscond()-resp.Time)
+				fmt.Printf("get msg cost %d ms\n", utils.LocalMilliscond()-resp.Time)
 			}
 		}
 
@@ -72,7 +72,7 @@ func (a *AgentAdapter) DecodeMessage(payload interface{}) error {
 	return err
 }
 
-//WriteMessage to connection
+// WriteMessage to connection
 func (a *AgentAdapter) WriteMessage(payload interface{}) error {
 	if payload.(*ss.Message).ID%1000 == 0 {
 		fmt.Println("1000")
@@ -84,7 +84,7 @@ func (a *AgentAdapter) WriteMessage(payload interface{}) error {
 	return nil
 }
 
-//ReadMessage goroutine not safe
+// ReadMessage goroutine not safe
 func (a *AgentAdapter) ReadMessage() (interface{}, error) {
 	b, err := a.Conn().ReadMessage()
 	return b, err

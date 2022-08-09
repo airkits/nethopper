@@ -29,57 +29,23 @@ package rpc_test
 
 import (
 	"fmt"
-	"testing"
-	"time"
 
 	"github.com/airkits/nethopper/mq"
-	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/network/common"
-	"github.com/airkits/nethopper/network/natsrpc"
-	"github.com/airkits/nethopper/utils"
 	"github.com/airkits/proto/s2s"
 	"github.com/airkits/proto/ss"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func TestNatsClientRequest(t *testing.T) {
-	conf := &natsrpc.ClientConfig{
-		Nodes: []common.NodeInfo{{
-			ID:      0,
-			Name:    "NAME",
-			Address: "nats://127.0.0.1:4222",
-		}},
-		PingInterval:        30 * time.Second,
-		MaxPingsOutstanding: 10,
-		MaxReconnects:       10,
-		QueueSize:           1000,
-		SocketQueueSize:     1000,
-		MaxMessageSize:      100,
+func HandlerHeartBeat(a *AgentAdapter, msg *ss.Message) error {
+	req := &s2s.HeartBeatReq{}
+	err := anypb.UnmarshalTo(msg.Body, req, proto.UnmarshalOptions{})
+	if err != nil {
+		fmt.Println(err.Error())
 	}
-	client := natsrpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
-		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
-		nc := conn.(*natsrpc.Conn)
-		nc.CreateStream("query", []string{"query.*"})
-		nc.RegisterSubject(int32(s2s.MessageCmd_HEARTBEAT), "query.test")
-		for i := 0; i < 2; i++ {
-			any, _ := anypb.New(&s2s.HeartBeatReq{Time: utils.LocalMilliscond()})
-			msg := &ss.Message{
-				ID:      uint32(i),
-				UID:     uid,
-				MsgID:   uint32(s2s.MessageCmd_HEARTBEAT),
-				MsgType: mq.MTRequest,
-				Seq:     uint32(i),
-				Body:    any,
-			}
+	msg.MsgType = mq.MTResponse
+	any, _ := anypb.New(&s2s.HeartBeatResp{Result: &s2s.Result{Code: 0, Msg: "ok"}, Time: req.Time})
+	msg.Body = any
+	return a.WriteMessage(msg)
 
-			a.GetAdapter().WriteMessage(msg)
-		}
-		return a
-	}, func(agent network.IAgent) {
-		fmt.Println("on error")
-	})
-	client.Run()
-
-	client.Wait()
-	fmt.Println("done")
 }

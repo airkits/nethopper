@@ -33,3 +33,4 @@ b0 pub b0.ba
 b0 pub b0.bb
 
 
+client <-10x2-> nginx <-5x2-> logic <-5x2-> nats <-5x2-> gamedb <-> mysql

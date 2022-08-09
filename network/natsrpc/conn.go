@@ -40,7 +40,6 @@ type Conn struct {
 	readChan       chan *ss.Message
 	maxMessageSize uint32
 	closeFlag      bool
-	streamInfo     *nats.StreamInfo
 	subjects       map[int32]string
 	requests       map[int32]string
 	funcs          map[string](func(*ss.Message) *ss.Message) //handlers
@@ -53,7 +52,12 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 	natsConn.subjects = make(map[int32]string)
 	natsConn.requests = make(map[int32]string)
 	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
-	js, err := conn.JetStream(nats.PublishAsyncMaxPending(1024))
+	js, err := conn.JetStream(nats.PublishAsyncMaxPending(10000),
+		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
+			// todo jetstream error handling
+			fmt.Println(err.Error())
+		}),
+	)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -88,6 +92,8 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 					if err != nil {
 						break
 					}
+				} else {
+					fmt.Println("cant get subject")
 				}
 			}
 
@@ -104,21 +110,29 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 
 func (s *Conn) CreateStream(name string, subjects []string) error {
 
-	if s.streamInfo != nil {
-		err := s.stream.DeleteStream(name)
-		if err != nil {
-			return err
-		}
+	info, err := s.stream.StreamInfo(name)
+	conf := &nats.StreamConfig{
+		Name:         name,
+		Subjects:     subjects,
+		MaxConsumers: 1,
+		MaxMsgs:      -1, // unlimitted
+		MaxBytes:     -1, // stream size unlimitted
+		MaxAge:       365 * 24 * time.Hour,
+		MaxMsgSize:   10000,
+		Duplicates:   1 * time.Hour,
 	}
+	fmt.Print(info)
+	if err != nil {
+		info, err = s.stream.AddStream(conf, nats.PublishAsyncMaxPending(10000))
 
-	info, err := s.stream.AddStream(&nats.StreamConfig{
-		Name:     name,
-		Subjects: subjects,
-	})
+	} else {
+		info, err = s.stream.UpdateStream(conf, nats.PublishAsyncMaxPending(10000))
+	}
+	fmt.Print(info)
 	if err != nil {
 		return err
 	}
-	s.streamInfo = info
+
 	return nil
 }
 
@@ -167,9 +181,9 @@ func (c *Conn) Request(subject string, msg *ss.Message) (*ss.Message, error) {
 }
 func (c *Conn) reply(subject string, f func(*ss.Message) *ss.Message) (*nats.Subscription, error) {
 	return c.nc.Subscribe(subject, func(msg *nats.Msg) {
-		fmt.Printf("Msg recieved")
+
 		msg.Ack()
-		fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
+		fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q \n", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
 		result := f(ss)
@@ -200,10 +214,11 @@ func (c *Conn) publishToStream(subject string, msg *ss.Message) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.stream.Publish(subject, data)
-	if err != nil {
-		fmt.Println(err.Error())
+	result, err2 := c.stream.Publish(subject, data)
+	if err2 != nil {
+		fmt.Println(err2.Error())
 	}
+	fmt.Printf("\nsend reqid = %d,seq=%d \n", result.Sequence, msg.Seq)
 	return nil
 }
 func (c *Conn) doDestroy() {
@@ -235,11 +250,11 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) doWrite(b *ss.Message) {
-	if len(c.writeChan) == cap(c.writeChan) {
-		log.Error("close conn: channel full")
-		c.doDestroy()
-		return
-	}
+	// if len(c.writeChan) == cap(c.writeChan) {
+	// 	log.Error("close conn: channel full")
+	// 	//c.doDestroy()
+	// 	return
+	// }
 
 	c.writeChan <- b
 }

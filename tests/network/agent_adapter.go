@@ -64,7 +64,10 @@ func (a *AgentAdapter) DecodeMessage(payload interface{}) error {
 			resp := &s2s.HeartBeatResp{}
 			err := anypb.UnmarshalTo(msg.Body, resp, proto.UnmarshalOptions{})
 			if err == nil {
-				fmt.Printf("get msg cost %d ms\n", utils.LocalMilliscond()-resp.Time)
+				if msg.Seq%1000 == 0 {
+					fmt.Printf("seq %d get msg cost %d ms\n", msg.Seq, utils.LocalMilliscond()-resp.Time)
+
+				}
 			}
 		}
 

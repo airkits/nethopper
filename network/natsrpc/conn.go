@@ -18,6 +18,7 @@ import (
 var ErrQueueIsClosed = errors.New("Queue is Closed")
 
 var ErrQueueEmpty = errors.New("Queue is empty")
+var ErrQueueFull = errors.New("Queue is full")
 
 // ConnSet grpc conn set
 type ConnSet map[*nats.Conn]struct{}
@@ -52,7 +53,7 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 	natsConn.subjects = make(map[int32]string)
 	natsConn.requests = make(map[int32]string)
 	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
-	js, err := conn.JetStream(nats.PublishAsyncMaxPending(10000),
+	js, err := conn.JetStream(nats.PublishAsyncMaxPending(256),
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
 			// todo jetstream error handling
 			fmt.Println(err.Error())
@@ -144,7 +145,7 @@ func (c *Conn) RegisterSubject(msgID int32, subject string) {
 	if _, ok := c.subjects[msgID]; ok {
 		fmt.Printf("subject id %v: already registered", msgID)
 	}
-	c.SubscribeToStream(subject)
+
 	c.subjects[msgID] = subject
 }
 func (c *Conn) RegisterRequest(msgID int32, subject string) {
@@ -252,14 +253,15 @@ func (c *Conn) Close() {
 	c.closeFlag = true
 }
 
-func (c *Conn) doWrite(b *ss.Message) {
+func (c *Conn) doWrite(b *ss.Message) error {
 	// if len(c.writeChan) == cap(c.writeChan) {
 	// 	log.Error("close conn: channel full")
 	// 	//c.doDestroy()
-	// 	return
+	// 	return ErrQueueFull
 	// }
 
 	c.writeChan <- b
+	return nil
 }
 
 // LocalAddr get local addr
@@ -303,7 +305,10 @@ func (c *Conn) WriteMessage(args ...interface{}) error {
 	}
 
 	for i := 0; i < len(args); i++ {
-		c.doWrite(args[i].(*ss.Message))
+		err := c.doWrite(args[i].(*ss.Message))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

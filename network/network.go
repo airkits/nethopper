@@ -42,7 +42,7 @@ type IClient interface {
 	Close()
 }
 
-//IServer network server interface
+// IServer network server interface
 type IServer interface {
 	ListenAndServe()
 	Close()
@@ -64,7 +64,7 @@ type IConn interface {
 	Destroy()
 }
 
-//IAgent agent interface define
+// IAgent agent interface define
 type IAgent interface {
 	Run()
 	OnClose()
@@ -108,16 +108,16 @@ type IAgentAdapter interface {
 	GenID() uint32
 }
 
-//AgentCreateFunc create agent func
+// AgentCreateFunc create agent func
 type AgentCreateFunc func(conn IConn, uid uint64, token string) IAgent
 
-//AgentCloseFunc close agent func
+// AgentCloseFunc close agent func
 type AgentCloseFunc func(IAgent)
 
 var instance *AgentManager
 var once sync.Once
 
-//GetInstance agent manager instance
+// GetInstance agent manager instance
 func GetInstance() *AgentManager {
 	once.Do(func() {
 		instance = &AgentManager{
@@ -128,13 +128,13 @@ func GetInstance() *AgentManager {
 	return instance
 }
 
-//AgentManager manager agent
+// AgentManager manager agent
 type AgentManager struct {
 	agents     *set.HashSet
 	authAgents *skiplist.SkipList
 }
 
-//AddAgent add agent to manager
+// AddAgent add agent to manager
 func (am *AgentManager) AddAgent(a IAgent) {
 	if a.IsAuth() {
 		v := am.authAgents.Get(float64(a.UID()))
@@ -147,7 +147,7 @@ func (am *AgentManager) AddAgent(a IAgent) {
 	}
 }
 
-//GetAuthAgent get auth agent,if exist return agent and true,else return false
+// GetAuthAgent get auth agent,if exist return agent and true,else return false
 func (am *AgentManager) GetAuthAgent(uid uint64) (IAgent, bool) {
 	v := am.authAgents.Get(float64(uid))
 	if v != nil {
@@ -156,7 +156,7 @@ func (am *AgentManager) GetAuthAgent(uid uint64) (IAgent, bool) {
 	return nil, false
 }
 
-//RemoveAgent remove agent from manager
+// RemoveAgent remove agent from manager
 func (am *AgentManager) RemoveAgent(a IAgent) {
 	a.OnClose()
 	if a.IsAuth() {

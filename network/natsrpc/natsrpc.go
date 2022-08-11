@@ -12,32 +12,32 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// NewClient create grpc client
-func NewClient(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *Client {
-	c := new(Client)
-	c.Conf = conf.(*ClientConfig)
+// NewNatsRPC create nats client
+func NewNatsRPC(conf config.IConfig, agentFunc network.AgentCreateFunc, agentCloseFunc network.AgentCloseFunc) *NatsRPC {
+	c := new(NatsRPC)
+	c.Conf = conf.(*NatsConfig)
 	c.NewAgent = agentFunc
 	c.CloseAgent = agentCloseFunc
 	c.wg = &sync.WaitGroup{}
 	return c
 }
 
-//Client nats client
-type Client struct {
+// NatsRPC nats PRC
+type NatsRPC struct {
 	sync.Mutex
-	Conf       *ClientConfig
+	Conf       *NatsConfig
 	NewAgent   network.AgentCreateFunc
 	CloseAgent network.AgentCloseFunc
 	conns      ConnSet
 	wg         *sync.WaitGroup
 }
 
-func (c *Client) Wait() {
+func (c *NatsRPC) Wait() {
 	c.wg.Wait()
 }
 
 // Run client start run
-func (c *Client) Run() {
+func (c *NatsRPC) Run() {
 	c.init()
 	for _, info := range c.Conf.Nodes {
 
@@ -47,7 +47,7 @@ func (c *Client) Run() {
 	}
 }
 
-func (c *Client) init() {
+func (c *NatsRPC) init() {
 	c.Lock()
 	defer c.Unlock()
 
@@ -60,13 +60,13 @@ func (c *Client) init() {
 
 	c.conns = make(ConnSet)
 }
-func (c *Client) Reconnect(natsConn *nats.Conn) {
+func (c *NatsRPC) Reconnect(natsConn *nats.Conn) {
 
 }
-func (c *Client) Disconnect(natsConn *nats.Conn) {
+func (c *NatsRPC) Disconnect(natsConn *nats.Conn) {
 
 }
-func (c *Client) connect(serverID int, name string, address string) error {
+func (c *NatsRPC) connect(serverID int, name string, address string) error {
 	defer c.wg.Done()
 
 	nc, err := nats.Connect(c.Conf.Nodes[0].Address,
@@ -101,7 +101,7 @@ func (c *Client) connect(serverID int, name string, address string) error {
 }
 
 // Close client connections
-func (c *Client) Close() {
+func (c *NatsRPC) Close() {
 	c.Lock()
 	for conn := range c.conns {
 		conn.Close()
@@ -111,8 +111,8 @@ func (c *Client) Close() {
 	c.wg.Wait()
 }
 
-//Call sync get response
-func (c *Client) Call(serverID int, name string, address string) *ss.Message {
+// Call sync get response
+func (c *NatsRPC) Call(serverID int, name string, address string) *ss.Message {
 
 	return nil
 }

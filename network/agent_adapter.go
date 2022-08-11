@@ -34,7 +34,7 @@ import (
 	"github.com/airkits/nethopper/log"
 )
 
-//AgentAdapter agent adapter
+// AgentAdapter agent adapter
 type AgentAdapter struct {
 	codec codec.Codec
 	conn  IConn
@@ -42,15 +42,16 @@ type AgentAdapter struct {
 	genID uint32
 }
 
-//Setup AgentAdapter
+// Setup AgentAdapter
 func (a *AgentAdapter) Setup(conn IConn, codec codec.Codec) {
 	a.conn = conn
 	a.codec = codec
 	a.seqID = 0
 	a.genID = 0
+
 }
 
-//WriteMessage to connection
+// WriteMessage to connection
 func (a *AgentAdapter) WriteMessage(payload interface{}) error {
 	if err := a.conn.WriteMessage(payload); err != nil {
 		log.Error("write message %x error: %v", payload, err)
@@ -59,7 +60,7 @@ func (a *AgentAdapter) WriteMessage(payload interface{}) error {
 	return nil
 }
 
-//ReadMessage goroutine not safe
+// ReadMessage goroutine not safe
 func (a *AgentAdapter) ReadMessage() (interface{}, error) {
 	b, err := a.conn.ReadMessage()
 	return b, err
@@ -75,12 +76,12 @@ func (a *AgentAdapter) GenID() uint32 {
 	return atomic.AddUint32(&a.genID, 1)
 }
 
-//SetCodec set codec
+// SetCodec set codec
 func (a *AgentAdapter) SetCodec(c codec.Codec) {
 	a.codec = c
 }
 
-//Conn get conn
+// Conn get conn
 func (a *AgentAdapter) Conn() IConn {
 	return a.conn
 }
@@ -90,7 +91,7 @@ func (a *AgentAdapter) SetConn(conn IConn) {
 	a.conn = conn
 }
 
-//GetSequenceID get inc id
+// GetSequenceID get inc id
 func (a *AgentAdapter) GetSequenceID() uint32 {
 	return atomic.AddUint32(&a.seqID, 1)
 }

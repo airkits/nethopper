@@ -43,7 +43,7 @@ import (
 )
 
 func TestNatsClientRequest(t *testing.T) {
-	conf := &natsrpc.ClientConfig{
+	conf := &natsrpc.NatsConfig{
 		Nodes: []common.NodeInfo{{
 			ID:      0,
 			Name:    "NAME",
@@ -56,7 +56,7 @@ func TestNatsClientRequest(t *testing.T) {
 		SocketQueueSize:     100000,
 		MaxMessageSize:      100000,
 	}
-	client := natsrpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	client := natsrpc.NewNatsRPC(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		nc := conn.(*natsrpc.Conn)
 		nc.CreateStream("query", []string{"query.*"})
@@ -68,7 +68,7 @@ func TestNatsClientRequest(t *testing.T) {
 		fmt.Println("on error")
 	})
 
-	server := natsrpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	server := natsrpc.NewNatsRPC(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		nc := conn.(*natsrpc.Conn)
 		time.Sleep(1000 * time.Millisecond)

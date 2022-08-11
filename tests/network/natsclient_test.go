@@ -47,7 +47,7 @@ func TestNatsClientRequest(t *testing.T) {
 		Nodes: []common.NodeInfo{{
 			ID:      0,
 			Name:    "NAME",
-			Address: "nats://192.168.1.178:4222",
+			Address: "nats://127.0.0.1:4222",
 		}},
 		PingInterval:        30 * time.Second,
 		MaxPingsOutstanding: 10,
@@ -56,7 +56,7 @@ func TestNatsClientRequest(t *testing.T) {
 		SocketQueueSize:     100000,
 		MaxMessageSize:      100000,
 	}
-	natsrpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	client := natsrpc.NewClient(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		nc := conn.(*natsrpc.Conn)
 		nc.CreateStream("query", []string{"query.*"})

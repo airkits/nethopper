@@ -38,7 +38,7 @@ func CreateStreamIfNotExists(streamName string, jc nats.JetStreamContext) error 
 	if err != nil && !errors.Is(err, nats.ErrStreamNotFound) {
 		return fmt.Errorf("failed to check if stream exist: %w", err)
 	}
-
+	jc.DeleteStream(streamName)
 	if errors.Is(err, nats.ErrStreamNotFound) {
 		_, err = jc.AddStream(&nats.StreamConfig{
 			Name:   streamName,
@@ -179,7 +179,7 @@ func gracefulShutdown(sub *nats.Subscription) {
 	}()
 }
 
-//LocalMilliscond 当前毫秒
+// LocalMilliscond 当前毫秒
 func LocalMilliscond() int64 {
 	return time.Now().UnixNano() / 1e6
 }

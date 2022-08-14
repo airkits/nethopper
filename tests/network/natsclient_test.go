@@ -86,7 +86,7 @@ func TestNatsClientRequest(t *testing.T) {
 			}
 
 			if err := a.GetAdapter().WriteMessage(msg); err != nil {
-				time.Sleep(100 * time.Millisecond)
+				//time.Sleep(100 * time.Millisecond)
 			}
 		}
 		return a

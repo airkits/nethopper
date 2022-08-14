@@ -9,6 +9,7 @@ import (
 
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/utils"
 	"github.com/airkits/proto/ss"
 	"github.com/golang/protobuf/proto"
 	"github.com/nats-io/nats.go"
@@ -66,8 +67,6 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 	natsConn.writeChan = make(chan *ss.Message, rwQueueSize)
 	natsConn.readChan = make(chan *ss.Message, rwQueueSize)
 	natsConn.maxMessageSize = maxMessageSize
-	//natsConn.CreateStream("query", []string{"query.*"})
-	//natsConn.SubscribeToStream("query.test")
 
 	go func() {
 		defer func() {
@@ -218,6 +217,9 @@ func (c *Conn) publishToStream(subject string, msg *ss.Message) error {
 	if err != nil {
 		return err
 	}
+	if msg.Seq%1000 == 0 {
+		fmt.Printf("before publish cost %d\n", utils.LocalMilliscond()-int64(msg.UID))
+	}
 	_, err2 := c.stream.PublishAsync(subject, data)
 	if err2 != nil {
 		fmt.Println(err2.Error())
@@ -261,6 +263,7 @@ func (c *Conn) doWrite(b *ss.Message) error {
 	// }
 
 	c.writeChan <- b
+
 	return nil
 }
 

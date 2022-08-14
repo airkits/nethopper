@@ -30,6 +30,7 @@ type NatsRPC struct {
 	CloseAgent network.AgentCloseFunc
 	conns      ConnSet
 	wg         *sync.WaitGroup
+	agent      network.IAgent
 }
 
 func (c *NatsRPC) Wait() {
@@ -39,12 +40,11 @@ func (c *NatsRPC) Wait() {
 // Run client start run
 func (c *NatsRPC) Run() {
 	c.init()
-	for _, info := range c.Conf.Nodes {
+	info := c.Conf.Nodes[0]
 
-		c.wg.Add(1)
-		go c.connect(info.ID, info.Name, info.Address)
+	c.wg.Add(1)
+	go c.connect(info.ID, info.Name, info.Address)
 
-	}
 }
 
 func (c *NatsRPC) init() {
@@ -65,6 +65,10 @@ func (c *NatsRPC) Reconnect(natsConn *nats.Conn) {
 }
 func (c *NatsRPC) Disconnect(natsConn *nats.Conn) {
 
+}
+
+func (c *NatsRPC) GetAgent() network.IAgent {
+	return c.agent
 }
 func (c *NatsRPC) connect(serverID int, name string, address string) error {
 	defer c.wg.Done()
@@ -87,16 +91,17 @@ func (c *NatsRPC) connect(serverID int, name string, address string) error {
 	c.Unlock()
 
 	natsConn := NewConn(nc, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
-	agent := c.NewAgent(natsConn, uint64(serverID), name)
+	c.agent = c.NewAgent(natsConn, uint64(serverID), name)
 
-	agent.Run()
+	c.agent.Run()
 
 	natsConn.Close()
 	c.Lock()
 	delete(c.conns, nc)
 	c.Unlock()
-	c.CloseAgent(agent)
-	agent.OnClose()
+	c.CloseAgent(c.agent)
+	c.agent.OnClose()
+	c.agent = nil
 	return nil
 }
 

@@ -33,66 +33,68 @@ import (
 	"github.com/airkits/nethopper/log"
 )
 
-//NewAgent create new agent
+// NewAgent create new agent
 func NewAgent(adapter IAgentAdapter, uid uint64, token string) IAgent {
 	return &Agent{adapter: adapter, uid: uid, token: token}
 }
 
-//Agent base agent struct
+// Agent base agent struct
 type Agent struct {
 	adapter IAgentAdapter
 	uid     uint64
 	token   string
 }
 
-//UID get agent id
+// UID get agent id
 func (a *Agent) UID() uint64 {
 	return a.uid
 }
 
-//SetUID set agent id
+// SetUID set agent id
 func (a *Agent) SetUID(uid uint64) {
 	a.uid = uid
 }
 
-//Token get token
+// Token get token
 func (a *Agent) Token() string {
 	return a.token
 }
 
-//GetAdapter get agent adapter
+// GetAdapter get agent adapter
 func (a *Agent) GetAdapter() IAgentAdapter {
 	return a.adapter
 }
 
-//IsAuth if set token return true else return false
+// IsAuth if set token return true else return false
 func (a *Agent) IsAuth() bool {
 	return a.UID() > 0
 }
 
-//SetToken set token
+// SetToken set token
 func (a *Agent) SetToken(token string) {
 	a.token = token
 }
 
-//Run agent start run
-//usage
-//func (a *Agent) Run (
-//  for {
-// 	data, err := a.ReadMessage()
-// 	if err != nil {
-// 		log.Debug("read message: %v", err)
-// 		break
-// 	}
-// 	out := make(map[string]interface{})
-// 	if err := a.Codec().Unmarshal(data, &out, nil); err == nil {
-// 		log.Info("receive message %v", out)
-// 		out["seq"] = out["seq"].(float64) + 1
-// 	} else {
-// 		log.Error(err)
-// 	}
-// 	a.WriteMessage(out)
-// }
+// Run agent start run
+// usage
+// func (a *Agent) Run (
+//
+//	 for {
+//		data, err := a.ReadMessage()
+//		if err != nil {
+//			log.Debug("read message: %v", err)
+//			break
+//		}
+//		out := make(map[string]interface{})
+//		if err := a.Codec().Unmarshal(data, &out, nil); err == nil {
+//			log.Info("receive message %v", out)
+//			out["seq"] = out["seq"].(float64) + 1
+//		} else {
+//			log.Error(err)
+//		}
+//		a.WriteMessage(out)
+//	}
+//
 // }
 func (a *Agent) Run() {
 	for {
@@ -101,7 +103,7 @@ func (a *Agent) Run() {
 			log.Debug("read message: %v", err)
 			break
 		}
-		log.Debug("[WS] receive one message")
+		//	log.Debug("[WS] receive one message")
 		a.adapter.DecodeMessage(data)
 
 	}
@@ -122,22 +124,22 @@ func (a *Agent) SendMessage(payload []byte) error {
 	return nil
 }
 
-//LocalAddr get local addr
+// LocalAddr get local addr
 func (a *Agent) LocalAddr() net.Addr {
 	return a.adapter.Conn().LocalAddr()
 }
 
-//RemoteAddr get remote addr
+// RemoteAddr get remote addr
 func (a *Agent) RemoteAddr() net.Addr {
 	return a.adapter.Conn().RemoteAddr()
 }
 
-//Close agent close
+// Close agent close
 func (a *Agent) Close() {
 	a.adapter.Conn().Close()
 }
 
-//Destroy agent destory
+// Destroy agent destory
 func (a *Agent) Destroy() {
 	a.adapter.Conn().Destroy()
 }

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/base/queue"
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/utils"
@@ -38,7 +39,7 @@ type Conn struct {
 	sync.Mutex
 	nc             *nats.Conn
 	stream         nats.JetStreamContext
-	writeChan      chan *ss.Message
+	writeQueue     queue.Queue
 	readChan       chan *ss.Message
 	maxMessageSize uint32
 	closeFlag      bool
@@ -54,17 +55,18 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 	natsConn.subjects = make(map[int32]string)
 	natsConn.requests = make(map[int32]string)
 	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
-	js, err := conn.JetStream(nats.PublishAsyncMaxPending(256),
-		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
-			// todo jetstream error handling
-			fmt.Println(err.Error())
-		}),
-	)
+	// js, err := conn.JetStream(nats.PublishAsyncMaxPending(256),
+	// 	nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
+	// 		// todo jetstream error handling
+	// 		fmt.Println(err.Error())
+	// 	}),
+	// )
+	js, err := conn.JetStream()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	natsConn.stream = js
-	natsConn.writeChan = make(chan *ss.Message, rwQueueSize)
+	natsConn.writeQueue = queue.NewChanQueue(int32(rwQueueSize))
 	natsConn.readChan = make(chan *ss.Message, rwQueueSize)
 	natsConn.maxMessageSize = maxMessageSize
 
@@ -74,10 +76,13 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 				log.PrintStack(false)
 			}
 		}()
-		for b := range natsConn.writeChan {
-			if b == nil {
+		for {
+			obj, err := natsConn.writeQueue.Pop()
+			if err == nil && obj == nil {
+
 				break
 			}
+			b := obj.(*ss.Message)
 			subject, ok := natsConn.requests[int32(b.MsgID)]
 			if ok {
 				msg, err := natsConn.Request(subject, b)
@@ -230,7 +235,7 @@ func (c *Conn) publishToStream(subject string, msg *ss.Message) error {
 func (c *Conn) doDestroy() {
 
 	if !c.closeFlag {
-		close(c.writeChan)
+		c.writeQueue.Close()
 		c.closeFlag = true
 	}
 }
@@ -261,8 +266,7 @@ func (c *Conn) doWrite(b *ss.Message) error {
 	// 	//c.doDestroy()
 	// 	return ErrQueueFull
 	// }
-
-	c.writeChan <- b
+	c.writeQueue.Push(b)
 
 	return nil
 }

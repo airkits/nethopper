@@ -65,7 +65,7 @@ func (a *AgentAdapter) DecodeMessage(payload interface{}) error {
 			err := anypb.UnmarshalTo(msg.Body, resp, proto.UnmarshalOptions{})
 			if err == nil {
 				if msg.Seq%1000 == 0 {
-					fmt.Printf("seq %d get msg cost %d ms\n", msg.Seq, utils.LocalMilliscond()-resp.Time)
+					fmt.Printf("seq  %d get msg cost %d ms\n", msg.Seq, utils.LocalMilliscond()-resp.Time)
 
 				}
 			}

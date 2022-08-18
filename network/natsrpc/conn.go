@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/airkits/nethopper/log"
+	"github.com/airkits/nethopper/mq"
 	"github.com/airkits/nethopper/network"
 	"github.com/airkits/nethopper/utils"
 	"github.com/airkits/proto/ss"
@@ -42,17 +43,14 @@ type Conn struct {
 	readChan       chan *ss.Message
 	maxMessageSize uint32
 	closeFlag      bool
-	subjects       map[int32]string
-	requests       map[int32]string
-	funcs          map[string](func(*ss.Message) *ss.Message) //handlers
+
+	funcs map[string](func(*ss.Message) *ss.Message) //handlers
 }
 
 // NewConn create websocket conn
 func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IConn {
 	natsConn := &Conn{}
 	natsConn.nc = conn
-	natsConn.subjects = make(map[int32]string)
-	natsConn.requests = make(map[int32]string)
 	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
 	js, err := conn.JetStream(nats.PublishAsyncMaxPending(256),
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
@@ -74,31 +72,25 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 				log.PrintStack(false)
 			}
 		}()
-		for b := range natsConn.writeChan {
-			if b == nil {
+		for m := range natsConn.writeChan {
+			if m == nil {
 				break
 			}
-			subject, ok := natsConn.requests[int32(b.MsgID)]
-			if ok {
-				msg, err := natsConn.Request(subject, b)
-				if err != nil {
+			subject := natsConn.GetSubject(m.MsgType, m.DestType, m.DestID, m.SrcType, m.SrcID)
+			if m.MsgType == mq.MTRequestAny {
+				msg, err1 := natsConn.Request(subject, m)
+				if err1 != nil {
 					break
 				}
 				natsConn.readChan <- msg
 			} else {
-				subject, ok = natsConn.subjects[int32(b.MsgID)]
-				if ok {
-					err = natsConn.publishToStream(subject, b)
-					if err != nil {
-						break
-					}
-				} else {
-					fmt.Println("cant get subject")
+				err = natsConn.publishToStream(subject, m)
+				if err != nil {
+					break
 				}
 			}
 
 		}
-
 		//	conn.Close()
 		natsConn.Lock()
 		natsConn.closeFlag = true
@@ -107,10 +99,49 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 
 	return natsConn
 }
+func (c *Conn) GetStreamName(msgType, srcType, srcID uint32) string {
+	if msgType == mq.MTBroadcast {
+		return fmt.Sprintf("gt%ds%d", srcType, srcID)
+	} else if msgType == mq.MTRequestAny {
+		return fmt.Sprintf("rt%ds%d", srcType, srcID)
+	}
+	return fmt.Sprintf("t%ds%d", srcType, srcID)
+}
+func (c *Conn) GetSubject(msgType, destType, destID, srcType, srcID uint32) string {
+	if msgType == mq.MTBroadcast {
+		return fmt.Sprintf("gt%ds%d.t%ds%d", destType, destID, srcType, srcID)
+	} else if msgType == mq.MTRequestAny {
+		return fmt.Sprintf("rt%ds%d.t%ds%d", destType, destID, srcType, srcID)
+	}
+	return fmt.Sprintf("t%ds%d.t%ds%d", destType, destID, srcType, srcID)
 
-func (s *Conn) CreateStream(name string, subjects []string) error {
+}
 
-	info, err := s.stream.StreamInfo(name)
+func (c *Conn) RegisterService(srcType, srcID uint32) error {
+
+	if err := c.RegisterStream(mq.MTBroadcast, srcType, srcID); err != nil {
+		return err
+	}
+	if err := c.RegisterStream(mq.MTRequest, srcType, srcID); err != nil {
+		return err
+	}
+	if err := c.RegisterStream(mq.MTRequestAny, srcType, srcID); err != nil {
+		return err
+	}
+	return nil
+}
+func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
+	name := c.GetStreamName(msgType, srcType, srcID)
+	subject := fmt.Sprintf("%s.*", name)
+	if err := c.createStream(name, []string{subject}); err != nil {
+		return err
+	}
+	c.SubscribeToStream(subject)
+	return nil
+}
+func (c *Conn) createStream(name string, subjects []string) error {
+
+	info, err := c.stream.StreamInfo(name)
 	conf := &nats.StreamConfig{
 		Name:         name,
 		Subjects:     subjects,
@@ -122,37 +153,17 @@ func (s *Conn) CreateStream(name string, subjects []string) error {
 		Duplicates:   1 * time.Hour,
 	}
 	fmt.Print(info)
-	if err == nil {
-		s.stream.DeleteStream(name)
+	if err != nil {
+		info, err = c.stream.AddStream(conf, nats.PublishAsyncMaxPending(10000))
+	} else {
+		info, err = c.stream.UpdateStream(conf, nats.PublishAsyncMaxPending(10000))
 	}
-	//if err != nil {
-	info, err = s.stream.AddStream(conf, nats.PublishAsyncMaxPending(10000))
-
-	//} else {
-	//info, err = s.stream.UpdateStream(conf, nats.PublishAsyncMaxPending(10000))
-	//}
 	fmt.Print(info)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (c *Conn) RegisterSubject(msgID int32, subject string) {
-
-	if _, ok := c.subjects[msgID]; ok {
-		fmt.Printf("subject id %v: already registered", msgID)
-	}
-
-	c.subjects[msgID] = subject
-}
-func (c *Conn) RegisterRequest(msgID int32, subject string) {
-
-	if _, ok := c.requests[msgID]; ok {
-		fmt.Printf("request message id %v: already registered", msgID)
-	}
-	c.requests[msgID] = subject
 }
 
 // RegisterReply register function before run
@@ -206,7 +217,7 @@ func (c *Conn) SubscribeToStream(subject string) {
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
 		c.readChan <- ss
-	}, nats.Durable("monitor"), nats.ManualAck())
+	}, nats.Durable(subject), nats.ManualAck())
 	if err != nil {
 		fmt.Println(err.Error())
 	}

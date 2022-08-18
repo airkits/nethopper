@@ -44,6 +44,8 @@ const (
 	MTNotify = 3
 	// MTBroadcast broadcast = 4
 	MTBroadcast = 4
+	//MTRequestAny
+	MTRequestAny = 5
 )
 const (
 	// InvalidInt32 Invalid values set to -1
@@ -101,7 +103,7 @@ func RemoveMessage(m *Message) {
 // MaxIDSequence max srcid sequence
 const MaxIDSequence = 10
 
-//Message mq Message
+// Message mq Message
 type Message struct {
 	MsgID     int32
 	SrcID     int32

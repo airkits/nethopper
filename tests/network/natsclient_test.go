@@ -56,33 +56,35 @@ func TestNatsClientRequest(t *testing.T) {
 		SocketQueueSize:     100000,
 		MaxMessageSize:      100000,
 	}
-	client := natsrpc.NewNatsRPC(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	server := natsrpc.NewNatsRPC(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		nc := conn.(*natsrpc.Conn)
-		nc.CreateStream("query", []string{"query.*"})
-		nc.RegisterSubject(int32(s2s.MessageCmd_HEARTBEAT), "query.test")
-		nc.SubscribeToStream("query.test")
+		nc.RegisterService(1, 0)
 		fmt.Println("server start")
 		return a
 	}, func(agent network.IAgent) {
 		fmt.Println("on error")
 	})
 
-	server := natsrpc.NewNatsRPC(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
+	client := natsrpc.NewNatsRPC(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)
 		nc := conn.(*natsrpc.Conn)
+		nc.RegisterService(2, 0)
 		time.Sleep(1000 * time.Millisecond)
-		nc.RegisterSubject(int32(s2s.MessageCmd_HEARTBEAT), "query.test")
 		fmt.Println("client start")
 		for i := 0; i < 100000; i++ {
 			any, _ := anypb.New(&s2s.HeartBeatReq{Time: utils.LocalMilliscond()})
 			msg := &ss.Message{
-				ID:      uint32(i),
-				UID:     uid,
-				MsgID:   uint32(s2s.MessageCmd_HEARTBEAT),
-				MsgType: mq.MTRequest,
-				Seq:     uint32(i),
-				Body:    any,
+				ID:       uint32(i),
+				UID:      uid,
+				MsgID:    uint32(s2s.MessageCmd_HEARTBEAT),
+				MsgType:  mq.MTRequest,
+				Seq:      uint32(i),
+				DestType: 1,
+				DestID:   0,
+				SrcType:  2,
+				SrcID:    0,
+				Body:     any,
 			}
 
 			if err := a.GetAdapter().WriteMessage(msg); err != nil {
@@ -96,6 +98,6 @@ func TestNatsClientRequest(t *testing.T) {
 
 	client.Run()
 	server.Run()
-	server.Wait()
+	client.Wait()
 	fmt.Println("done")
 }

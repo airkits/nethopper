@@ -52,7 +52,7 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 	natsConn := &Conn{}
 	natsConn.nc = conn
 	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
-	js, err := conn.JetStream(nats.PublishAsyncMaxPending(256),
+	js, err := conn.JetStream(nats.PublishAsyncMaxPending(4096),
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
 			// todo jetstream error handling
 			fmt.Println(err.Error())

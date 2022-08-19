@@ -136,7 +136,7 @@ func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 	if err := c.createStream(name, []string{subject}); err != nil {
 		return err
 	}
-	c.SubscribeToStream(subject)
+	c.SubscribeToStream(name, subject)
 	return nil
 }
 func (c *Conn) createStream(name string, subjects []string) error {
@@ -208,8 +208,8 @@ func (c *Conn) reply(subject string, f func(*ss.Message) *ss.Message) (*nats.Sub
 		c.nc.PublishRequest(msg.Subject, msg.Reply, data)
 	})
 }
-func (c *Conn) SubscribeToStream(subject string) {
-	fmt.Printf("Subscribing to query.serialized")
+func (c *Conn) SubscribeToStream(name, subject string) {
+	fmt.Printf("Subscribing to %s", subject)
 	result, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
 		//	fmt.Printf("Msg recieved")
 		msg.Ack()
@@ -217,7 +217,7 @@ func (c *Conn) SubscribeToStream(subject string) {
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
 		c.readChan <- ss
-	}, nats.Durable(subject), nats.ManualAck())
+	}, nats.Durable(name), nats.ManualAck())
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -264,6 +264,11 @@ func (c *Conn) Close() {
 
 	c.doWrite(nil)
 	c.closeFlag = true
+
+	if err := c.nc.FlushTimeout(5 * time.Second); err != nil {
+		log.Error("error while flushing jetstream during close operation")
+	}
+	c.nc.Close()
 }
 
 func (c *Conn) doWrite(b *ss.Message) error {

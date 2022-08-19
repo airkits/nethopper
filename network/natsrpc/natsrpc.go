@@ -77,6 +77,8 @@ func (c *NatsRPC) connect(serverID int, name string, address string) error {
 		nats.PingInterval(c.Conf.PingInterval*time.Second),
 		nats.MaxPingsOutstanding(c.Conf.MaxPingsOutstanding),
 		nats.MaxReconnects(c.Conf.MaxReconnects),
+		nats.RetryOnFailedConnect(true),
+		nats.ReconnectWait(5*time.Second),
 		nats.ReconnectHandler(c.Reconnect),
 		nats.DisconnectHandler(c.Disconnect),
 	)

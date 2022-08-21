@@ -10,7 +10,6 @@ import (
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/mq"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/utils"
 	"github.com/airkits/proto/ss"
 	"github.com/golang/protobuf/proto"
 	"github.com/nats-io/nats.go"
@@ -139,6 +138,27 @@ func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 	c.SubscribeToStream(name, subject)
 	return nil
 }
+
+/*
+*
+最大年龄	流中任何消息的最长期限，以微秒为单位
+最大字节数	当合并后的流大小超过此旧消息时，将删除Stream的大小
+最大消息大小	流将接受的最大消息
+最大消息	流中可能有多少条消息，如果流超过此大小，则最早的消息将被删除
+MaxConsumers	可以为给定的流定义多少个消费者，
+名称	流的名称，不能包含空格，制表符或.
+NoAck	禁用确认流接收的消息
+复制品	每个邮件要保留多少个副本（截至2020年1月尚未实现）
+保留	如何考虑保留邮件
+LimitsPolicy（默认）
+InterestPolicy或WorkQueuePolicy丢弃	当流达到其限制时，
+DiscardNew拒绝新消息，而
+DiscardOld（默认）删除旧消息
+存储	该类型的存储后端，file并memory
+科目	要使用的主题列表，支持通配符
+重复项	跟踪重复消息的窗口
+*
+*/
 func (c *Conn) createStream(name string, subjects []string) error {
 
 	info, err := c.stream.StreamInfo(name)
@@ -146,10 +166,10 @@ func (c *Conn) createStream(name string, subjects []string) error {
 		Name:         name,
 		Subjects:     subjects,
 		MaxConsumers: 1,
-		MaxMsgs:      -1, // unlimitted
-		MaxBytes:     -1, // stream size unlimitted
-		MaxAge:       365 * 24 * time.Hour,
-		MaxMsgSize:   10000,
+		MaxMsgs:      1000000, // unlimitted
+		MaxBytes:     -1,      // stream size unlimitted
+		MaxAge:       7 * 24 * time.Hour,
+		MaxMsgSize:   640000,
 		Duplicates:   1 * time.Hour,
 	}
 	fmt.Print(info)
@@ -228,9 +248,7 @@ func (c *Conn) publishToStream(subject string, msg *ss.Message) error {
 	if err != nil {
 		return err
 	}
-	if msg.Seq%1000 == 0 {
-		fmt.Printf("before publish cost %d\n", utils.LocalMilliscond()-int64(msg.UID))
-	}
+
 	_, err2 := c.stream.PublishAsync(subject, data)
 	if err2 != nil {
 		fmt.Println(err2.Error())

@@ -13,6 +13,7 @@ import (
 	"github.com/airkits/proto/ss"
 	"github.com/golang/protobuf/proto"
 	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // ErrQueueIsClosed queue is closed
@@ -38,8 +39,8 @@ type Conn struct {
 	sync.Mutex
 	nc             *nats.Conn
 	stream         nats.JetStreamContext
-	writeChan      chan *ss.Message
-	readChan       chan *ss.Message
+	sendChan       chan *ss.Message
+	recvChan       chan *ss.Message
 	maxMessageSize uint32
 	closeFlag      bool
 
@@ -61,8 +62,8 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 		fmt.Println(err.Error())
 	}
 	natsConn.stream = js
-	natsConn.writeChan = make(chan *ss.Message, rwQueueSize)
-	natsConn.readChan = make(chan *ss.Message, rwQueueSize)
+	natsConn.sendChan = make(chan *ss.Message, rwQueueSize)
+	natsConn.recvChan = make(chan *ss.Message, rwQueueSize)
 	natsConn.maxMessageSize = maxMessageSize
 
 	go func() {
@@ -71,21 +72,35 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 				log.PrintStack(false)
 			}
 		}()
-		for m := range natsConn.writeChan {
+		for m := range natsConn.sendChan {
 			if m == nil {
 				break
 			}
 			subject := natsConn.GetSubject(m.MsgType, m.DestType, m.DestID, m.SrcType, m.SrcID)
 			if m.MsgType == mq.MTRequestAny {
-				msg, err1 := natsConn.Request(subject, m)
+				msg1, err1 := natsConn.Request(subject, m)
 				if err1 != nil {
-					break
+					natsConn.recvChan <- msg1
+					continue
 				}
-				natsConn.readChan <- msg
+				natsConn.recvChan <- msg1
+			} else if m.MsgType == mq.MTResponseAny {
+				msg4, err4 := natsConn.Reply(m)
+				if err4 != nil {
+					natsConn.recvChan <- msg4
+					continue
+				}
+			} else if m.MsgType == mq.MTRequestPush || m.MsgType == mq.MTResponsePush {
+				msg2, err2 := natsConn.publishToNats(subject, m)
+				if err2 != nil {
+					natsConn.recvChan <- msg2
+					continue
+				}
 			} else {
-				err = natsConn.publishToStream(subject, m)
-				if err != nil {
-					break
+				msg3, err3 := natsConn.publishToStream(subject, m)
+				if err3 != nil {
+					natsConn.recvChan <- msg3
+					continue
 				}
 			}
 
@@ -98,25 +113,51 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 
 	return natsConn
 }
+func (c *Conn) DirectErrorMsg(m *ss.Message, err error) *ss.Message {
+	msgType := m.MsgType
+	if msgType == mq.MTRequest {
+		msgType = mq.MTResponse
+	} else if msgType == mq.MTRequestAny {
+		msgType = mq.MTResponseAny
+	} else if msgType == mq.MTRequestPush {
+		msgType = mq.MTResponsePush
+	}
+	msg := &ss.Message{
+		ID:       m.ID,
+		UID:      m.UID,
+		MsgID:    m.MsgID,
+		MsgType:  msgType,
+		Seq:      m.Seq,
+		SrcType:  m.SrcType,
+		SrcID:    m.SrcID,
+		DestType: m.SrcType,
+		DestID:   m.SrcID,
+		Time:     0,
+		Reply:    err.Error(),
+		Options:  map[string][]byte{},
+		Body:     &anypb.Any{},
+	}
+	return msg
+}
 func (c *Conn) GetStreamName(msgType, srcType, srcID uint32) string {
 	if msgType == mq.MTBroadcast {
-		return fmt.Sprintf("gt%ds%d", srcType, srcID)
+		return fmt.Sprintf("gjst%ds%d", srcType, srcID)
 	} else if msgType == mq.MTRequestAny {
-		return fmt.Sprintf("rt%ds%d", srcType, srcID)
-	} else if msgType == mq.MTPush {
-		return fmt.Sprintf("pt%ds%d", srcType, srcID)
+		return fmt.Sprintf("anyt%ds%d", srcType, srcID)
+	} else if msgType == mq.MTRequestPush {
+		return fmt.Sprintf("pusht%ds%d", srcType, srcID)
 	}
-	return fmt.Sprintf("t%ds%d", srcType, srcID)
+	return fmt.Sprintf("jst%ds%d", srcType, srcID)
 }
 func (c *Conn) GetSubject(msgType, destType, destID, srcType, srcID uint32) string {
 	if msgType == mq.MTBroadcast {
-		return fmt.Sprintf("gt%ds%d.t%ds%d", destType, destID, srcType, srcID)
+		return fmt.Sprintf("gjst%ds%d.t%ds%d", destType, destID, srcType, srcID)
 	} else if msgType == mq.MTRequestAny {
-		return fmt.Sprintf("rt%ds%d.t%ds%d", destType, destID, srcType, srcID)
-	} else if msgType == mq.MTPush {
-		return fmt.Sprintf("pt%ds%d.t%ds%d", destType, destID, srcType, srcID)
+		return fmt.Sprintf("anyt%ds%d.t%ds%d", destType, destID, srcType, srcID)
+	} else if msgType == mq.MTRequestPush {
+		return fmt.Sprintf("pusht%ds%d.t%ds%d", destType, destID, srcType, srcID)
 	}
-	return fmt.Sprintf("t%ds%d.t%ds%d", destType, destID, srcType, srcID)
+	return fmt.Sprintf("jst%ds%d.t%ds%d", destType, destID, srcType, srcID)
 
 }
 
@@ -131,7 +172,7 @@ func (c *Conn) RegisterService(srcType, srcID uint32) error {
 	if err := c.RegisterSubject(mq.MTRequestAny, srcType, srcID); err != nil {
 		return err
 	}
-	if err := c.RegisterSubject(mq.MTPush, srcType, srcID); err != nil {
+	if err := c.RegisterSubject(mq.MTRequestPush, srcType, srcID); err != nil {
 		return err
 	}
 	return nil
@@ -148,8 +189,12 @@ func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 func (c *Conn) RegisterSubject(msgType, srcType, srcID uint32) error {
 	name := c.GetStreamName(msgType, srcType, srcID)
 	subject := fmt.Sprintf("%s.*", name)
+	if msgType == mq.MTRequestPush {
+		c.SubscribeToNats(name, subject)
+	} else if msgType == mq.MTRequestAny {
+		c.SubscribeToReply(name, subject)
+	}
 
-	c.SubscribeToNats(name, subject)
 	return nil
 }
 
@@ -180,17 +225,17 @@ func (c *Conn) createStream(name string, subjects []string) error {
 		Name:         name,
 		Subjects:     subjects,
 		MaxConsumers: 1,
-		MaxMsgs:      1000000, // unlimitted
-		MaxBytes:     -1,      // stream size unlimitted
+		MaxMsgs:      -1, // unlimitted
+		MaxBytes:     -1, // stream size unlimitted
 		MaxAge:       7 * 24 * time.Hour,
 		MaxMsgSize:   640000,
 		Duplicates:   1 * time.Hour,
 	}
 	fmt.Print(info)
 	if err != nil {
-		info, err = c.stream.AddStream(conf, nats.PublishAsyncMaxPending(10000))
+		info, err = c.stream.AddStream(conf, nats.PublishAsyncMaxPending(100000))
 	} else {
-		info, err = c.stream.UpdateStream(conf, nats.PublishAsyncMaxPending(10000))
+		info, err = c.stream.UpdateStream(conf, nats.PublishAsyncMaxPending(100000))
 	}
 	fmt.Print(info)
 	if err != nil {
@@ -201,46 +246,57 @@ func (c *Conn) createStream(name string, subjects []string) error {
 }
 
 // RegisterReply register function before run
-func (c *Conn) RegisterReply(subject string, f func(*ss.Message) *ss.Message) {
+// func (c *Conn) RegisterReply(subject string, f func(*ss.Message) *ss.Message) {
 
-	if _, ok := c.funcs[subject]; ok {
-		panic(fmt.Sprintf("function id %v: already registered", subject))
-	}
-	c.funcs[subject] = f
-	c.reply(subject, f)
-}
+// 	if _, ok := c.funcs[subject]; ok {
+// 		panic(fmt.Sprintf("function id %v: already registered", subject))
+// 	}
+// 	c.funcs[subject] = f
+// 	c.reply(subject, f)
+// }
 
 func (c *Conn) Request(subject string, msg *ss.Message) (*ss.Message, error) {
 
 	data, err := proto.Marshal(msg)
 	if err != nil {
-		return nil, err
+		return c.DirectErrorMsg(msg, err), err
 	}
 	result, err := c.nc.Request(subject, data, time.Second*30)
 	if err != nil {
-		return nil, err
+		return c.DirectErrorMsg(msg, err), err
 	}
 	outMsg := &ss.Message{}
 	err = proto.Unmarshal(result.Data, outMsg)
 	if err != nil {
-		return nil, err
+		return c.DirectErrorMsg(msg, err), err
 	}
 	return outMsg, nil
 }
-func (c *Conn) reply(subject string, f func(*ss.Message) *ss.Message) (*nats.Subscription, error) {
-	return c.nc.Subscribe(subject, func(msg *nats.Msg) {
-
-		msg.Ack()
-		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q \n", string(msg.Data), msg.Subject)
+func (c *Conn) Reply(m *ss.Message) (*ss.Message, error) {
+	data, err := proto.Marshal(m)
+	if err != nil {
+		return c.DirectErrorMsg(m, err), err
+	}
+	err = c.nc.Publish(m.Reply, data)
+	if err != nil {
+		return c.DirectErrorMsg(m, err), err
+	}
+	return nil, nil
+}
+func (c *Conn) SubscribeToReply(name, subject string) {
+	fmt.Printf("Subscribing to %s", subject)
+	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
+		//	fmt.Printf("Msg recieved")
+		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
-		result := f(ss)
-		data, err := proto.Marshal(result)
-		if err != nil {
-
-		}
-		c.nc.PublishRequest(msg.Subject, msg.Reply, data)
+		ss.Reply = msg.Reply
+		c.recvChan <- ss
 	})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(result)
 }
 func (c *Conn) SubscribeToNats(name, subject string) {
 	fmt.Printf("Subscribing to %s", subject)
@@ -249,7 +305,7 @@ func (c *Conn) SubscribeToNats(name, subject string) {
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
-		c.readChan <- ss
+		c.recvChan <- ss
 	})
 	if err != nil {
 		fmt.Println(err.Error())
@@ -264,7 +320,7 @@ func (c *Conn) SubscribeToStream(name, subject string) {
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
-		c.readChan <- ss
+		c.recvChan <- ss
 	}, nats.Durable(name), nats.ManualAck())
 	if err != nil {
 		fmt.Println(err.Error())
@@ -272,36 +328,38 @@ func (c *Conn) SubscribeToStream(name, subject string) {
 	fmt.Println(result)
 }
 
-func (c *Conn) publishToNats(subject string, msg *ss.Message) error {
+func (c *Conn) publishToNats(subject string, msg *ss.Message) (*ss.Message, error) {
 	data, err := proto.Marshal(msg)
 	if err != nil {
-		return err
+		return c.DirectErrorMsg(msg, err), err
 	}
 
 	err2 := c.nc.Publish(subject, data)
 	if err2 != nil {
 		fmt.Println(err2.Error())
+		return c.DirectErrorMsg(msg, err2), err2
 	}
 	//	fmt.Printf("\nsend reqid = %d,seq=%d \n", result.Sequence, msg.Seq)
-	return nil
+	return nil, nil
 }
-func (c *Conn) publishToStream(subject string, msg *ss.Message) error {
+func (c *Conn) publishToStream(subject string, msg *ss.Message) (*ss.Message, error) {
 	data, err := proto.Marshal(msg)
 	if err != nil {
-		return err
+		return c.DirectErrorMsg(msg, err), err
 	}
 
 	_, err2 := c.stream.PublishAsync(subject, data)
 	if err2 != nil {
 		fmt.Println(err2.Error())
+		return c.DirectErrorMsg(msg, err2), err2
 	}
 	//	fmt.Printf("\nsend reqid = %d,seq=%d \n", result.Sequence, msg.Seq)
-	return nil
+	return nil, nil
 }
 func (c *Conn) doDestroy() {
 
 	if !c.closeFlag {
-		close(c.writeChan)
+		close(c.sendChan)
 		c.closeFlag = true
 	}
 }
@@ -332,13 +390,13 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) doWrite(b *ss.Message) error {
-	// if len(c.writeChan) == cap(c.writeChan) {
+	// if len(c.sendChan) == cap(c.sendChan) {
 	// 	log.Error("close conn: channel full")
 	// 	//c.doDestroy()
 	// 	return ErrQueueFull
 	// }
 
-	c.writeChan <- b
+	c.sendChan <- b
 
 	return nil
 }
@@ -359,13 +417,13 @@ func (c *Conn) RemoteAddr() net.Addr {
 // ReadMessage goroutine not safe
 func (c *Conn) ReadMessage() (interface{}, error) {
 
-	v, ok := <-c.readChan
+	v, ok := <-c.recvChan
 	if ok {
 		return v, nil
 	}
 	return nil, ErrQueueIsClosed
 	// select {
-	// case v, ok := <-c.readChan:
+	// case v, ok := <-c.recvChan:
 	// 	if ok {
 	// 		return v, nil
 	// 	}

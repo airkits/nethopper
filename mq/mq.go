@@ -46,8 +46,12 @@ const (
 	MTBroadcast = 4
 	//MTRequestAny request/reply
 	MTRequestAny = 5
-	//MTPush  pub/sub
-	MTPush = 6
+	//MTResponseAny
+	MTResponseAny = 6
+	//MTRequestPush  pub/sub
+	MTRequestPush = 7
+	//MTResponsePush
+	MTResponsePush = 8
 )
 const (
 	// InvalidInt32 Invalid values set to -1

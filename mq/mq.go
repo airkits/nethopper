@@ -44,8 +44,10 @@ const (
 	MTNotify = 3
 	// MTBroadcast broadcast = 4
 	MTBroadcast = 4
-	//MTRequestAny
+	//MTRequestAny request/reply
 	MTRequestAny = 5
+	//MTPush  pub/sub
+	MTPush = 6
 )
 const (
 	// InvalidInt32 Invalid values set to -1

@@ -103,6 +103,8 @@ func (c *Conn) GetStreamName(msgType, srcType, srcID uint32) string {
 		return fmt.Sprintf("gt%ds%d", srcType, srcID)
 	} else if msgType == mq.MTRequestAny {
 		return fmt.Sprintf("rt%ds%d", srcType, srcID)
+	} else if msgType == mq.MTPush {
+		return fmt.Sprintf("pt%ds%d", srcType, srcID)
 	}
 	return fmt.Sprintf("t%ds%d", srcType, srcID)
 }
@@ -111,6 +113,8 @@ func (c *Conn) GetSubject(msgType, destType, destID, srcType, srcID uint32) stri
 		return fmt.Sprintf("gt%ds%d.t%ds%d", destType, destID, srcType, srcID)
 	} else if msgType == mq.MTRequestAny {
 		return fmt.Sprintf("rt%ds%d.t%ds%d", destType, destID, srcType, srcID)
+	} else if msgType == mq.MTPush {
+		return fmt.Sprintf("pt%ds%d.t%ds%d", destType, destID, srcType, srcID)
 	}
 	return fmt.Sprintf("t%ds%d.t%ds%d", destType, destID, srcType, srcID)
 
@@ -124,7 +128,10 @@ func (c *Conn) RegisterService(srcType, srcID uint32) error {
 	if err := c.RegisterStream(mq.MTRequest, srcType, srcID); err != nil {
 		return err
 	}
-	if err := c.RegisterStream(mq.MTRequestAny, srcType, srcID); err != nil {
+	if err := c.RegisterSubject(mq.MTRequestAny, srcType, srcID); err != nil {
+		return err
+	}
+	if err := c.RegisterSubject(mq.MTPush, srcType, srcID); err != nil {
 		return err
 	}
 	return nil
@@ -136,6 +143,13 @@ func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 		return err
 	}
 	c.SubscribeToStream(name, subject)
+	return nil
+}
+func (c *Conn) RegisterSubject(msgType, srcType, srcID uint32) error {
+	name := c.GetStreamName(msgType, srcType, srcID)
+	subject := fmt.Sprintf("%s.*", name)
+
+	c.SubscribeToNats(name, subject)
 	return nil
 }
 
@@ -228,6 +242,20 @@ func (c *Conn) reply(subject string, f func(*ss.Message) *ss.Message) (*nats.Sub
 		c.nc.PublishRequest(msg.Subject, msg.Reply, data)
 	})
 }
+func (c *Conn) SubscribeToNats(name, subject string) {
+	fmt.Printf("Subscribing to %s", subject)
+	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
+		//	fmt.Printf("Msg recieved")
+		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
+		ss := &ss.Message{}
+		proto.Unmarshal(msg.Data, ss)
+		c.readChan <- ss
+	})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(result)
+}
 func (c *Conn) SubscribeToStream(name, subject string) {
 	fmt.Printf("Subscribing to %s", subject)
 	result, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
@@ -242,6 +270,20 @@ func (c *Conn) SubscribeToStream(name, subject string) {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(result)
+}
+
+func (c *Conn) publishToNats(subject string, msg *ss.Message) error {
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	err2 := c.nc.Publish(subject, data)
+	if err2 != nil {
+		fmt.Println(err2.Error())
+	}
+	//	fmt.Printf("\nsend reqid = %d,seq=%d \n", result.Sequence, msg.Seq)
+	return nil
 }
 func (c *Conn) publishToStream(subject string, msg *ss.Message) error {
 	data, err := proto.Marshal(msg)

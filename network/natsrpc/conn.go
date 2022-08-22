@@ -48,11 +48,11 @@ type Conn struct {
 }
 
 // NewConn create websocket conn
-func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IConn {
+func NewConn(conn *nats.Conn, socketQueueSize int, maxMessageSize uint32) network.IConn {
 	natsConn := &Conn{}
 	natsConn.nc = conn
 	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
-	js, err := conn.JetStream(nats.PublishAsyncMaxPending(4096),
+	js, err := conn.JetStream(nats.PublishAsyncMaxPending(int(maxMessageSize)),
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
 			// todo jetstream error handling
 			fmt.Println(err.Error())
@@ -62,8 +62,8 @@ func NewConn(conn *nats.Conn, rwQueueSize int, maxMessageSize uint32) network.IC
 		fmt.Println(err.Error())
 	}
 	natsConn.stream = js
-	natsConn.sendChan = make(chan *ss.Message, rwQueueSize)
-	natsConn.recvChan = make(chan *ss.Message, rwQueueSize)
+	natsConn.sendChan = make(chan *ss.Message, socketQueueSize)
+	natsConn.recvChan = make(chan *ss.Message, socketQueueSize)
 	natsConn.maxMessageSize = maxMessageSize
 
 	go func() {

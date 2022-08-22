@@ -27,8 +27,9 @@
 
 package queue
 
-//Queue interface define
+// Queue interface define
 type Queue interface {
+
 	// Push 阻塞写队列
 	Push(data interface{}) error
 	// AsyncPush 异步非阻塞写队列

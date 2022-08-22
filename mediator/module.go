@@ -115,7 +115,7 @@ type IModule interface {
 	// IdleTimesAdd()
 }
 
-//BaseContext use context to close all module and using the bubbling method to exit
+// BaseContext use context to close all module and using the bubbling method to exit
 type BaseContext struct {
 	ctx        context.Context
 	cancel     context.CancelFunc
@@ -128,12 +128,12 @@ type BaseContext struct {
 	// idleTimes  uint32
 }
 
-//Handlers set moudle handlers
+// Handlers set moudle handlers
 func (s *BaseContext) Handlers() map[int32]interface{} {
 	return nil
 }
 
-//ReflectHandlers set moudle reflect handlers
+// ReflectHandlers set moudle reflect handlers
 func (s *BaseContext) ReflectHandlers() map[int32]interface{} {
 	return nil
 }
@@ -255,7 +255,7 @@ func (s *BaseContext) DoWorker(obj *base.CallObject) error {
 func (s *BaseContext) Call(option int32, obj *base.CallObject) error {
 	//	s.IdleTimesReset()
 	if err := s.q.AsyncPush(obj); err != nil {
-		log.Error(err.Error())
+		log.Error("%s module call failed,%s", s.Name(), err.Error())
 	}
 
 	return nil
@@ -287,22 +287,22 @@ func (s *BaseContext) Close() {
 	s.cancel()
 }
 
-//ID module ID
+// ID module ID
 func (s *BaseContext) ID() uint8 {
 	return s.id
 }
 
-//SetID set module id
+// SetID set module id
 func (s *BaseContext) SetID(v uint8) {
 	s.id = v
 }
 
-//Name module name
+// Name module name
 func (s *BaseContext) Name() string {
 	return s.name
 }
 
-//SetName set module name
+// SetName set module name
 func (s *BaseContext) SetName(v string) {
 	s.name = v
 }
@@ -350,7 +350,7 @@ func (s *BaseContext) ReadConfig(conf config.IConfig) error {
 	return nil
 }
 
-//Reload reload config
+// Reload reload config
 func (s *BaseContext) Reload(conf config.IConfig) error {
 	return nil
 }

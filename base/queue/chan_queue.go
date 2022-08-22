@@ -64,7 +64,7 @@ func (q *ChanQueue) Pop() (val interface{}, err error) {
 
 }
 
-//AsyncPop async pop
+// AsyncPop async pop
 func (q *ChanQueue) AsyncPop() (val interface{}, err error) {
 
 	select {
@@ -80,7 +80,7 @@ func (q *ChanQueue) AsyncPop() (val interface{}, err error) {
 
 }
 
-//Push sync push data
+// Push sync push data
 func (q *ChanQueue) Push(x interface{}) error {
 
 	if q.IsClosed() {
@@ -91,7 +91,7 @@ func (q *ChanQueue) Push(x interface{}) error {
 	return nil
 }
 
-//AsyncPush async push data
+// AsyncPush async push data
 func (q *ChanQueue) AsyncPush(x interface{}) error {
 
 	if q.IsClosed() {
@@ -106,22 +106,22 @@ func (q *ChanQueue) AsyncPush(x interface{}) error {
 	}
 }
 
-//Length get chan queue length
+// Length get chan queue length
 func (q *ChanQueue) Length() int32 {
 	return q.size
 }
 
-//Capacity get queue capacity
+// Capacity get queue capacity
 func (q *ChanQueue) Capacity() int32 {
 	return q.capacity
 }
 
-//IsFull queue is full return true
+// IsFull queue is full return true
 func (q *ChanQueue) IsFull() bool {
 	return len(q.innerChan) == cap(q.innerChan)
 }
 
-//Close 不需要关闭innerChan,交给GC回收,多写的时候直接关闭innerChan会出问题
+// Close 不需要关闭innerChan,交给GC回收,多写的时候直接关闭innerChan会出问题
 func (q *ChanQueue) Close() error {
 	if q.IsClosed() {
 		return ErrQueueIsClosed

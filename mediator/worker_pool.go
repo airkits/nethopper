@@ -30,7 +30,6 @@ var (
 
 // IWorkerPool process pool interface
 type IWorkerPool interface {
-
 	//Setup
 	Setup(queueSize uint32)
 	// Submit add obj to Processor
@@ -55,6 +54,7 @@ type IWorkerPool interface {
 // WorkerPool Processor pool limit goruntine max count
 // -- dynamic processor pool
 type WorkerPool struct {
+
 	// capacity max goruntine count
 	capacity uint32
 
@@ -114,12 +114,12 @@ func (p *WorkerPool) Count() uint32 {
 	return atomic.LoadUint32(&p.workerCount)
 }
 
-//AddRef current goruntine count +1
+// AddRef current goruntine count +1
 func (p *WorkerPool) AddRef() {
 	atomic.AddUint32(&p.workerCount, 1)
 }
 
-//DecRef current goruntine count -1
+// DecRef current goruntine count -1
 func (p *WorkerPool) DecRef() {
 	atomic.AddUint32(&p.workerCount, ^uint32(-(-1)-1))
 }
@@ -293,12 +293,12 @@ func (p *FixedWorkerPool) Count() uint32 {
 	return atomic.LoadUint32(&p.workerCount)
 }
 
-//AddRef current goruntine count +1
+// AddRef current goruntine count +1
 func (p *FixedWorkerPool) AddRef() {
 	atomic.AddUint32(&p.workerCount, 1)
 }
 
-//DecRef current goruntine count -1
+// DecRef current goruntine count -1
 func (p *FixedWorkerPool) DecRef() {
 	atomic.AddUint32(&p.workerCount, ^uint32(-(-1)-1))
 }

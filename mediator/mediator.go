@@ -51,6 +51,7 @@ func (m *Mediator) CreateModule(data *MData) (IModule, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	module.MakeContext(int32(data.Conf.GetQueueSize()))
 	module.Setup(data.Conf)
 	module.SetID(data.ID)

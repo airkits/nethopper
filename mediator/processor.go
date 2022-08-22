@@ -140,7 +140,7 @@ func (w *Processor) Run() {
 	}()
 }
 
-//Submit task to processor
+// Submit task to processor
 func (w *Processor) Submit(obj *base.CallObject) error {
 	if err := w.q.AsyncPush(obj); err != nil {
 		return err

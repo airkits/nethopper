@@ -32,6 +32,8 @@ type NatsConfig struct {
 	QueueSize           int               `mapstructure:"queue_size"`
 	SocketQueueSize     int               `mapstructure:"socket_queue_size"`
 	MaxMessageSize      uint32            `mapstructure:"max_message_size"`
+	WorkerPoolCapacity  int               `mapstructure:"worker_pool_capacity"`
+	WorkerPoolQueueSize int               `mapstructure:"worker_pool_queue_size"`
 }
 
 // GetQueueSize get module queue size

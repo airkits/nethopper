@@ -59,7 +59,7 @@ func Process(obj *base.CallObject) *base.Ret {
 
 	defer func() {
 		if r := recover(); r != nil {
-			result = base.NewRet(-1, r.(error), nil)
+			result = base.NewRet(base.ErrCodeProcessor, r.(error), nil)
 			if !obj.Notify {
 				obj.ChanRet <- result
 			}

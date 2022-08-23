@@ -17,7 +17,7 @@ import (
 var instance *Mediator
 var once sync.Once
 
-//M mediator instance
+// M mediator instance
 func M() *Mediator {
 	once.Do(func() {
 		instance = NewMediator()
@@ -83,7 +83,7 @@ func AsyncNotify(destMID uint8, cmdID int32, option int32, args ...interface{}) 
 func Call(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.Ret {
 	obj, err := AsyncCall(destMID, cmdID, option, args...)
 	if err != nil {
-		result := base.NewRet(-1, err, nil)
+		result := base.NewRet(base.ErrCodeModule, err, nil)
 		result.SetTrace(destMID)
 		return result
 	}
@@ -180,7 +180,7 @@ func ExecuteHandler(s IModule, obj *base.CallObject) *base.Ret {
 					result = values[0].Interface().(*base.Ret)
 				} else {
 					err := errors.New("unsupport params length")
-					result = base.NewRet(-1, err, nil)
+					result = base.NewRet(base.ErrCodeModule, err, nil)
 					panic(err)
 				}
 			}
@@ -212,7 +212,7 @@ func RunSimpleFrame(s IModule) {
 
 	if err != nil && !obj.Notify {
 
-		obj.ChanRet <- base.NewRet(-1, err, nil)
+		obj.ChanRet <- base.NewRet(base.ErrCodeWorker, err, nil)
 	}
 }
 

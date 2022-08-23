@@ -179,7 +179,7 @@ func (s *BaseContext) GetReflectHandler(id int32) interface{} {
 
 // Execute callobject
 func (s *BaseContext) Execute(obj *base.CallObject) *base.Ret {
-	return base.NewRet(-1, fmt.Errorf("must override execute"), nil)
+	return base.NewRet(base.ErrCodeModule, fmt.Errorf("must override execute"), nil)
 }
 
 // IdleTimesReset reset idle times
@@ -241,7 +241,7 @@ func (s *BaseContext) DoWorker(obj *base.CallObject) error {
 		err = s.workerPool.Submit(obj)
 	}
 	if err != nil {
-		result := base.NewRet(-1, err, nil)
+		result := base.NewRet(base.ErrCodeWorker, err, nil)
 		result.SetTrace(obj.Trace...)
 		result.SetTrace(s.ID())
 		if !obj.Notify {
@@ -256,6 +256,7 @@ func (s *BaseContext) Call(option int32, obj *base.CallObject) error {
 	//	s.IdleTimesReset()
 	if err := s.q.AsyncPush(obj); err != nil {
 		log.Error("%s module call failed,%s", s.Name(), err.Error())
+		return err
 	}
 
 	return nil

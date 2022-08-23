@@ -92,11 +92,23 @@ func (q *ChanQueue) Push(x interface{}) error {
 }
 
 // AsyncPush async push data
-func (q *ChanQueue) AsyncPush(x interface{}) error {
+func (q *ChanQueue) AsyncPush(x interface{}) (err error) {
 
 	if q.IsClosed() {
-		return ErrQueueIsClosed
+		err = ErrQueueIsClosed
+		return err
 	}
+
+	for i := 0; i < 3; i++ {
+		err = q.tryPush(x)
+		if err != ErrQueueFull {
+			return err
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return nil
+}
+func (q *ChanQueue) tryPush(x interface{}) error {
 	select {
 	case q.innerChan <- x:
 		atomic.AddInt32(&q.size, 1)

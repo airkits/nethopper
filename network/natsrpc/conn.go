@@ -7,12 +7,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/mq"
 	"github.com/airkits/nethopper/network"
+	"github.com/airkits/nethopper/utils"
+	"github.com/airkits/proto/s2s"
 	"github.com/airkits/proto/ss"
-	"github.com/golang/protobuf/proto"
 	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -56,6 +59,11 @@ func NewConn(conn *nats.Conn, socketQueueSize int, maxMessageSize uint32) networ
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
 			// todo jetstream error handling
 			fmt.Println(err.Error())
+			outMsg := &ss.Message{}
+			_ = proto.Unmarshal(msg.Data, outMsg)
+			if err != nil {
+				natsConn.recvChan <- natsConn.DirectErrorMsg(outMsg, err)
+			}
 		}),
 	)
 	if err != nil {
@@ -122,6 +130,14 @@ func (c *Conn) DirectErrorMsg(m *ss.Message, err error) *ss.Message {
 	} else if msgType == mq.MTRequestPush {
 		msgType = mq.MTResponsePush
 	}
+	body := &s2s.ErrorResp{
+		Result: &s2s.Result{
+			Code: base.ErrCodeRouter,
+			Msg:  err.Error(),
+		},
+		Time: utils.LocalMilliscond(),
+	}
+	any, _ := anypb.New(body)
 	msg := &ss.Message{
 		ID:       m.ID,
 		UID:      m.UID,
@@ -132,11 +148,12 @@ func (c *Conn) DirectErrorMsg(m *ss.Message, err error) *ss.Message {
 		SrcID:    m.SrcID,
 		DestType: m.SrcType,
 		DestID:   m.SrcID,
-		Time:     0,
-		Reply:    err.Error(),
-		Options:  map[string][]byte{},
-		Body:     &anypb.Any{},
+		Time:     m.Time,
+		Reply:    m.Reply,
+		Options:  map[string][]byte{"e": []byte(err.Error())},
+		Body:     any,
 	}
+
 	return msg
 }
 func (c *Conn) GetStreamName(msgType, srcType, srcID uint32) string {
@@ -152,9 +169,9 @@ func (c *Conn) GetStreamName(msgType, srcType, srcID uint32) string {
 func (c *Conn) GetSubject(msgType, destType, destID, srcType, srcID uint32) string {
 	if msgType == mq.MTBroadcast {
 		return fmt.Sprintf("gjst%ds%d.t%ds%d", destType, destID, srcType, srcID)
-	} else if msgType == mq.MTRequestAny {
+	} else if msgType == mq.MTRequestAny || msgType == mq.MTResponseAny {
 		return fmt.Sprintf("anyt%ds%d.t%ds%d", destType, destID, srcType, srcID)
-	} else if msgType == mq.MTRequestPush {
+	} else if msgType == mq.MTRequestPush || msgType == mq.MTResponsePush {
 		return fmt.Sprintf("pusht%ds%d.t%ds%d", destType, destID, srcType, srcID)
 	}
 	return fmt.Sprintf("jst%ds%d.t%ds%d", destType, destID, srcType, srcID)

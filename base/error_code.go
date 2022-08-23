@@ -10,6 +10,8 @@ const (
 	ErrCodeWorker = 1001
 	//ErrCodeProcessor
 	ErrCodeProcessor = 1002
+	//ErrCodeRouter
+	ErrCodeRouter = 1003
 	//ErrCodeLogic
-	ErrCodeLogic = 1003
+	ErrCodeLogic = 1004
 )

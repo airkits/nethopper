@@ -35,9 +35,36 @@ func bench_sync(q queue.Queue) {
 	wg.Wait()
 }
 
+func bench_syncb(q queue.Queue) {
+	var wg sync.WaitGroup
+	num := 1000000
+	pushNum := 5
+	wg.Add(pushNum + 1)
+	for i := 0; i < pushNum; i++ {
+		go func(num int) {
+			for j := 0; j < num; j++ {
+				q.Push(j)
+			}
+			wg.Done()
+		}(num)
+	}
+	go func() {
+		idx := 0
+		for idx < num*pushNum {
+			result, err := q.AutoPop()
+			if err == nil {
+				idx += len(result)
+			}
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+}
+
 func Benchmark_ChanQueue(b *testing.B) {
 	q := queue.NewChanQueue(1000)
-	bench_sync(q)
+	//bench_sync(q)
+	bench_syncb(q)
 }
 
 func BenchmarkPush(b *testing.B) {

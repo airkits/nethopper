@@ -34,7 +34,6 @@ import (
 
 	"github.com/airkits/nethopper/mq"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/nethopper/network/common"
 	"github.com/airkits/nethopper/network/natsrpc"
 	"github.com/airkits/nethopper/utils"
 	"github.com/airkits/proto/s2s"
@@ -44,11 +43,9 @@ import (
 
 func TestNatsClientRequest(t *testing.T) {
 	conf := &natsrpc.NatsConfig{
-		Nodes: []common.NodeInfo{{
-			ID:      0,
-			Name:    "NAME",
-			Address: "nats://127.0.0.1:4222",
-		}},
+		Nats: []string{
+			"nats://127.0.0.1:4222",
+		},
 		PingInterval:        30 * time.Second,
 		MaxPingsOutstanding: 10,
 		MaxReconnects:       10,

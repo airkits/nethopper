@@ -2,8 +2,6 @@ package natsrpc
 
 import (
 	"time"
-
-	"github.com/airkits/nethopper/network/common"
 )
 
 // ServiceInfo service node info
@@ -23,17 +21,19 @@ type ServiceGroup struct {
 
 // NatsConfig grpc client config
 type NatsConfig struct {
-	Nodes               []common.NodeInfo `mapstructure:"nodes"`
-	ServiceGroup        ServiceGroup      `mapstructure:"service_group"`
-	TargetGroup         ServiceGroup      `mapstructure:"target_group"`
-	PingInterval        time.Duration     `mapstructure:"ping_interval"`
-	MaxPingsOutstanding int               `mapstructure:"max_ping_outstanding"`
-	MaxReconnects       int               `mapstructure:"max_reconnects"`
-	QueueSize           int               `mapstructure:"queue_size"`
-	SocketQueueSize     int               `mapstructure:"socket_queue_size"`
-	MaxMessageSize      uint32            `mapstructure:"max_message_size"`
-	WorkerPoolCapacity  int               `mapstructure:"worker_pool_capacity"`
-	WorkerPoolQueueSize int               `mapstructure:"worker_pool_queue_size"`
+	ServiceType int      `mapstructure:"service_type"`
+	ServiceID   int      `mapstructure:"service_id"`
+	Nats        []string `mapstructure:"nats"`
+	//ServiceGroup        ServiceGroup      `mapstructure:"service_group"`
+	//TargetGroup         ServiceGroup      `mapstructure:"target_group"`
+	PingInterval        time.Duration `mapstructure:"ping_interval"`
+	MaxPingsOutstanding int           `mapstructure:"max_ping_outstanding"`
+	MaxReconnects       int           `mapstructure:"max_reconnects"`
+	QueueSize           int           `mapstructure:"queue_size"`
+	SocketQueueSize     int           `mapstructure:"socket_queue_size"`
+	MaxMessageSize      uint32        `mapstructure:"max_message_size"`
+	WorkerPoolCapacity  int           `mapstructure:"worker_pool_capacity"`
+	WorkerPoolQueueSize int           `mapstructure:"worker_pool_queue_size"`
 }
 
 // GetQueueSize get module queue size

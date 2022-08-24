@@ -2,6 +2,7 @@ package natsrpc
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -40,10 +41,8 @@ func (c *NatsRPC) Wait() {
 // Run client start run
 func (c *NatsRPC) Run() {
 	c.init()
-	info := c.Conf.Nodes[0]
-
 	c.wg.Add(1)
-	go c.connect(info.ID, info.Name, info.Address)
+	go c.connect()
 
 }
 
@@ -52,10 +51,10 @@ func (c *NatsRPC) init() {
 	defer c.Unlock()
 
 	if c.NewAgent == nil {
-		log.Fatal("[GRPCClient] NewAgent must not be nil")
+		log.Fatal("[NatsRPC] NewAgent must not be nil")
 	}
 	if c.conns != nil {
-		log.Fatal("[GRPCClient] client is running")
+		log.Fatal("[NatsRPC] client is running")
 	}
 
 	c.conns = make(ConnSet)
@@ -70,10 +69,10 @@ func (c *NatsRPC) Disconnect(natsConn *nats.Conn) {
 func (c *NatsRPC) GetAgent() network.IAgent {
 	return c.agent
 }
-func (c *NatsRPC) connect(serverID int, name string, address string) error {
+func (c *NatsRPC) connect() error {
 	defer c.wg.Done()
 
-	nc, err := nats.Connect(c.Conf.Nodes[0].Address,
+	nc, err := nats.Connect(strings.Join(c.Conf.Nats, ","),
 		nats.PingInterval(c.Conf.PingInterval*time.Second),
 		nats.MaxPingsOutstanding(c.Conf.MaxPingsOutstanding),
 		nats.MaxReconnects(c.Conf.MaxReconnects),
@@ -87,13 +86,13 @@ func (c *NatsRPC) connect(serverID int, name string, address string) error {
 		return err
 	}
 
-	log.Info("[Client] client create new connection to id:[%d] %s %s.", serverID, name, address)
+	log.Info("[NatsRPC] connect to %s id:[%s] %s.", nc.ConnectedServerName(), nc.ConnectedServerId(), nc.ConnectedServerVersion())
 	c.Lock()
 	c.conns[nc] = struct{}{}
 	c.Unlock()
 
 	natsConn := NewConn(nc, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
-	c.agent = c.NewAgent(natsConn, uint64(serverID), name)
+	c.agent = c.NewAgent(natsConn, 0, nc.ConnectedServerId())
 
 	c.agent.Run()
 

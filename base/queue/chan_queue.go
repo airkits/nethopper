@@ -63,6 +63,26 @@ func (q *ChanQueue) Pop() (val interface{}, err error) {
 	return nil, ErrQueueIsClosed
 
 }
+func (q *ChanQueue) AutoPop() ([]interface{}, error) {
+	var batch []interface{}
+	var val interface{}
+	var err error
+	for i := 0; i < 128; i++ {
+		val, err = q.AsyncPop()
+		if err != nil {
+			break
+		}
+		batch = append(batch, val)
+	}
+	if len(batch) == 0 {
+		val, err = q.Pop()
+		if err != nil {
+			return nil, err
+		}
+		batch = append(batch, val)
+	}
+	return batch, nil
+}
 
 // AsyncPop async pop
 func (q *ChanQueue) AsyncPop() (val interface{}, err error) {

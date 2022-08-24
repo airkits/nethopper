@@ -109,7 +109,7 @@ type IAgentAdapter interface {
 }
 
 // AgentCreateFunc create agent func
-type AgentCreateFunc func(conn IConn, uid uint64, token string) IAgent
+type AgentCreateFunc func(conn IConn, id uint64, token string) IAgent
 
 // AgentCloseFunc close agent func
 type AgentCloseFunc func(IAgent)

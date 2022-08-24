@@ -130,6 +130,7 @@ func (c *Conn) DirectErrorMsg(m *ss.Message, err error) *ss.Message {
 	} else if msgType == mq.MTRequestPush {
 		msgType = mq.MTResponsePush
 	}
+	m.MsgID = uint32(s2s.MessageCmd_ERROR)
 	body := &s2s.ErrorResp{
 		Result: &s2s.Result{
 			Code: base.ErrCodeRouter,
@@ -158,23 +159,23 @@ func (c *Conn) DirectErrorMsg(m *ss.Message, err error) *ss.Message {
 }
 func (c *Conn) GetStreamName(msgType, srcType, srcID uint32) string {
 	if msgType == mq.MTBroadcast {
-		return fmt.Sprintf("gjst%ds%d", srcType, srcID)
+		return fmt.Sprintf("gjetst%ds%d", srcType, srcID)
 	} else if msgType == mq.MTRequestAny {
-		return fmt.Sprintf("anyt%ds%d", srcType, srcID)
+		return fmt.Sprintf("replyt%ds%d", srcType, srcID)
 	} else if msgType == mq.MTRequestPush {
 		return fmt.Sprintf("pusht%ds%d", srcType, srcID)
 	}
-	return fmt.Sprintf("jst%ds%d", srcType, srcID)
+	return fmt.Sprintf("jetst%ds%d", srcType, srcID)
 }
 func (c *Conn) GetSubject(msgType, destType, destID, srcType, srcID uint32) string {
 	if msgType == mq.MTBroadcast {
-		return fmt.Sprintf("gjst%ds%d.t%ds%d", destType, destID, srcType, srcID)
+		return fmt.Sprintf("gjetst%ds%d.t%ds%d", destType, destID, srcType, srcID)
 	} else if msgType == mq.MTRequestAny || msgType == mq.MTResponseAny {
-		return fmt.Sprintf("anyt%ds%d.t%ds%d", destType, destID, srcType, srcID)
+		return fmt.Sprintf("replyt%ds%d.t%ds%d", destType, destID, srcType, srcID)
 	} else if msgType == mq.MTRequestPush || msgType == mq.MTResponsePush {
 		return fmt.Sprintf("pusht%ds%d.t%ds%d", destType, destID, srcType, srcID)
 	}
-	return fmt.Sprintf("jst%ds%d.t%ds%d", destType, destID, srcType, srcID)
+	return fmt.Sprintf("jetst%ds%d.t%ds%d", destType, destID, srcType, srcID)
 
 }
 
@@ -237,7 +238,7 @@ DiscardOld（默认）删除旧消息
 */
 func (c *Conn) createStream(name string, subjects []string) error {
 
-	info, err := c.stream.StreamInfo(name)
+	_, err := c.stream.StreamInfo(name)
 	conf := &nats.StreamConfig{
 		Name:         name,
 		Subjects:     subjects,
@@ -248,13 +249,13 @@ func (c *Conn) createStream(name string, subjects []string) error {
 		MaxMsgSize:   640000,
 		Duplicates:   1 * time.Hour,
 	}
-	fmt.Print(info)
+
 	if err != nil {
-		info, err = c.stream.AddStream(conf, nats.PublishAsyncMaxPending(100000))
+		_, err = c.stream.AddStream(conf, nats.PublishAsyncMaxPending(100000))
 	} else {
-		info, err = c.stream.UpdateStream(conf, nats.PublishAsyncMaxPending(100000))
+		_, err = c.stream.UpdateStream(conf, nats.PublishAsyncMaxPending(100000))
 	}
-	fmt.Print(info)
+
 	if err != nil {
 		return err
 	}
@@ -301,9 +302,9 @@ func (c *Conn) Reply(m *ss.Message) (*ss.Message, error) {
 	return nil, nil
 }
 func (c *Conn) SubscribeToReply(name, subject string) {
-	fmt.Printf("Subscribing to %s", subject)
+	fmt.Printf("\nSubscribeToReply %s to %s\n", name, subject)
 	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
-		//	fmt.Printf("Msg recieved")
+		//	fmt.Printf("SubscribeToReply Msg recieved\n")
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
@@ -316,9 +317,9 @@ func (c *Conn) SubscribeToReply(name, subject string) {
 	fmt.Println(result)
 }
 func (c *Conn) SubscribeToNats(name, subject string) {
-	fmt.Printf("Subscribing to %s", subject)
+	fmt.Printf("\nSubscribeToNats %s to %s\n", name, subject)
 	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
-		//	fmt.Printf("Msg recieved")
+		//fmt.Printf("SubscribeToNats Msg recieved\n")
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
@@ -330,9 +331,9 @@ func (c *Conn) SubscribeToNats(name, subject string) {
 	fmt.Println(result)
 }
 func (c *Conn) SubscribeToStream(name, subject string) {
-	fmt.Printf("Subscribing to %s", subject)
+	fmt.Printf("\nSubscribeToStream %s to %s\n", name, subject)
 	result, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
-		//	fmt.Printf("Msg recieved")
+		//fmt.Printf("SubscribeToStream Msg recieved\n")
 		msg.Ack()
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}

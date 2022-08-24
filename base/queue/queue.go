@@ -36,6 +36,8 @@ type Queue interface {
 	AsyncPush(data interface{}) error
 	// Pop 阻塞读队列
 	Pop() (interface{}, error)
+	//AutoPop 批量获取阻塞读队列
+	AutoPop() ([]interface{}, error)
 	// AsyncPop 异步读队列
 	AsyncPop() (interface{}, error)
 	// Capacity 队列大小

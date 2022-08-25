@@ -31,6 +31,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/airkits/nethopper/base"
@@ -50,7 +51,8 @@ type IModule interface {
 	Name() string
 	//SetName set module name
 	SetName(v string)
-
+	WaitInited()
+	Inited()
 	//Handlers set moudle handlers
 	Handlers() map[int32]interface{}
 	//ReflectHandlers set moudle reflect handlers
@@ -126,6 +128,7 @@ type BaseContext struct {
 	rfuncs     map[int32]interface{} //reflect handlers
 	workerPool IWorkerPool
 	// idleTimes  uint32
+	waitInited sync.WaitGroup
 }
 
 // Handlers set moudle handlers
@@ -136,6 +139,14 @@ func (s *BaseContext) Handlers() map[int32]interface{} {
 // ReflectHandlers set moudle reflect handlers
 func (s *BaseContext) ReflectHandlers() map[int32]interface{} {
 	return nil
+}
+
+func (s *BaseContext) Inited() {
+	s.waitInited.Done()
+}
+
+func (s *BaseContext) WaitInited() {
+	s.waitInited.Wait()
 }
 
 // RegisterHandler register function before run
@@ -204,6 +215,7 @@ func (s *BaseContext) Execute(obj *base.CallObject) *base.Ret {
 // MakeContext init base module queue and create context
 func (s *BaseContext) MakeContext(queueSize int32) {
 	//s.parent = p
+	s.waitInited.Add(1)
 	s.q = queue.NewChanQueue(queueSize)
 	s.funcs = make(map[int32]interface{})
 	s.rfuncs = make(map[int32]interface{})

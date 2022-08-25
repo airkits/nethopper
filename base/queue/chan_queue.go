@@ -56,13 +56,16 @@ func NewChanQueue(capacity int32) Queue {
 
 // Pop sync block pop
 func (q *ChanQueue) Pop() (val interface{}, err error) {
-
-	v, ok := <-q.innerChan
-	if ok {
-		atomic.AddInt32(&q.size, -1)
-		return v, nil
+	select {
+	case v, ok := <-q.innerChan:
+		if ok {
+			atomic.AddInt32(&q.size, -1)
+			return v, nil
+		}
+		return nil, base.ErrQueueIsClosed
+	case <-time.After(base.TimeoutChanTime):
+		return nil, base.ErrQueueTimeout
 	}
-	return nil, base.ErrQueueIsClosed
 
 }
 func (q *ChanQueue) AutoPop() ([]interface{}, error) {
@@ -105,12 +108,16 @@ func (q *ChanQueue) AsyncPop() (val interface{}, err error) {
 // Push sync push data
 func (q *ChanQueue) Push(x interface{}) error {
 
-	if q.IsClosed() {
+	select {
+	case <-q.closedChan:
 		return base.ErrQueueIsClosed
+	case q.innerChan <- x:
+		atomic.AddInt32(&q.size, 1)
+		return nil
+	case <-time.After(base.TimeoutChanTime):
+		return base.ErrQueueTimeout
 	}
-	q.innerChan <- x
-	atomic.AddInt32(&q.size, 1)
-	return nil
+
 }
 
 // AsyncPush async push data

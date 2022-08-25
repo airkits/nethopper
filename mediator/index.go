@@ -204,14 +204,19 @@ func RunSimpleFrame(s IModule) {
 		//err = errors.New("no processor pool")
 		result := s.Execute(obj)
 		if !obj.Notify {
-			obj.ChanRet <- result
+			select {
+			case obj.ChanRet <- result:
+				return
+			case <-time.After(base.TimeoutChanTime):
+				obj.ChanRet <- base.NewRet(base.ErrCodeWorker, base.ErrReadChanTimeout, nil)
+				return
+			}
 		}
 		return
 	}
 	err = s.WorkerPoolSubmit(obj)
 
 	if err != nil && !obj.Notify {
-
 		obj.ChanRet <- base.NewRet(base.ErrCodeWorker, err, nil)
 	}
 }

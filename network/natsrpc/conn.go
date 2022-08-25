@@ -192,7 +192,11 @@ func (c *Conn) RegisterService(srcType, srcID uint32) error {
 func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 	name := c.GetStreamName(msgType, srcType, srcID)
 	subject := fmt.Sprintf("%s.*", name)
-	if err := c.createStream(name, []string{subject}); err != nil {
+	maxConsumers := 1
+	if msgType == mq.MTBroadcast {
+		maxConsumers = 256
+	}
+	if err := c.createStream(name, []string{subject}, maxConsumers); err != nil {
 		log.Error("[NatsRPC] Create or Update stream error %s", err.Error())
 		return err
 	}
@@ -231,13 +235,13 @@ DiscardOld（默认）删除旧消息
 重复项	跟踪重复消息的窗口
 *
 */
-func (c *Conn) createStream(name string, subjects []string) error {
+func (c *Conn) createStream(name string, subjects []string, maxConsumers int) error {
 
 	_, err := c.stream.StreamInfo(name)
 	conf := &nats.StreamConfig{
 		Name:         name,
 		Subjects:     subjects,
-		MaxConsumers: 128,
+		MaxConsumers: maxConsumers,
 		MaxMsgs:      -1, // unlimitted
 		MaxBytes:     -1, // stream size unlimitted
 		MaxAge:       7 * 24 * time.Hour,
@@ -299,7 +303,6 @@ func (c *Conn) Reply(m *ss.Message) (*ss.Message, error) {
 func (c *Conn) SubscribeToReply(name, subject string) {
 	log.Info("[NatsRPC] SubscribeToReply %s to %s", name, subject)
 	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
-		//	fmt.Printf("SubscribeToReply Msg recieved\n")
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
@@ -314,7 +317,6 @@ func (c *Conn) SubscribeToReply(name, subject string) {
 func (c *Conn) SubscribeToNats(name, subject string) {
 	log.Info("[NatsRPC] SubscribeToNats %s to %s", name, subject)
 	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
-		//fmt.Printf("SubscribeToNats Msg recieved\n")
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
@@ -328,8 +330,7 @@ func (c *Conn) SubscribeToNats(name, subject string) {
 func (c *Conn) SubscribeToStream(name, subject string) {
 	log.Info("[NatsRPC] SubscribeToStream %s to %s", name, subject)
 	sub, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
-		//fmt.Printf("SubscribeToStream Msg recieved\n")
-		log.Info("recv msg from stream %s %v ", subject, msg)
+		//	log.Info("recv msg from stream %s %v ", subject, msg)
 
 		msg.Ack()
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
@@ -361,11 +362,12 @@ func (c *Conn) publishToNats(subject string, msg *ss.Message) (*ss.Message, erro
 	return nil, nil
 }
 func (c *Conn) publishToStream(subject string, msg *ss.Message) (*ss.Message, error) {
-	log.Info("publish msg to stream %s %v ", subject, msg)
+	//log.Info("publish msg to stream %s %v ", subject, msg)
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return c.DirectErrorMsg(msg, err), err
 	}
+
 	c.sendCount += 1
 	_, err2 := c.stream.PublishAsync(subject, data)
 	if err2 != nil {

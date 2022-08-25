@@ -60,18 +60,31 @@ func (c *NatsRPC) init() {
 	c.conns = make(ConnSet)
 }
 func (c *NatsRPC) Reconnect(natsConn *nats.Conn) {
+	log.Error("[NatsRPC] Reconnect")
 
 }
 func (c *NatsRPC) Disconnect(natsConn *nats.Conn) {
+	log.Error("[NatsRPC] Connect failed,Disconnect")
 
 }
+func (c *NatsRPC) DisconnectError(natsConn *nats.Conn, err error) {
+	log.Error("[NatsRPC] Connect failed,DisconnectError")
 
+}
+func (c *NatsRPC) ErrorHandler(natsConn *nats.Conn, sub *nats.Subscription, err error) {
+	log.Error("[NatsRPC] Connect failed,ErrorHandler")
+
+}
 func (c *NatsRPC) GetAgent() network.IAgent {
 	return c.agent
 }
 func (c *NatsRPC) connect() error {
 	defer c.wg.Done()
-
+	// PingInterval ping间隔
+	// MaxPingsOutstanding ping未响应次数
+	// MaxReconnects 最大重连次数
+	// RetryOnFailedConnect 失败重连
+	// ReconnectWait 重连等待时间
 	nc, err := nats.Connect(strings.Join(c.Conf.Nats, ","),
 		nats.PingInterval(c.Conf.PingInterval*time.Second),
 		nats.MaxPingsOutstanding(c.Conf.MaxPingsOutstanding),
@@ -80,13 +93,18 @@ func (c *NatsRPC) connect() error {
 		nats.ReconnectWait(5*time.Second),
 		nats.ReconnectHandler(c.Reconnect),
 		nats.DisconnectHandler(c.Disconnect),
+		nats.DisconnectErrHandler(c.DisconnectError),
+		nats.ErrorHandler(c.ErrorHandler),
+		nats.Timeout(10*time.Second),
 	)
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
 
-	log.Info("[NatsRPC] connect to %s id:[%s] %s.", nc.ConnectedServerName(), nc.ConnectedServerId(), nc.ConnectedServerVersion())
+	log.Info("[NatsRPC] Connect to %s ID:[%s] VERSION:[%s].", nc.ConnectedServerName(), nc.ConnectedServerId(), nc.ConnectedServerVersion())
+	mp := nc.MaxPayload()
+	log.Info("[NatsRPC] Maximum payload is %d MB", mp/(1024*1024))
 	c.Lock()
 	c.conns[nc] = struct{}{}
 	c.Unlock()

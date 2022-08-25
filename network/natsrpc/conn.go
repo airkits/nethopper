@@ -1,7 +1,6 @@
 package natsrpc
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -18,12 +17,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-// ErrQueueIsClosed queue is closed
-var ErrQueueIsClosed = errors.New("Queue is Closed")
-
-var ErrQueueEmpty = errors.New("Queue is empty")
-var ErrQueueFull = errors.New("Queue is full")
 
 // ConnSet grpc conn set
 type ConnSet map[*nats.Conn]struct{}
@@ -46,14 +39,15 @@ type Conn struct {
 	recvChan       chan *ss.Message
 	maxMessageSize uint32
 	closeFlag      bool
-
-	funcs map[string](func(*ss.Message) *ss.Message) //handlers
+	sendCount      int64
+	funcs          map[string](func(*ss.Message) *ss.Message) //handlers
 }
 
 // NewConn create websocket conn
 func NewConn(conn *nats.Conn, socketQueueSize int, maxMessageSize uint32) network.IConn {
 	natsConn := &Conn{}
 	natsConn.nc = conn
+	natsConn.sendCount = 0
 	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
 	js, err := conn.JetStream(nats.PublishAsyncMaxPending(int(maxMessageSize)),
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
@@ -199,6 +193,7 @@ func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 	name := c.GetStreamName(msgType, srcType, srcID)
 	subject := fmt.Sprintf("%s.*", name)
 	if err := c.createStream(name, []string{subject}); err != nil {
+		log.Error("[NatsRPC] Create or Update stream error %s", err.Error())
 		return err
 	}
 	c.SubscribeToStream(name, subject)
@@ -242,7 +237,7 @@ func (c *Conn) createStream(name string, subjects []string) error {
 	conf := &nats.StreamConfig{
 		Name:         name,
 		Subjects:     subjects,
-		MaxConsumers: 1,
+		MaxConsumers: 128,
 		MaxMsgs:      -1, // unlimitted
 		MaxBytes:     -1, // stream size unlimitted
 		MaxAge:       7 * 24 * time.Hour,
@@ -302,7 +297,7 @@ func (c *Conn) Reply(m *ss.Message) (*ss.Message, error) {
 	return nil, nil
 }
 func (c *Conn) SubscribeToReply(name, subject string) {
-	fmt.Printf("\nSubscribeToReply %s to %s\n", name, subject)
+	log.Info("[NatsRPC] SubscribeToReply %s to %s", name, subject)
 	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
 		//	fmt.Printf("SubscribeToReply Msg recieved\n")
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
@@ -317,7 +312,7 @@ func (c *Conn) SubscribeToReply(name, subject string) {
 	fmt.Println(result)
 }
 func (c *Conn) SubscribeToNats(name, subject string) {
-	fmt.Printf("\nSubscribeToNats %s to %s\n", name, subject)
+	log.Info("[NatsRPC] SubscribeToNats %s to %s", name, subject)
 	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
 		//fmt.Printf("SubscribeToNats Msg recieved\n")
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
@@ -331,9 +326,11 @@ func (c *Conn) SubscribeToNats(name, subject string) {
 	fmt.Println(result)
 }
 func (c *Conn) SubscribeToStream(name, subject string) {
-	fmt.Printf("\nSubscribeToStream %s to %s\n", name, subject)
-	result, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
+	log.Info("[NatsRPC] SubscribeToStream %s to %s", name, subject)
+	sub, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
 		//fmt.Printf("SubscribeToStream Msg recieved\n")
+		log.Info("recv msg from stream %s %v ", subject, msg)
+
 		msg.Ack()
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
@@ -343,7 +340,10 @@ func (c *Conn) SubscribeToStream(name, subject string) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	fmt.Println(result)
+	msgLimit, byteLimit, _ := sub.PendingLimits()
+	log.Info("[NatsRPC] subscribe stream success,msgLimit:%d byteLimit:%d", msgLimit, byteLimit)
+	sub.SetPendingLimits(-1, -1)
+	fmt.Println(sub)
 }
 
 func (c *Conn) publishToNats(subject string, msg *ss.Message) (*ss.Message, error) {
@@ -361,15 +361,24 @@ func (c *Conn) publishToNats(subject string, msg *ss.Message) (*ss.Message, erro
 	return nil, nil
 }
 func (c *Conn) publishToStream(subject string, msg *ss.Message) (*ss.Message, error) {
+	log.Info("publish msg to stream %s %v ", subject, msg)
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return c.DirectErrorMsg(msg, err), err
 	}
-
+	c.sendCount += 1
 	_, err2 := c.stream.PublishAsync(subject, data)
 	if err2 != nil {
 		fmt.Println(err2.Error())
 		return c.DirectErrorMsg(msg, err2), err2
+	}
+	if c.sendCount > 51200 {
+		select {
+		case <-c.stream.PublishAsyncComplete():
+			c.sendCount = 0
+		case <-time.After(100 * time.Millisecond):
+			fmt.Println("publish async Did not resolve in time")
+		}
 	}
 	//	fmt.Printf("\nsend reqid = %d,seq=%d \n", result.Sequence, msg.Seq)
 	return nil, nil
@@ -408,15 +417,14 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) doWrite(b *ss.Message) error {
-	// if len(c.sendChan) == cap(c.sendChan) {
-	// 	log.Error("close conn: channel full")
-	// 	//c.doDestroy()
-	// 	return ErrQueueFull
-	// }
-
 	c.sendChan <- b
-
 	return nil
+	// select {
+	// case c.sendChan <- b:
+	// 	return nil
+	// case <-time.After(10 * time.Second):
+	// 	return base.ErrReadChanTimeout
+	// }
 }
 
 // LocalAddr get local addr
@@ -439,15 +447,15 @@ func (c *Conn) ReadMessage() (interface{}, error) {
 	if ok {
 		return v, nil
 	}
-	return nil, ErrQueueIsClosed
+	return nil, base.ErrQueueIsClosed
 	// select {
 	// case v, ok := <-c.recvChan:
 	// 	if ok {
 	// 		return v, nil
 	// 	}
-	// 	return nil, ErrQueueIsClosed
-	// default:
-	// 	return nil, ErrQueueEmpty
+	// 	return nil, base.ErrQueueIsClosed
+	// case <-time.After(10 * time.Second):
+	// 	return nil, base.ErrReadChanTimeout
 	// }
 }
 

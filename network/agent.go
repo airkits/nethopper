@@ -30,7 +30,7 @@ package network
 import (
 	"net"
 
-	"github.com/airkits/nethopper/base/queue"
+	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/log"
 )
 
@@ -101,7 +101,7 @@ func (a *Agent) Run() {
 	for {
 		data, err := a.adapter.ReadMessage()
 		if err != nil {
-			if err == queue.ErrQueueIsClosed {
+			if err == base.ErrQueueIsClosed {
 				log.Debug("read message: %v", err)
 				break
 			} else {

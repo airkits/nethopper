@@ -30,6 +30,8 @@ package queue
 import (
 	"sync/atomic"
 	"time"
+
+	"github.com/airkits/nethopper/base"
 )
 
 // ChanQueue use chan queue
@@ -60,7 +62,7 @@ func (q *ChanQueue) Pop() (val interface{}, err error) {
 		atomic.AddInt32(&q.size, -1)
 		return v, nil
 	}
-	return nil, ErrQueueIsClosed
+	return nil, base.ErrQueueIsClosed
 
 }
 func (q *ChanQueue) AutoPop() ([]interface{}, error) {
@@ -93,9 +95,9 @@ func (q *ChanQueue) AsyncPop() (val interface{}, err error) {
 			atomic.AddInt32(&q.size, -1)
 			return v, nil
 		}
-		return nil, ErrQueueIsClosed
+		return nil, base.ErrQueueIsClosed
 	default:
-		return nil, ErrQueueEmpty
+		return nil, base.ErrQueueEmpty
 	}
 
 }
@@ -104,7 +106,7 @@ func (q *ChanQueue) AsyncPop() (val interface{}, err error) {
 func (q *ChanQueue) Push(x interface{}) error {
 
 	if q.IsClosed() {
-		return ErrQueueIsClosed
+		return base.ErrQueueIsClosed
 	}
 	q.innerChan <- x
 	atomic.AddInt32(&q.size, 1)
@@ -115,13 +117,13 @@ func (q *ChanQueue) Push(x interface{}) error {
 func (q *ChanQueue) AsyncPush(x interface{}) (err error) {
 
 	if q.IsClosed() {
-		err = ErrQueueIsClosed
+		err = base.ErrQueueIsClosed
 		return err
 	}
 
 	for i := 0; i < 3; i++ {
 		err = q.tryPush(x)
-		if err != ErrQueueFull {
+		if err != base.ErrQueueFull {
 			return err
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -134,7 +136,7 @@ func (q *ChanQueue) tryPush(x interface{}) error {
 		atomic.AddInt32(&q.size, 1)
 		return nil
 	default:
-		return ErrQueueFull
+		return base.ErrQueueFull
 	}
 }
 
@@ -156,7 +158,7 @@ func (q *ChanQueue) IsFull() bool {
 // Close 不需要关闭innerChan,交给GC回收,多写的时候直接关闭innerChan会出问题
 func (q *ChanQueue) Close() error {
 	if q.IsClosed() {
-		return ErrQueueIsClosed
+		return base.ErrQueueIsClosed
 	}
 	close(q.closedChan)
 
@@ -193,7 +195,7 @@ func (q *ChanQueue) getChan(timeout time.Duration) (<-chan interface{}, <-chan e
 				atomic.AddInt32(&q.size, -1)
 				resultChan <- item
 			case <-time.After(timeout):
-				timeoutChan <- ErrQueueTimeout
+				timeoutChan <- base.ErrQueueTimeout
 			}
 		}
 	}()

@@ -62,6 +62,22 @@ func AsyncCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*
 
 }
 
+// AsyncTransportCall async get data from modules,return call object
+// same option value will run in same processor
+func AsyncTransportCall(destMID uint8, cmdID int32, option int32, args ...interface{}) (*base.CallObject, error) {
+	m := M().GetModuleByID(destMID)
+	if m == nil {
+		return nil, fmt.Errorf("get module failed module [%d] cmd[%d]", destMID, cmdID)
+	}
+	obj := base.NewTransportObject(m, cmdID, option, args...)
+	obj.SetTrace(destMID)
+	if err := m.Call(option, obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+
+}
+
 // AsyncNotify async send data from modules,return call object
 // same option value will run in same processor
 func AsyncNotify(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.CallObject {
@@ -82,12 +98,34 @@ func AsyncNotify(destMID uint8, cmdID int32, option int32, args ...interface{}) 
 // same option value will run in same processor
 func Call(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.Ret {
 	obj, err := AsyncCall(destMID, cmdID, option, args...)
+	var result *base.Ret
 	if err != nil {
-		result := base.NewRet(base.ErrCodeModule, err, nil)
-		result.SetTrace(destMID)
-		return result
+		result = base.NewRet(base.ErrCodeModule, err, nil)
+	} else {
+		select {
+		case result = <-obj.ChanRet:
+			break
+		case <-time.After(base.TimeoutChanTime):
+			result = base.NewRet(base.ErrCodeModule, base.ErrCallTimeout, nil)
+		}
 	}
-	result := <-obj.ChanRet
+	result.SetTrace(destMID)
+	return result
+}
+func TransportCall(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.Ret {
+	obj, err := AsyncTransportCall(destMID, cmdID, option, args...)
+	var result *base.Ret
+	if err != nil {
+		result = base.NewRet(base.ErrCodeModule, err, nil)
+	} else {
+		select {
+		case result = <-obj.ChanRet:
+			break
+		case <-time.After(base.TimeoutChanTime):
+			result = base.NewRet(base.ErrCodeModule, base.ErrCallTimeout, nil)
+		}
+	}
+
 	result.SetTrace(destMID)
 	return result
 }
@@ -153,11 +191,29 @@ func ExecuteHandler(s IModule, obj *base.CallObject) *base.Ret {
 		case func(interface{}) *base.Ret:
 			result = f.(func(interface{}) *base.Ret)(s)
 		case func(interface{}, interface{}) *base.Ret:
-			result = f.(func(interface{}, interface{}) *base.Ret)(s, obj.Args[0])
+			if obj.Type == base.CallObejctTransport {
+				result = f.(func(interface{}, interface{}) *base.Ret)(s, obj)
+			} else {
+				result = f.(func(interface{}, interface{}) *base.Ret)(s, obj.Args[0])
+			}
 		case func(interface{}, interface{}, interface{}) *base.Ret:
-			result = f.(func(interface{}, interface{}, interface{}) *base.Ret)(s, obj.Args[0], obj.Args[1])
+			if obj.Type == base.CallObejctTransport {
+				result = f.(func(interface{}, interface{}, interface{}) *base.Ret)(s, obj, obj.Args[0])
+			} else {
+				result = f.(func(interface{}, interface{}, interface{}) *base.Ret)(s, obj.Args[0], obj.Args[1])
+			}
 		case func(interface{}, interface{}, interface{}, interface{}) *base.Ret:
-			result = f.(func(interface{}, interface{}, interface{}, interface{}) *base.Ret)(s, obj.Args[0], obj.Args[1], obj.Args[2])
+			if obj.Type == base.CallObejctTransport {
+				result = f.(func(interface{}, interface{}, interface{}, interface{}) *base.Ret)(s, obj, obj.Args[0], obj.Args[1])
+			} else {
+				result = f.(func(interface{}, interface{}, interface{}, interface{}) *base.Ret)(s, obj.Args[0], obj.Args[1], obj.Args[2])
+			}
+		case func(interface{}, interface{}, interface{}, interface{}, interface{}) *base.Ret:
+			if obj.Type == base.CallObejctTransport {
+				result = f.(func(interface{}, interface{}, interface{}, interface{}, interface{}) *base.Ret)(s, obj, obj.Args[0], obj.Args[1], obj.Args[2])
+			} else {
+				result = f.(func(interface{}, interface{}, interface{}, interface{}, interface{}) *base.Ret)(s, obj.Args[0], obj.Args[1], obj.Args[2], obj.Args[3])
+			}
 		default:
 			panic(fmt.Sprintf("function cmd %v: definition of function is invalid,%v", obj.CmdID, reflect.TypeOf(f)))
 		}
@@ -168,11 +224,16 @@ func ExecuteHandler(s IModule, obj *base.CallObject) *base.Ret {
 			err := fmt.Errorf("module[%s],handler id %v: function not registered", s.Name(), obj.CmdID)
 			panic(err)
 		} else {
-			args := []interface{}{s}
+			var args []interface{}
+			if obj.Type == base.CallObejctTransport {
+				args = []interface{}{s, obj}
+			} else {
+				args = []interface{}{s}
+			}
 			args = append(args, obj.Args...)
 			values := base.CallFunction(f, args...)
 			if values == nil {
-				err := errors.New("unsupport handler,need return (interface{},Result) or ([]interface{},Result)")
+				err := errors.New("unsupport handler,need return (*base.Ret)")
 				panic(err)
 			} else {
 				l := len(values)
@@ -203,7 +264,7 @@ func RunSimpleFrame(s IModule) {
 	if !s.HasWorkerPool() {
 		//err = errors.New("no processor pool")
 		result := s.Execute(obj)
-		if !obj.Notify {
+		if obj.Type == base.CallObejctNone {
 			select {
 			case obj.ChanRet <- result:
 				return
@@ -216,7 +277,7 @@ func RunSimpleFrame(s IModule) {
 	}
 	err = s.WorkerPoolSubmit(obj)
 
-	if err != nil && !obj.Notify {
+	if err != nil && obj.Type == base.CallObejctNone {
 		obj.ChanRet <- base.NewRet(base.ErrCodeWorker, err, nil)
 	}
 }

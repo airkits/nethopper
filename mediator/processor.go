@@ -60,7 +60,7 @@ func Process(obj *base.CallObject) *base.Ret {
 	defer func() {
 		if r := recover(); r != nil {
 			result = base.NewRet(base.ErrCodeProcessor, r.(error), nil)
-			if !obj.Notify {
+			if obj.Type == base.CallObejctNone {
 				obj.ChanRet <- result
 			}
 
@@ -68,7 +68,7 @@ func Process(obj *base.CallObject) *base.Ret {
 	}()
 
 	result = obj.Caller.Execute(obj)
-	if !obj.Notify {
+	if obj.Type == base.CallObejctNone {
 		obj.ChanRet <- result
 	}
 	return result

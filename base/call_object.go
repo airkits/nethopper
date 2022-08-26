@@ -1,5 +1,13 @@
 package base
 
+const (
+	// CallObejctType call object type
+	CallObejctType      = iota
+	CallObejctNone      = 1 //普通模式
+	CallObejctNotify    = 2 //通知模式，无响应
+	CallObejctTransport = 3 //透传模式，handler可以收到callobject
+)
+
 type ICaller interface {
 	Execute(obj *CallObject) *Ret
 }
@@ -9,7 +17,7 @@ type CallObject struct {
 	Caller  ICaller
 	CmdID   int32
 	Option  int32
-	Notify  bool
+	Type    int8
 	Args    []interface{}
 	Trace   []uint8
 	ChanRet chan *Ret
@@ -20,7 +28,7 @@ func (c *CallObject) Init(caller ICaller, cmdID int32, opt int32, args ...interf
 	c.CmdID = cmdID
 	c.Option = opt
 	c.Args = args
-	if !c.Notify {
+	if c.Type != CallObejctNotify {
 		c.ChanRet = make(chan *Ret, 1)
 	}
 	c.Trace = make([]uint8, 0, 3)
@@ -56,7 +64,7 @@ type Ret struct {
 // NewCallObject create call object
 func NewCallObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
 	obj := &CallObject{
-		Notify: false,
+		Type: CallObejctNone,
 	}
 	return obj.Init(caller, cmdID, opt, args...)
 }
@@ -64,7 +72,15 @@ func NewCallObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) 
 // NewNotifyObject create notify object
 func NewNotifyObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
 	obj := &CallObject{
-		Notify: true,
+		Type: CallObejctNotify,
+	}
+	return obj.Init(caller, cmdID, opt, args...)
+}
+
+// NewTransportObject create transport object
+func NewTransportObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
+	obj := &CallObject{
+		Type: CallObejctTransport,
 	}
 	return obj.Init(caller, cmdID, opt, args...)
 }

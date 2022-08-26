@@ -244,7 +244,7 @@ func (s *BaseContext) DoWorker(obj *base.CallObject) error {
 		result := s.Execute(obj)
 		result.SetTrace(obj.Trace...)
 		result.SetTrace(s.ID())
-		if !obj.Notify {
+		if obj.Type == base.CallObejctNone {
 			obj.ChanRet <- result
 		}
 
@@ -256,7 +256,7 @@ func (s *BaseContext) DoWorker(obj *base.CallObject) error {
 		result := base.NewRet(base.ErrCodeWorker, err, nil)
 		result.SetTrace(obj.Trace...)
 		result.SetTrace(s.ID())
-		if !obj.Notify {
+		if obj.Type == base.CallObejctNone {
 			obj.ChanRet <- result
 		}
 	}

@@ -85,8 +85,8 @@ type IAgent interface {
 type IAgentAdapter interface {
 	//Setup AgentAdapter
 	Setup(conn IConn, codec codec.Codec)
-	//DecodeMessage process request and notify message
-	DecodeMessage(payload interface{}) error
+	//ReceiveMessage process request and notify message
+	ReceiveMessage(payload interface{}) error
 
 	//WriteMessage to connection
 	WriteMessage(payload interface{}) error

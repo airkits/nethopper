@@ -53,8 +53,8 @@ type AgentAdapter struct {
 	network.AgentAdapter
 }
 
-// DecodeMessage process request and notify message
-func (a *AgentAdapter) DecodeMessage(payload interface{}) error {
+// ReceiveMessage process request and notify message
+func (a *AgentAdapter) ReceiveMessage(payload interface{}) error {
 	msg := (payload).(*ss.Message)
 	var err error
 	if msg.MsgID == uint32(s2s.MessageCmd_HEARTBEAT) {

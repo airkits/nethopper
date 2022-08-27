@@ -242,10 +242,9 @@ func (c *Conn) createStream(name string, subjects []string, maxConsumers int) er
 		Name:         name,
 		Subjects:     subjects,
 		MaxConsumers: maxConsumers,
-		MaxMsgs:      -1, // unlimitted
-		MaxBytes:     -1, // stream size unlimitted
-		MaxAge:       7 * 24 * time.Hour,
-		MaxMsgSize:   640000,
+		MaxMsgs:      1000000, // unlimitted
+		MaxBytes:     -1,      // stream size unlimitted
+		MaxAge:       1 * 24 * time.Hour,
 		Duplicates:   1 * time.Hour,
 	}
 
@@ -374,11 +373,11 @@ func (c *Conn) publishToStream(subject string, msg *ss.Message) (*ss.Message, er
 		fmt.Println(err2.Error())
 		return c.DirectErrorMsg(msg, err2), err2
 	}
-	if c.sendCount > 51200 {
+	if c.sendCount > 5120 {
 		select {
 		case <-c.stream.PublishAsyncComplete():
 			c.sendCount = 0
-		case <-time.After(100 * time.Millisecond):
+		case <-time.After(50 * time.Millisecond):
 			fmt.Println("publish async Did not resolve in time")
 		}
 	}

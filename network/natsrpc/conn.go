@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/airkits/nethopper/base"
+	"github.com/airkits/nethopper/codec/json"
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/mq"
 	"github.com/airkits/nethopper/network"
@@ -33,23 +34,23 @@ type INatsStream interface {
 // Conn grpc conn define
 type Conn struct {
 	sync.Mutex
-	nc             *nats.Conn
-	stream         nats.JetStreamContext
-	sendChan       chan *ss.Message
-	recvChan       chan *ss.Message
-	maxMessageSize uint32
-	closeFlag      bool
-	sendCount      int64
-	funcs          map[string](func(*ss.Message) *ss.Message) //handlers
+	nc        *nats.Conn
+	stream    nats.JetStreamContext
+	sendChan  chan *ss.Message
+	recvChan  chan *ss.Message
+	closeFlag bool
+	sendCount int64
+	services  sync.Map
+	Conf      *NatsConfig
 }
 
 // NewConn create websocket conn
-func NewConn(conn *nats.Conn, socketQueueSize int, maxMessageSize uint32) network.IConn {
+func NewConn(conn *nats.Conn, conf *NatsConfig) network.IConn {
 	natsConn := &Conn{}
 	natsConn.nc = conn
+	natsConn.Conf = conf
 	natsConn.sendCount = 0
-	natsConn.funcs = make(map[string](func(*ss.Message) *ss.Message))
-	js, err := conn.JetStream(nats.PublishAsyncMaxPending(int(maxMessageSize)),
+	js, err := conn.JetStream(nats.PublishAsyncMaxPending(int(conf.AsyncMaxPending)),
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
 			// todo jetstream error handling
 			fmt.Println(err.Error())
@@ -64,9 +65,8 @@ func NewConn(conn *nats.Conn, socketQueueSize int, maxMessageSize uint32) networ
 		fmt.Println(err.Error())
 	}
 	natsConn.stream = js
-	natsConn.sendChan = make(chan *ss.Message, socketQueueSize)
-	natsConn.recvChan = make(chan *ss.Message, socketQueueSize)
-	natsConn.maxMessageSize = maxMessageSize
+	natsConn.sendChan = make(chan *ss.Message, conf.SocketQueueSize)
+	natsConn.recvChan = make(chan *ss.Message, conf.SocketQueueSize)
 
 	go func() {
 		defer func() {
@@ -187,6 +187,32 @@ func (c *Conn) RegisterService(srcType, srcID uint32) error {
 	if err := c.RegisterSubject(mq.MTRequestPush, srcType, srcID); err != nil {
 		return err
 	}
+	os, err := c.getObjectStore()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(c.Conf.Services); i++ {
+		c.LoadServiceInfo(os, &c.Conf.Services[i])
+	}
+	go func() {
+
+		// Create key watcher.
+		wopts := []nats.WatchOpt{}
+		watcher, err := os.Watch(wopts...)
+		if err != nil {
+			fmt.Printf("ERROR: nats.KeyValue.WatchAll failed, err: %v", err)
+		}
+		for {
+			select {
+			case kve := <-watcher.Updates():
+				if kve != nil {
+					fmt.Printf("RECV: key: %v", kve)
+				}
+			case <-time.After(base.TimeoutChanTime):
+				continue
+			}
+		}
+	}()
 	return nil
 }
 func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
@@ -194,7 +220,7 @@ func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 	subject := fmt.Sprintf("%s.*", name)
 	maxConsumers := 1
 	if msgType == mq.MTBroadcast {
-		maxConsumers = 256
+		maxConsumers = 1024
 	}
 	if err := c.createStream(name, []string{subject}, maxConsumers); err != nil {
 		log.Error("[NatsRPC] Create or Update stream error %s", err.Error())
@@ -210,6 +236,40 @@ func (c *Conn) RegisterSubject(msgType, srcType, srcID uint32) error {
 		c.SubscribeToNats(name, subject)
 	} else if msgType == mq.MTRequestAny {
 		c.SubscribeToReply(name, subject)
+	}
+
+	return nil
+}
+func (c *Conn) getObjectStore() (nats.ObjectStore, error) {
+	cfg := &nats.ObjectStoreConfig{Bucket: NatsServiceKey}
+	return c.stream.CreateObjectStore(cfg)
+}
+func (c *Conn) LoadServiceInfo(os nats.ObjectStore, localInfo *ServiceGroup) error {
+
+	result, err := os.GetString(localInfo.Key)
+	if err != nil {
+		infoByte, err1 := json.Marshal(localInfo)
+		if err1 != nil {
+			return err1
+		}
+		os.PutString(localInfo.Key, string(infoByte))
+		c.services.Store(localInfo.Type, localInfo)
+		return err
+	}
+	remoteInfo := &ServiceGroup{}
+	err = json.Unmarshal([]byte(result), remoteInfo)
+	if err != nil {
+		return err
+	}
+	if localInfo.Version > remoteInfo.Version {
+		infoByte, err1 := json.Marshal(localInfo)
+		if err1 != nil {
+			return err1
+		}
+		os.PutString(localInfo.Key, string(infoByte))
+		c.services.Store(localInfo.Type, localInfo)
+	} else {
+		c.services.Store(localInfo.Type, remoteInfo)
 	}
 
 	return nil
@@ -260,16 +320,6 @@ func (c *Conn) createStream(name string, subjects []string, maxConsumers int) er
 
 	return nil
 }
-
-// RegisterReply register function before run
-// func (c *Conn) RegisterReply(subject string, f func(*ss.Message) *ss.Message) {
-
-// 	if _, ok := c.funcs[subject]; ok {
-// 		panic(fmt.Sprintf("function id %v: already registered", subject))
-// 	}
-// 	c.funcs[subject] = f
-// 	c.reply(subject, f)
-// }
 
 func (c *Conn) Request(subject string, msg *ss.Message) (*ss.Message, error) {
 

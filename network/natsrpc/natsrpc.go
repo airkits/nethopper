@@ -9,7 +9,6 @@ import (
 	"github.com/airkits/nethopper/config"
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
-	"github.com/airkits/proto/ss"
 	"github.com/nats-io/nats.go"
 )
 
@@ -63,10 +62,7 @@ func (c *NatsRPC) Reconnect(natsConn *nats.Conn) {
 	log.Error("[NatsRPC] Reconnect")
 
 }
-func (c *NatsRPC) Disconnect(natsConn *nats.Conn) {
-	log.Error("[NatsRPC] Connect failed,Disconnect")
 
-}
 func (c *NatsRPC) DisconnectError(natsConn *nats.Conn, err error) {
 	log.Error("[NatsRPC] Connect failed,DisconnectError")
 
@@ -92,7 +88,6 @@ func (c *NatsRPC) connect() error {
 		nats.RetryOnFailedConnect(true),
 		nats.ReconnectWait(5*time.Second),
 		nats.ReconnectHandler(c.Reconnect),
-		nats.DisconnectHandler(c.Disconnect),
 		nats.DisconnectErrHandler(c.DisconnectError),
 		nats.ErrorHandler(c.ErrorHandler),
 		nats.Timeout(10*time.Second),
@@ -109,7 +104,7 @@ func (c *NatsRPC) connect() error {
 	c.conns[nc] = struct{}{}
 	c.Unlock()
 
-	natsConn := NewConn(nc, c.Conf.SocketQueueSize, c.Conf.MaxMessageSize)
+	natsConn := NewConn(nc, c.Conf)
 	c.agent = c.NewAgent(natsConn, 0, nc.ConnectedServerId())
 
 	c.agent.Run()
@@ -133,10 +128,4 @@ func (c *NatsRPC) Close() {
 	c.conns = nil
 	c.Unlock()
 	c.wg.Wait()
-}
-
-// Call sync get response
-func (c *NatsRPC) Call(serverID int, name string, address string) *ss.Message {
-
-	return nil
 }

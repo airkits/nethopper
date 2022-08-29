@@ -51,7 +51,7 @@ func TestNatsClientRequest(t *testing.T) {
 		MaxReconnects:       10,
 		QueueSize:           100000,
 		SocketQueueSize:     100000,
-		MaxMessageSize:      100000,
+		AsyncMaxPending:     100000,
 	}
 	server := natsrpc.NewNatsRPC(conf, func(conn network.IConn, uid uint64, token string) network.IAgent {
 		a := network.NewAgent(NewAgentAdapter(conn), uid, token)

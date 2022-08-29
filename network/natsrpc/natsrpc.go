@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/airkits/nethopper/base"
+	"github.com/airkits/nethopper/codec/json"
 	"github.com/airkits/nethopper/config"
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/network"
@@ -31,6 +33,7 @@ type NatsRPC struct {
 	conns      ConnSet
 	wg         *sync.WaitGroup
 	agent      network.IAgent
+	services   sync.Map
 }
 
 func (c *NatsRPC) Wait() {
@@ -105,6 +108,7 @@ func (c *NatsRPC) connect() error {
 	c.Unlock()
 
 	natsConn := NewConn(nc, c.Conf)
+	c.RegisterConfig(natsConn)
 	c.agent = c.NewAgent(natsConn, 0, nc.ConnectedServerId())
 
 	c.agent.Run()
@@ -117,6 +121,93 @@ func (c *NatsRPC) connect() error {
 	c.agent.OnClose()
 	c.agent = nil
 	return nil
+}
+
+func (c *NatsRPC) LoadServiceInfo(os nats.KeyValue, localInfo *ServiceGroup) error {
+
+	result, err := os.Get(localInfo.Key)
+	if err != nil {
+		infoByte, err1 := json.Marshal(localInfo)
+		if err1 != nil {
+			return err1
+		}
+		os.PutString(localInfo.Key, string(infoByte))
+		c.services.Store(localInfo.Type, localInfo)
+		return err
+	}
+	remoteInfo := &ServiceGroup{}
+	err = json.Unmarshal(result.Value(), remoteInfo)
+	if err != nil {
+		return err
+	}
+	if localInfo.Version > remoteInfo.Version {
+		infoByte, err1 := json.Marshal(localInfo)
+		if err1 != nil {
+			return err1
+		}
+		os.PutString(localInfo.Key, string(infoByte))
+		c.services.Store(localInfo.Type, localInfo)
+	} else {
+		c.services.Store(localInfo.Type, remoteInfo)
+	}
+
+	return nil
+}
+func (c *NatsRPC) RegisterConfig(natsConn network.IConn) error {
+	kv, err := natsConn.(*Conn).GetKVBucket()
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(c.Conf.Services); i++ {
+		c.LoadServiceInfo(kv, &c.Conf.Services[i])
+	}
+
+	go func() {
+
+		// Create key watcher.
+		wopts := []nats.WatchOpt{}
+		watcher, err := kv.WatchAll(wopts...)
+		if err != nil {
+			fmt.Printf("ERROR: nats.KeyValue.WatchAll failed, err: %v", err)
+		}
+		for {
+			select {
+			case kve := <-watcher.Updates():
+				if kve != nil {
+					fmt.Printf("RECV: key: %v", kve)
+					for i := 0; i < len(c.Conf.Services); i++ {
+						if c.Conf.Services[i].Key == kve.Key() {
+							result := &ServiceGroup{}
+							err := json.Unmarshal(kve.Value(), result)
+							if err == nil && result.Version >= c.Conf.Services[i].Version {
+								c.services.Store(c.Conf.Services[i].Type, result)
+							}
+						}
+					}
+				}
+			case <-time.After(base.TimeoutChanTime):
+				continue
+			}
+		}
+	}()
+	return nil
+}
+func (c *NatsRPC) GetHashValue(destType uint32, value uint64) uint32 {
+	info, ok := c.services.Load(destType)
+
+	if !ok {
+		return 0
+	}
+	hashs := info.(ServiceGroup).Hash
+	if hashs == nil {
+		return 0
+	}
+	if info.(ServiceGroup).Mode == 1 {
+		hashCode := int(value % uint64(len(hashs)))
+		return uint32(hashs[hashCode])
+	}
+	return 0
 }
 
 // Close client connections

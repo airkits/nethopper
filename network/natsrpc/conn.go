@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/airkits/nethopper/base"
-	"github.com/airkits/nethopper/codec/json"
 	"github.com/airkits/nethopper/log"
 	"github.com/airkits/nethopper/mq"
 	"github.com/airkits/nethopper/network"
@@ -19,7 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// ConnSet grpc conn set
+// ConnSet nats conn set
 type ConnSet map[*nats.Conn]struct{}
 
 // INatsStream define rpc stream interface
@@ -31,7 +30,7 @@ type INatsStream interface {
 	Close()
 }
 
-// Conn grpc conn define
+// Conn nats conn define
 type Conn struct {
 	sync.Mutex
 	nc        *nats.Conn
@@ -40,15 +39,12 @@ type Conn struct {
 	recvChan  chan *ss.Message
 	closeFlag bool
 	sendCount int64
-	services  sync.Map
-	Conf      *NatsConfig
 }
 
 // NewConn create websocket conn
 func NewConn(conn *nats.Conn, conf *NatsConfig) network.IConn {
 	natsConn := &Conn{}
 	natsConn.nc = conn
-	natsConn.Conf = conf
 	natsConn.sendCount = 0
 	js, err := conn.JetStream(nats.PublishAsyncMaxPending(int(conf.AsyncMaxPending)),
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
@@ -187,33 +183,11 @@ func (c *Conn) RegisterService(srcType, srcID uint32) error {
 	if err := c.RegisterSubject(mq.MTRequestPush, srcType, srcID); err != nil {
 		return err
 	}
-	os, err := c.getObjectStore()
-	if err != nil {
-		return err
-	}
-	for i := 0; i < len(c.Conf.Services); i++ {
-		c.LoadServiceInfo(os, &c.Conf.Services[i])
-	}
-	go func() {
 
-		// Create key watcher.
-		wopts := []nats.WatchOpt{}
-		watcher, err := os.Watch(wopts...)
-		if err != nil {
-			fmt.Printf("ERROR: nats.KeyValue.WatchAll failed, err: %v", err)
-		}
-		for {
-			select {
-			case kve := <-watcher.Updates():
-				if kve != nil {
-					fmt.Printf("RECV: key: %v", kve)
-				}
-			case <-time.After(base.TimeoutChanTime):
-				continue
-			}
-		}
-	}()
 	return nil
+}
+func (c *Conn) GetKVBucket() (nats.KeyValue, error) {
+	return c.getKeyValue()
 }
 func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 	name := c.GetStreamName(msgType, srcType, srcID)
@@ -240,39 +214,9 @@ func (c *Conn) RegisterSubject(msgType, srcType, srcID uint32) error {
 
 	return nil
 }
-func (c *Conn) getObjectStore() (nats.ObjectStore, error) {
-	cfg := &nats.ObjectStoreConfig{Bucket: NatsServiceKey}
-	return c.stream.CreateObjectStore(cfg)
-}
-func (c *Conn) LoadServiceInfo(os nats.ObjectStore, localInfo *ServiceGroup) error {
-
-	result, err := os.GetString(localInfo.Key)
-	if err != nil {
-		infoByte, err1 := json.Marshal(localInfo)
-		if err1 != nil {
-			return err1
-		}
-		os.PutString(localInfo.Key, string(infoByte))
-		c.services.Store(localInfo.Type, localInfo)
-		return err
-	}
-	remoteInfo := &ServiceGroup{}
-	err = json.Unmarshal([]byte(result), remoteInfo)
-	if err != nil {
-		return err
-	}
-	if localInfo.Version > remoteInfo.Version {
-		infoByte, err1 := json.Marshal(localInfo)
-		if err1 != nil {
-			return err1
-		}
-		os.PutString(localInfo.Key, string(infoByte))
-		c.services.Store(localInfo.Type, localInfo)
-	} else {
-		c.services.Store(localInfo.Type, remoteInfo)
-	}
-
-	return nil
+func (c *Conn) getKeyValue() (nats.KeyValue, error) {
+	cfg := &nats.KeyValueConfig{Bucket: NatsServiceKey}
+	return c.stream.CreateKeyValue(cfg)
 }
 
 /*
@@ -376,6 +320,7 @@ func (c *Conn) SubscribeToNats(name, subject string) {
 	}
 	fmt.Println(result)
 }
+
 func (c *Conn) SubscribeToStream(name, subject string) {
 	log.Info("[NatsRPC] SubscribeToStream %s to %s", name, subject)
 	sub, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {

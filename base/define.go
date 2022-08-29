@@ -2,4 +2,4 @@ package base
 
 import "time"
 
-var TimeoutChanTime = 8 * time.Second
+var TimeoutChanTime = 5 * time.Second

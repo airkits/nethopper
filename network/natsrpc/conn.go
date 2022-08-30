@@ -18,9 +18,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// ConnSet nats conn set
-type ConnSet map[*nats.Conn]struct{}
-
 // INatsStream define rpc stream interface
 type INatsStream interface {
 	Send(*ss.Message) error
@@ -33,12 +30,14 @@ type INatsStream interface {
 // Conn nats conn define
 type Conn struct {
 	sync.Mutex
-	nc        *nats.Conn
-	stream    nats.JetStreamContext
-	sendChan  chan *ss.Message
-	recvChan  chan *ss.Message
-	closeFlag bool
-	sendCount int64
+	nc              *nats.Conn
+	stream          nats.JetStreamContext
+	sendChan        chan *ss.Message
+	recvChan        chan *ss.Message
+	closeFlag       bool
+	sendCount       int64
+	subs            []*nats.Subscription
+	AsyncMaxPending int
 }
 
 // NewConn create websocket conn
@@ -46,7 +45,9 @@ func NewConn(conn *nats.Conn, conf *NatsConfig) network.IConn {
 	natsConn := &Conn{}
 	natsConn.nc = conn
 	natsConn.sendCount = 0
-	js, err := conn.JetStream(nats.PublishAsyncMaxPending(int(conf.AsyncMaxPending)),
+	natsConn.subs = []*nats.Subscription{}
+	natsConn.AsyncMaxPending = int(conf.AsyncMaxPending)
+	js, err := conn.JetStream(nats.PublishAsyncMaxPending(natsConn.AsyncMaxPending),
 		nats.PublishAsyncErrHandler(func(stream nats.JetStream, msg *nats.Msg, err error) {
 			// todo jetstream error handling
 			fmt.Println(err.Error())
@@ -110,6 +111,15 @@ func NewConn(conn *nats.Conn, conf *NatsConfig) network.IConn {
 	}()
 
 	return natsConn
+}
+func (c *Conn) ResetStream() error {
+	if c.stream != nil {
+		for i := 0; i < len(c.subs); i++ {
+			c.subs[i].Unsubscribe()
+		}
+		c.subs = []*nats.Subscription{}
+	}
+	return nil
 }
 func (c *Conn) DirectErrorMsg(m *ss.Message, err error) *ss.Message {
 	msgType := m.MsgType
@@ -295,7 +305,7 @@ func (c *Conn) Reply(m *ss.Message) (*ss.Message, error) {
 }
 func (c *Conn) SubscribeToReply(name, subject string) {
 	log.Info("[NatsRPC] SubscribeToReply %s to %s", name, subject)
-	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
+	sub, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
@@ -305,11 +315,12 @@ func (c *Conn) SubscribeToReply(name, subject string) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	fmt.Println(result)
+	c.subs = append(c.subs, sub)
+	fmt.Println(sub)
 }
-func (c *Conn) SubscribeToNats(name, subject string) {
+func (c *Conn) SubscribeToNats(name, subject string) (*nats.Subscription, error) {
 	log.Info("[NatsRPC] SubscribeToNats %s to %s", name, subject)
-	result, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
+	sub, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
 		proto.Unmarshal(msg.Data, ss)
@@ -318,10 +329,12 @@ func (c *Conn) SubscribeToNats(name, subject string) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	fmt.Println(result)
+	fmt.Println(sub)
+	c.subs = append(c.subs, sub)
+	return sub, err
 }
 
-func (c *Conn) SubscribeToStream(name, subject string) {
+func (c *Conn) SubscribeToStream(name, subject string) (*nats.Subscription, error) {
 	log.Info("[NatsRPC] SubscribeToStream %s to %s", name, subject)
 	sub, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
 		//	log.Info("recv msg from stream %s %v ", subject, msg)
@@ -339,6 +352,8 @@ func (c *Conn) SubscribeToStream(name, subject string) {
 	log.Info("[NatsRPC] subscribe stream success,msgLimit:%d byteLimit:%d", msgLimit, byteLimit)
 	sub.SetPendingLimits(-1, -1)
 	fmt.Println(sub)
+	c.subs = append(c.subs, sub)
+	return sub, err
 }
 
 func (c *Conn) publishToNats(subject string, msg *ss.Message) (*ss.Message, error) {
@@ -413,14 +428,14 @@ func (c *Conn) Close() {
 }
 
 func (c *Conn) doWrite(b *ss.Message) error {
-	c.sendChan <- b
-	return nil
-	// select {
-	// case c.sendChan <- b:
-	// 	return nil
-	// case <-time.After(10 * time.Second):
-	// 	return base.ErrReadChanTimeout
-	// }
+	// c.sendChan <- b
+	// return nil
+	select {
+	case c.sendChan <- b:
+		return nil
+	case <-time.After(10 * time.Second):
+		return base.ErrReadChanTimeout
+	}
 }
 
 // LocalAddr get local addr

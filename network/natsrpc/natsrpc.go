@@ -186,6 +186,7 @@ func (c *NatsRPC) RegisterConfig() error {
 		watcher, err := kv.WatchAll(wopts...)
 		if err != nil {
 			log.Error("[NatsRPC] type:[%d] id:[%d]: nats.KeyValue.WatchAll failed, err: %v", c.Conf.ServiceType, c.Conf.ServiceID, err)
+			return
 		}
 		for {
 			select {

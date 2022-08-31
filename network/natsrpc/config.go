@@ -23,7 +23,6 @@ type NatsConfig struct {
 	Services            []ServiceGroup `mapstructure:"services"`
 	PingInterval        time.Duration  `mapstructure:"ping_interval"`
 	MaxPingsOutstanding int            `mapstructure:"max_ping_outstanding"`
-	MaxReconnects       int            `mapstructure:"max_reconnects"`
 	QueueSize           int            `mapstructure:"queue_size"`
 	SocketQueueSize     int            `mapstructure:"socket_queue_size"`
 	AsyncMaxPending     uint32         `mapstructure:"async_max_pending"`

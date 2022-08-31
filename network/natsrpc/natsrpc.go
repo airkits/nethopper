@@ -88,9 +88,11 @@ func (c *NatsRPC) DisconnectError(nc *nats.Conn, err error) {
 	}
 }
 func (c *NatsRPC) ErrorHandler(nc *nats.Conn, sub *nats.Subscription, err error) {
+	log.Error("[NatsRPC] type:[%d] id:[%d] ErrorHandler %s err:%s", c.Conf.ServiceType, c.Conf.ServiceID, sub.Subject, err.Error())
 
 }
 func (c *NatsRPC) natCloseHandler(nc *nats.Conn) {
+	log.Error("[NatsRPC] type:[%d] id:[%d] natCloseHandler %s", c.Conf.ServiceType, c.Conf.ServiceID, nc.Servers())
 
 }
 func (c *NatsRPC) GetAgent() network.IAgent {
@@ -106,7 +108,7 @@ func (c *NatsRPC) connect() error {
 	nc, err := nats.Connect(strings.Join(c.Conf.Nats, ","),
 		nats.PingInterval(c.Conf.PingInterval*time.Second),
 		nats.MaxPingsOutstanding(c.Conf.MaxPingsOutstanding),
-		nats.MaxReconnects(c.Conf.MaxReconnects),
+		nats.MaxReconnects(-1),
 		nats.RetryOnFailedConnect(true),
 		nats.ReconnectWait(5*time.Second),
 		nats.ReconnectHandler(c.Reconnect),

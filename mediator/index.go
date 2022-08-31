@@ -112,7 +112,7 @@ func Call(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.R
 	result.SetTrace(destMID)
 	return result
 }
-func TransportCall(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.Ret {
+func TCall(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.Ret {
 	obj, err := AsyncTransportCall(destMID, cmdID, option, args...)
 	var result *base.Ret
 	if err != nil {

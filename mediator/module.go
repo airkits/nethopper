@@ -157,6 +157,7 @@ func (s *BaseContext) RegisterHandler(id int32, f interface{}) {
 	case func(interface{}, interface{}) *base.Ret:
 	case func(interface{}, interface{}, interface{}) *base.Ret:
 	case func(interface{}, interface{}, interface{}, interface{}) *base.Ret:
+	case func(interface{}, interface{}, interface{}, interface{}, interface{}) *base.Ret:
 	default:
 		panic(fmt.Sprintf("function id %v: definition of function is invalid,%v", id, reflect.TypeOf(f)))
 	}

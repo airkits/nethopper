@@ -5,7 +5,7 @@ import (
 	"github.com/yitter/idgenerator-go/idgen"
 )
 
-//GenUUID create uuid based on random numbers
+// GenUUID create uuid based on random numbers
 func GenUUID() string {
 	// or error handling
 	u := uuid.NewV4()
@@ -15,10 +15,11 @@ func GenUUID() string {
 // InitUID uidGenerater workerID between 1-255
 func InitUID(workID uint16) {
 	options := idgen.NewIdGeneratorOptions(workID)
+	//	options.SeqBitLength = 10
 	idgen.SetIdGenerator(options)
 }
 
-//GenUID
+// GenUID
 func GenUID() uint64 {
 	return idgen.NextId()
 }

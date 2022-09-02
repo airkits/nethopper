@@ -257,9 +257,6 @@ func RunSimpleFrame(s IModule) {
 		return
 	}
 	obj := m.(*base.CallObject)
-	// if err := s.DoWorker(obj); err != nil {
-	// 	log.Error("%s error %s", s.Name(), err.Error())
-	// }
 
 	if !s.HasWorkerPool() {
 		//err = errors.New("no processor pool")

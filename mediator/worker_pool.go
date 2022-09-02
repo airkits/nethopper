@@ -377,8 +377,8 @@ func (p *FixedWorkerPool) ExpiredCleaning() {
 // getProcessor get one Processor from pool
 func (p *FixedWorkerPool) getProcessor(opt uint32) *Processor {
 	var w *Processor
-	p.lock.Lock()
-	defer p.lock.Unlock()
+	// p.lock.Lock()
+	// defer p.lock.Unlock()
 	// 首先看running是否到达容量限制和是否存在空闲Processor
 	workers := p.workers
 
@@ -393,7 +393,9 @@ func (p *FixedWorkerPool) getProcessor(opt uint32) *Processor {
 		if cacheWorker := p.cache.Get(); cacheWorker != nil {
 			w = cacheWorker.(*Processor)
 			w.Run()
+			p.lock.Lock()
 			workers[hash] = w
+			p.lock.Unlock()
 		}
 	}
 

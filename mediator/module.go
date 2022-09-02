@@ -104,9 +104,6 @@ type IModule interface {
 	//GetReflectHandler get reflect handler
 	GetReflectHandler(id int32) interface{}
 
-	// DoWorker dispatch callobject to worker processor
-	DoWorker(obj *base.CallObject) error
-
 	//IdleTimesReset reset idle times
 	// IdleTimesReset()
 
@@ -234,34 +231,6 @@ func (s *BaseContext) HasWorkerPool() bool {
 }
 func (s *BaseContext) WorkerPoolSubmit(obj *base.CallObject) error {
 	return s.workerPool.Submit(obj)
-}
-
-// DoWorker process callobject
-func (s *BaseContext) DoWorker(obj *base.CallObject) error {
-	//Debug("[%s] cmd [%s] process", s.Name(), obj.Cmd)
-	var err error
-	if s.workerPool == nil {
-		//err = errors.New("no processor pool")
-		result := s.Execute(obj)
-		result.SetTrace(obj.Trace...)
-		result.SetTrace(s.ID())
-		if obj.Type == base.CallObejctNone {
-			obj.ChanRet <- result
-		}
-
-		return nil
-	} else {
-		err = s.workerPool.Submit(obj)
-	}
-	if err != nil {
-		result := base.NewRet(base.ErrCodeWorker, err, nil)
-		result.SetTrace(obj.Trace...)
-		result.SetTrace(s.ID())
-		if obj.Type == base.CallObejctNone {
-			obj.ChanRet <- result
-		}
-	}
-	return err
 }
 
 // Call async send message to module

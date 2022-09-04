@@ -38,6 +38,8 @@ type Conn struct {
 	sendCount       int64
 	subs            []*nats.Subscription
 	AsyncMaxPending int
+	srcType         uint32
+	srcID           uint32
 }
 
 // NewConn create websocket conn
@@ -180,6 +182,8 @@ func (c *Conn) GetSubject(msgType, destType, destID, srcType, srcID uint32) stri
 }
 
 func (c *Conn) RegisterService(srcType, srcID uint32) error {
+	c.srcType = srcType
+	c.srcID = srcID
 
 	if err := c.RegisterStream(mq.MTBroadcast, srcType, srcID); err != nil {
 		return err
@@ -207,7 +211,7 @@ func (c *Conn) RegisterStream(msgType, srcType, srcID uint32) error {
 		maxConsumers = 1024
 	}
 	if err := c.createStream(name, []string{subject}, maxConsumers); err != nil {
-		log.Error("[NatsRPC] Create or Update stream error %s", err.Error())
+		log.Error("[NatsRPC] type:[%d] id:[%d] Create or Update stream error %s", c.srcType, c.srcID, err.Error())
 		return err
 	}
 	c.SubscribeToStream(name, subject)
@@ -304,7 +308,7 @@ func (c *Conn) Reply(m *ss.Message) (*ss.Message, error) {
 	return nil, nil
 }
 func (c *Conn) SubscribeToReply(name, subject string) {
-	log.Info("[NatsRPC] SubscribeToReply %s to %s", name, subject)
+	log.Info("[NatsRPC] type:[%d] id:[%d] SubscribeToReply %s to %s", c.srcType, c.srcID, name, subject)
 	sub, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
@@ -316,10 +320,10 @@ func (c *Conn) SubscribeToReply(name, subject string) {
 		fmt.Println(err.Error())
 	}
 	c.subs = append(c.subs, sub)
-	fmt.Println(sub)
+	//	fmt.Println(sub)
 }
 func (c *Conn) SubscribeToNats(name, subject string) (*nats.Subscription, error) {
-	log.Info("[NatsRPC] SubscribeToNats %s to %s", name, subject)
+	log.Info("[NatsRPC] type:[%d] id:[%d] SubscribeToNats %s to %s", c.srcType, c.srcID, name, subject)
 	sub, err := c.nc.Subscribe(subject, func(msg *nats.Msg) {
 		//	fmt.Printf("Subscriber fetched msg.Data:%s from subSubjectName:%q", string(msg.Data), msg.Subject)
 		ss := &ss.Message{}
@@ -329,13 +333,13 @@ func (c *Conn) SubscribeToNats(name, subject string) (*nats.Subscription, error)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	fmt.Println(sub)
+	//fmt.Println(sub)
 	c.subs = append(c.subs, sub)
 	return sub, err
 }
 
 func (c *Conn) SubscribeToStream(name, subject string) (*nats.Subscription, error) {
-	log.Info("[NatsRPC] SubscribeToStream %s to %s", name, subject)
+	log.Info("[NatsRPC] type:[%d] id:[%d] SubscribeToStream %s to %s", c.srcType, c.srcID, name, subject)
 	sub, err := c.stream.Subscribe(subject, func(msg *nats.Msg) {
 		//	log.Info("recv msg from stream %s %v ", subject, msg)
 
@@ -349,9 +353,9 @@ func (c *Conn) SubscribeToStream(name, subject string) (*nats.Subscription, erro
 		fmt.Println(err.Error())
 	}
 	msgLimit, byteLimit, _ := sub.PendingLimits()
-	log.Info("[NatsRPC] subscribe stream success,msgLimit:%d byteLimit:%d", msgLimit, byteLimit)
+	log.Info("[NatsRPC] type:[%d] id:[%d] subscribe stream success,msgLimit:%d byteLimit:%d", c.srcType, c.srcID, msgLimit, byteLimit)
 	sub.SetPendingLimits(-1, -1)
-	fmt.Println(sub)
+	//	fmt.Println(sub)
 	c.subs = append(c.subs, sub)
 	return sub, err
 }

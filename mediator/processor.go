@@ -130,6 +130,7 @@ func (w *Processor) Run() {
 			}
 			if err == nil {
 				Process(obj.(*base.CallObject))
+
 			}
 			if w.q.Length() == 0 {
 				if ok := w.wp.RecycleProcessor(w); !ok {

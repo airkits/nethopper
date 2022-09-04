@@ -102,14 +102,16 @@ func Call(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.R
 	if err != nil {
 		result = base.NewRet(base.ErrCodeModule, err, nil)
 	} else {
+
 		select {
 		case result = <-obj.ChanRet:
 			break
-		case <-time.After(base.TimeoutChanTime):
+		case <-obj.Timer.C:
 			result = base.NewRet(base.ErrCodeModule, base.ErrCallTimeout, nil)
 		}
 	}
 	result.SetTrace(destMID)
+	obj.Reset()
 	return result
 }
 func TCall(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.Ret {
@@ -118,15 +120,17 @@ func TCall(destMID uint8, cmdID int32, option int32, args ...interface{}) *base.
 	if err != nil {
 		result = base.NewRet(base.ErrCodeModule, err, nil)
 	} else {
+
 		select {
 		case result = <-obj.ChanRet:
 			break
-		case <-time.After(base.TimeoutChanTime):
+		case <-obj.Timer.C:
 			result = base.NewRet(base.ErrCodeModule, base.ErrCallTimeout, nil)
 		}
 	}
 
 	result.SetTrace(destMID)
+	obj.Reset()
 	return result
 }
 
@@ -257,18 +261,11 @@ func RunSimpleFrame(s IModule) {
 		return
 	}
 	obj := m.(*base.CallObject)
-
 	if !s.HasWorkerPool() {
 		//err = errors.New("no processor pool")
 		result := s.Execute(obj)
 		if obj.Type == base.CallObejctNone {
-			select {
-			case obj.ChanRet <- result:
-				return
-			case <-time.After(base.TimeoutChanTime):
-				obj.ChanRet <- base.NewRet(base.ErrCodeWorker, base.ErrReadChanTimeout, nil)
-				return
-			}
+			obj.ChanRet <- result
 		}
 		return
 	}

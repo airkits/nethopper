@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/airkits/nethopper/base"
 	"github.com/airkits/nethopper/codec/json"
 	"github.com/airkits/nethopper/config"
 	"github.com/airkits/nethopper/log"
@@ -208,8 +207,6 @@ func (c *NatsRPC) RegisterConfig() error {
 			case <-c.watchClosed:
 				fmt.Println("watch close")
 				return
-			case <-time.After(base.TimeoutChanTime):
-				continue
 			}
 		}
 	}()

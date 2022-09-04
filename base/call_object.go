@@ -1,5 +1,10 @@
 package base
 
+import (
+	"sync"
+	"time"
+)
+
 const (
 	// CallObejctType call object type
 	CallObejctType      = iota
@@ -12,6 +17,14 @@ type ICaller interface {
 	Execute(obj *CallObject) *Ret
 }
 
+var GCallObjectPool = sync.Pool{
+	New: func() interface{} {
+		return &CallObject{
+			Timer: time.NewTimer(TimeoutChanTime),
+		}
+	},
+}
+
 // CallObject call struct
 type CallObject struct {
 	Caller  ICaller
@@ -21,16 +34,19 @@ type CallObject struct {
 	Args    []interface{}
 	Trace   []uint8
 	ChanRet chan *Ret
+	Timer   *time.Timer
 }
 
-func (c *CallObject) Init(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
+func (c *CallObject) Init(t int8, caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
 	c.Caller = caller
 	c.CmdID = cmdID
 	c.Option = opt
 	c.Args = args
+	c.Type = t
 	if c.Type != CallObejctNotify {
 		c.ChanRet = make(chan *Ret, 1)
 	}
+	c.Timer.Reset(TimeoutChanTime)
 	c.Trace = make([]uint8, 0, 3)
 	return c
 }
@@ -44,10 +60,12 @@ func (c *CallObject) Reset() *CallObject {
 	c.CmdID = 0
 	c.Option = 0
 	c.Trace = nil
+	c.Type = 0
 	if c.ChanRet != nil {
 		close(c.ChanRet)
 		c.ChanRet = nil
 	}
+	GCallObjectPool.Put(c)
 	return c
 }
 
@@ -63,26 +81,20 @@ type Ret struct {
 
 // NewCallObject create call object
 func NewCallObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
-	obj := &CallObject{
-		Type: CallObejctNone,
-	}
-	return obj.Init(caller, cmdID, opt, args...)
+	obj := GCallObjectPool.Get()
+	return obj.(*CallObject).Init(CallObejctNone, caller, cmdID, opt, args...)
 }
 
 // NewNotifyObject create notify object
 func NewNotifyObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
-	obj := &CallObject{
-		Type: CallObejctNotify,
-	}
-	return obj.Init(caller, cmdID, opt, args...)
+	obj := GCallObjectPool.Get()
+	return obj.(*CallObject).Init(CallObejctNotify, caller, cmdID, opt, args...)
 }
 
 // NewTransportObject create transport object
 func NewTransportObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
-	obj := &CallObject{
-		Type: CallObejctTransport,
-	}
-	return obj.Init(caller, cmdID, opt, args...)
+	obj := GCallObjectPool.Get()
+	return obj.(*CallObject).Init(CallObejctTransport, caller, cmdID, opt, args...)
 }
 
 // NewRet create ret object

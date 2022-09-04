@@ -41,6 +41,8 @@ type ChanQueue struct {
 	size       int32
 	timer      *time.Timer
 	closedChan chan struct{}
+	popTimer   *time.Timer
+	pushTimer  *time.Timer
 }
 
 // NewChanQueue create chan queue
@@ -51,11 +53,14 @@ func NewChanQueue(capacity int32) Queue {
 		size:       0,
 		timer:      time.NewTimer(time.Second),
 		closedChan: make(chan struct{}),
+		popTimer:   time.NewTimer(base.TimeoutChanTime),
+		pushTimer:  time.NewTimer(base.TimeoutChanTime),
 	}
 }
 
 // Pop sync block pop
 func (q *ChanQueue) Pop() (val interface{}, err error) {
+	q.popTimer.Reset(base.TimeoutChanTime)
 	select {
 	case v, ok := <-q.innerChan:
 		if ok {
@@ -63,7 +68,7 @@ func (q *ChanQueue) Pop() (val interface{}, err error) {
 			return v, nil
 		}
 		return nil, base.ErrQueueIsClosed
-	case <-time.After(base.TimeoutChanTime):
+	case <-q.popTimer.C:
 		return nil, base.ErrQueueTimeout
 	}
 
@@ -107,14 +112,14 @@ func (q *ChanQueue) AsyncPop() (val interface{}, err error) {
 
 // Push sync push data
 func (q *ChanQueue) Push(x interface{}) error {
-
+	q.pushTimer.Reset(base.TimeoutChanTime)
 	select {
 	case <-q.closedChan:
 		return base.ErrQueueIsClosed
 	case q.innerChan <- x:
 		atomic.AddInt32(&q.size, 1)
 		return nil
-	case <-time.After(base.TimeoutChanTime):
+	case <-q.pushTimer.C:
 		return base.ErrQueueTimeout
 	}
 

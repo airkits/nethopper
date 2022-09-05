@@ -2,6 +2,7 @@ package natsrpc
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -147,7 +148,7 @@ func (c *NatsRPC) LoadServiceInfo(os nats.KeyValue, localInfo *ServiceGroup) err
 			return err1
 		}
 		os.PutString(localInfo.Key, string(infoByte))
-		c.services.Store(localInfo.Type, localInfo)
+		c.services.Store(strconv.Itoa(localInfo.Type), localInfo)
 		return err
 	}
 	remoteInfo := &ServiceGroup{}
@@ -161,9 +162,9 @@ func (c *NatsRPC) LoadServiceInfo(os nats.KeyValue, localInfo *ServiceGroup) err
 			return err1
 		}
 		os.PutString(localInfo.Key, string(infoByte))
-		c.services.Store(localInfo.Type, localInfo)
+		c.services.Store(strconv.Itoa(localInfo.Type), localInfo)
 	} else {
-		c.services.Store(localInfo.Type, remoteInfo)
+		c.services.Store(strconv.Itoa(localInfo.Type), remoteInfo)
 	}
 
 	return nil
@@ -199,7 +200,7 @@ func (c *NatsRPC) RegisterConfig() error {
 							result := &ServiceGroup{}
 							err := json.Unmarshal(kve.Value(), result)
 							if err == nil && result.Version >= c.Conf.Services[i].Version {
-								c.services.Store(c.Conf.Services[i].Type, result)
+								c.services.Store(strconv.Itoa(c.Conf.Services[i].Type), result)
 							}
 						}
 					}
@@ -213,16 +214,16 @@ func (c *NatsRPC) RegisterConfig() error {
 	return nil
 }
 func (c *NatsRPC) GetHashValue(destType uint32, value uint64) uint32 {
-	info, ok := c.services.Load(destType)
+	info, ok := c.services.Load(strconv.Itoa(int(destType)))
 
 	if !ok {
 		return 0
 	}
-	hashs := info.(ServiceGroup).Hash
+	hashs := info.(*ServiceGroup).Hash
 	if hashs == nil {
 		return 0
 	}
-	if info.(ServiceGroup).Mode == 1 {
+	if info.(*ServiceGroup).Mode == 1 {
 		hashCode := int(value % uint64(len(hashs)))
 		return uint32(hashs[hashCode])
 	}

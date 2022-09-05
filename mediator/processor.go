@@ -135,9 +135,11 @@ func (w *Processor) Run() {
 				if err == nil {
 					//Process(obj.(*base.CallObject))
 					tobj := v.(*base.CallObject)
-					result := tobj.Caller.Execute(tobj)
-					if tobj.Type == base.CallObejctNormal {
-						tobj.SetRet(result)
+					if tobj.Caller != nil {
+						result := tobj.Caller.Execute(tobj)
+						if tobj.Type == base.CallObejctNormal {
+							tobj.SetRet(result)
+						}
 					}
 
 				}

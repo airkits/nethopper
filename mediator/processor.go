@@ -53,26 +53,26 @@ type Processor struct {
 }
 
 // Process goruntine process pre call
-func Process(obj *base.CallObject) *base.Ret {
-	//defer TraceCost(s.Name() + ":" + obj.Cmd)()
-	var result *base.Ret
+// func Process(obj *base.CallObject) *base.Ret {
+// 	//defer TraceCost(s.Name() + ":" + obj.Cmd)()
+// 	var result *base.Ret
 
-	defer func() {
-		if r := recover(); r != nil {
-			result = base.NewRet(base.ErrCodeProcessor, r.(error), nil)
-			if obj.Type == base.CallObejctNone {
-				obj.ChanRet <- result
-			}
+// 	defer func() {
+// 		if r := recover(); r != nil {
+// 			result = base.NewRet(base.ErrCodeProcessor, r.(error), nil)
+// 			if obj.Type == base.CallObejctNormal {
+// 				obj.ChanRet <- result
+// 			}
 
-		}
-	}()
+// 		}
+// 	}()
 
-	result = obj.Caller.Execute(obj)
-	if obj.Type == base.CallObejctNone {
-		obj.ChanRet <- result
-	}
-	return result
-}
+// 	result = obj.Caller.Execute(obj)
+// 	if obj.Type == base.CallObejctNormal {
+// 		obj.ChanRet <- result
+// 	}
+// 	return result
+// }
 
 // f := s.(IModule).GetHandler(obj.CmdID)
 // if f != nil {
@@ -120,17 +120,30 @@ func (w *Processor) Run() {
 	//	atomic.AddUint32(&w.owner.WorkerCount, 1)
 	w.wp.AddRef()
 	go func() {
+		done := false
 		for {
-			obj, err := w.q.Pop()
-			if err == nil && obj == nil {
-				//atomic.AddUint32(&w.owner.WorkerCount, ^uint32(-(-1)-1))
-				w.wp.DecRef()
-				w.wp.CachePut(w)
-				break
-			}
-			if err == nil {
-				Process(obj.(*base.CallObject))
+			objs, err := w.q.AutoPop()
 
+			for _, v := range objs {
+				if err == nil && v == nil {
+					//atomic.AddUint32(&w.owner.WorkerCount, ^uint32(-(-1)-1))
+					w.wp.DecRef()
+					w.wp.CachePut(w)
+					done = true
+					break
+				}
+				if err == nil {
+					//Process(obj.(*base.CallObject))
+					tobj := v.(*base.CallObject)
+					result := tobj.Caller.Execute(tobj)
+					if tobj.Type == base.CallObejctNormal {
+						tobj.SetRet(result)
+					}
+
+				}
+			}
+			if done {
+				break
 			}
 			if w.q.Length() == 0 {
 				if ok := w.wp.RecycleProcessor(w); !ok {

@@ -15,7 +15,7 @@ func GenUUID() string {
 // InitUID uidGenerater workerID between 1-255
 func InitUID(workID uint16) {
 	options := idgen.NewIdGeneratorOptions(workID)
-	//	options.SeqBitLength = 10
+	options.SeqBitLength = 10
 	idgen.SetIdGenerator(options)
 }
 

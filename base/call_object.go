@@ -8,7 +8,7 @@ import (
 const (
 	// CallObejctType call object type
 	CallObejctType      = iota
-	CallObejctNone      = 1 //普通模式
+	CallObejctNormal    = 1 //普通模式
 	CallObejctNotify    = 2 //通知模式，无响应
 	CallObejctTransport = 3 //透传模式，handler可以收到callobject
 )
@@ -53,7 +53,14 @@ func (c *CallObject) Init(t int8, caller ICaller, cmdID int32, opt int32, args .
 func (c *CallObject) SetTrace(mid ...uint8) {
 	c.Trace = append(c.Trace, mid...)
 }
+func (c *CallObject) SetRet(ret *Ret) bool {
 
+	if c.ChanRet != nil {
+		c.ChanRet <- ret
+		return true
+	}
+	return false
+}
 func (c *CallObject) Reset() *CallObject {
 	c.Args = nil
 	c.Caller = nil
@@ -82,7 +89,7 @@ type Ret struct {
 // NewCallObject create call object
 func NewCallObject(caller ICaller, cmdID int32, opt int32, args ...interface{}) *CallObject {
 	obj := GCallObjectPool.Get()
-	return obj.(*CallObject).Init(CallObejctNone, caller, cmdID, opt, args...)
+	return obj.(*CallObject).Init(CallObejctNormal, caller, cmdID, opt, args...)
 }
 
 // NewNotifyObject create notify object

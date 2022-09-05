@@ -388,7 +388,7 @@ func (p *FixedWorkerPool) getProcessor(opt uint32) *Processor {
 	}
 
 	w = workers[hash]
-
+	//log.Info("[Mediator] worker user id:[%d] processor", hash)
 	if w == nil {
 		if cacheWorker := p.cache.Get(); cacheWorker != nil {
 			w = cacheWorker.(*Processor)

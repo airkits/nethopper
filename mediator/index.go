@@ -264,15 +264,16 @@ func RunSimpleFrame(s IModule) {
 	if !s.HasWorkerPool() {
 		//err = errors.New("no processor pool")
 		result := s.Execute(obj)
-		if obj.Type == base.CallObejctNone {
-			obj.ChanRet <- result
+		if obj.Type == base.CallObejctNormal {
+			obj.SetRet(result)
 		}
+
 		return
 	}
 	err = s.WorkerPoolSubmit(obj)
 
-	if err != nil && obj.Type == base.CallObejctNone {
-		obj.ChanRet <- base.NewRet(base.ErrCodeWorker, err, nil)
+	if err != nil {
+		obj.SetRet(base.NewRet(base.ErrCodeWorker, err, nil))
 	}
 }
 

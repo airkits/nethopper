@@ -127,9 +127,10 @@ func (c *NatsRPC) connect() error {
 	log.Info("[NatsRPC] type:[%d] id:[%d] Maximum payload is %d MB", c.Conf.ServiceType, c.Conf.ServiceID, mp/(1024*1024))
 
 	c.conn = NewConn(nc, c.Conf)
-	c.agent = c.NewAgent(c.conn, 0, nc.ConnectedServerId())
 	c.conn.(*Conn).RegisterService(uint32(c.Conf.ServiceType), uint32(c.Conf.ServiceID))
 	c.RegisterConfig()
+	c.agent = c.NewAgent(c.conn, 0, nc.ConnectedServerId())
+
 	c.agent.Run()
 
 	c.conn.Close()
